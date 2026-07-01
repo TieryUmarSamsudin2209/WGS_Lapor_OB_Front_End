@@ -1,0 +1,12 @@
+{
+    "iis.configDir": "",
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.snippetSuggestions": "top",
+    "emmet.triggerExpansionOnTab": true,
+    "cmake.ignoreCMakeListsMissing": true
+}
