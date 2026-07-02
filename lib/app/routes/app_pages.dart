@@ -10,15 +10,15 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/report/bindings/report_binding.dart';
 import '../modules/report/views/report_view.dart';
-import '../modules/task/bindings/task_binding.dart';
-import '../modules/task/views/task.view.dart';
+import '../modules/splash_screen/bindings/splash_screen_binding.dart';
+import '../modules/splash_screen/views/splash_screen_view.dart';
 
 part 'app_routes.dart';
 
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.AKTIVASI;
+  static const INITIAL = Routes.SPLASH_SCREEN;
 
   static final routes = [
     GetPage(
@@ -37,14 +37,14 @@ class AppPages {
       binding: ProfileBinding(),
     ),
     GetPage(
-      name: _Paths.TASK,
-      page: () => const TrackReportsPage(),
-      binding: TaskBinding(),
-    ),
-    GetPage(
       name: _Paths.REPORT,
       page: () => const ReportPage(),
       binding: ReportBinding(),
+    ),
+    GetPage(
+      name: _Paths.SPLASH_SCREEN,
+      page: () => const SplashScreenView(),
+      binding: SplashScreenBinding(),
     ),
     GetPage(
       name: _Paths.AKTIVASI,

@@ -76,8 +76,6 @@ class LoginPage extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.3),
-                          // Spread radius negatif dan Offset ke bawah (Y positif)
-                          // Memastikan shadow/bayangan HANYA muncul di bagian bawah card
                           spreadRadius: -10,
                           blurRadius: 20,
                           offset: const Offset(0, 25),
