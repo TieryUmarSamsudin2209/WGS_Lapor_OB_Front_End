@@ -1,305 +1,405 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/home_controller.dart';
 import '../../../routes/app_pages.dart';
 
-void main() {
-  runApp(const HomePages());
-}
-
-class HomePages extends StatelessWidget {
-  const HomePages({super.key});
-
+class HomeView extends GetView<HomeController> {
+  const HomeView({super.key});
   @override
   Widget build(BuildContext context) {
-    return const DashboardPage();
+    return const BottomNavigationLayout();
   }
 }
 
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+class BottomNavigationLayout extends StatefulWidget {
+  const BottomNavigationLayout({super.key});
+
+  @override
+  State<BottomNavigationLayout> createState() =>
+      _BottomNavigationLayoutState();
+}
+
+class _BottomNavigationLayoutState extends State<BottomNavigationLayout> {
+  final Color navyColor = const Color(0xFF0F4C81);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFFFFFF),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Row(
-          children: [
-            Text(" ", style: TextStyle(color: Colors.blueGrey[600], fontSize: 16)),
-            const Text("Lapor OB", style: TextStyle(color: Color(0xFF003366), fontWeight: FontWeight.bold, fontSize: 20)),
-          ],
+        backgroundColor: navyColor,
+        title: const Text('Beranda'),
+        titleTextStyle: const TextStyle(
+          fontSize: 30,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black54),
-            onPressed: () {},
+            icon: const Icon(Icons.notifications_outlined),
+            style: IconButton.styleFrom(
+              foregroundColor: navyColor,
+              backgroundColor: Colors.white,
+            ),
+            onPressed: () {
+              // Handle notification press
+            },
           )
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            Text("Good morning,", style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-            const Text("Alex Karyawan", style: TextStyle(color: Color(0xFF003366), fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            
-            // Tombol Report New Issue
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: () => Get.toNamed(Routes.REPORT),
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text("Laporkan Masalah Baru", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF003366),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // Card Active Reports
-            GestureDetector(
-              onTap: () => Get.toNamed(Routes.PROFILE),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F0FE),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: const Color(0xFF004A8D), borderRadius: BorderRadius.circular(8)),
-                          child: const Icon(Icons.assignment, color: Colors.white, size: 24),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(color: Colors.lightBlue[100], borderRadius: BorderRadius.circular(20)),
-                          child: const Text("Action Needed", style: TextStyle(color: Color(0xFF004A8D), fontSize: 12, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    const Text("3", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF003366))),
-                    const Text("Active Reports", style: TextStyle(color: Colors.black54, fontSize: 16)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // Grid Categories
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              childAspectRatio: 1.5,
-              children: [
-                _buildCategoryCard(context, Icons.home_outlined, "Plumbing"),
-                _buildCategoryCard(context, Icons.bolt, "Electrical"),
-                _buildCategoryCard(context, Icons.ac_unit, "HVAC"),
-                _buildCategoryCard(context, Icons.chair_outlined, "Furniture"),
-              ],
-            ),
-            const SizedBox(height: 30),
-
-            // Section Recent Activities
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Recent Activities", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF003366))),
-                TextButton(onPressed: () => Get.toNamed(Routes.PROFILE), child: const Text("View All", style: TextStyle(color: Color(0xFF003366), fontWeight: FontWeight.bold))),
-              ],
-            ),
-            
-            _buildActivityCard(
-              icon: Icons.home_outlined,
-              title: "Leaking Pipe in Restroom B",
-              id: "#REP-2023-11A",
-              time: "Today, 09:30 AM",
-              status: "In Progress",
-              statusColor: Colors.grey[400]!,
-            ),
-            _buildActivityCard(
-              icon: Icons.bolt,
-              title: "Flickering Lights in Meeting Room 4",
-              id: "#REP-2023-10X",
-              time: "Yesterday, 14:15 PM",
-              status: "Resolved",
-              statusColor: const Color(0xFFE3F2FD),
-              textColor: const Color(0xFF004A8D),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-      
-      // Bottom Navigation Bar
-      bottomNavigationBar: _buildBottomNavBar(context),
-    );
-  }
-
-  Widget _buildBottomNavBar(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        height: 65,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2EAF8), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF104A7F).withValues(alpha: 0.08),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(context, Icons.home_outlined, "Home", true, () {}),
-            _buildNavItem(context, Icons.add_circle_outline, "Report", false, () => Get.toNamed(Routes.REPORT)),
-            _buildNavItem(context, Icons.person, "Profile", false, () => Get.offAllNamed(Routes.PROFILE)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool isActive, VoidCallback onTap) {
-    final Color activeColor = const Color(0xFF104A7F);
-    if (isActive) {
-      return GestureDetector(
-        onTap: onTap,
+      body: const HomePage(),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          height: 70,
           decoration: BoxDecoration(
-            color: activeColor,
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x660015B0),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              )
+            ],
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Icon(icon, color: Colors.white, size: 20),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+              // --- Item 1: Home (already here) ---
+              _buildNavItem(
+                icon: Icons.home,
+                outlineIcon: Icons.home_outlined,
+                label: 'Home',
+                isActive: true,
+                onTap: () {
+                  // Already on Home, no navigation needed.
+                },
+              ),
+
+              // --- Item 2: Report ---
+              _buildNavItem(
+                icon: Icons.add,
+                outlineIcon: Icons.add,
+                label: 'Report',
+                isActive: false,
+                onTap: () => Get.toNamed(Routes.REPORT),
+              ),
+
+              // --- Item 3: Profile ---
+              _buildNavItem(
+                icon: Icons.person,
+                outlineIcon: Icons.person_outline,
+                label: 'Profile',
+                isActive: false,
+                onTap: () => Get.toNamed(Routes.PROFILE),
               ),
             ],
           ),
         ),
-      );
-    } else {
-      return GestureDetector(
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required IconData outlineIcon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? navyColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: activeColor, size: 22),
-            const SizedBox(height: 4),
+            Icon(
+              isActive ? icon : outlineIcon,
+              color: isActive ? Colors.white : navyColor,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: activeColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
+                color: isActive ? Colors.white : navyColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
               ),
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  final Color navyColor = const Color(0xFF0F4C81);
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: navyColor,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(17),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Selamat Pagi,',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Alex Karyawan',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      onPressed: () => Get.toNamed(Routes.REPORT),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add, size: 20, color: navyColor),
+                          const SizedBox(width: 2),
+                          Text(
+                            'Laporkan masalah baru',
+                            style: TextStyle(color: navyColor, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Kategori',
+                    style: TextStyle(
+                      fontSize: 25,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildCategoryItem(
+                        icon: Icons.plumbing_outlined,
+                        label: 'Kebersihan',
+                        onTap: () =>
+                            Get.toNamed(Routes.REPORT, arguments: 'Plumbing'),
+                      ),
+                      _buildCategoryItem(
+                        icon: Icons.chair_outlined,
+                        label: 'Peralatan',
+                        onTap: () =>
+                            Get.toNamed(Routes.REPORT, arguments: 'Furniture'),
+                      ),
+                      _buildCategoryItem(
+                        icon: Icons.air_outlined,
+                        label: 'Maintenance',
+                        onTap: () =>
+                            Get.toNamed(Routes.REPORT, arguments: 'HVAC'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Container(
+            margin: const EdgeInsets.all(15),
+            width: double.infinity,
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: navyColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Aktivitas',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.toNamed(Routes.PROFILE),
+                      child: const Text(
+                        'Lihat Semua',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildActivityCard(
+                  icon: Icons.plumbing_outlined,
+                  title: 'Leaking Pipe in Restroom B',
+                  subtitle: 'Reported: Today, 09:30 AM • ID: #REP-2023-11A',
+                  statusIcon: Icons.sync,
+                  statusLabel: 'In Progress',
+                ),
+                const SizedBox(height: 8),
+                _buildActivityCard(
+                  icon: Icons.electric_bolt_outlined,
+                  title: 'Flickering Lights in Meeting Room 4',
+                  subtitle:
+                      'Reported: Yesterday, 14:15 PM • ID: #REP-2023-10X',
+                  statusIcon: Icons.check_circle_outline,
+                  statusLabel: 'Resolved',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildCategoryCard(BuildContext context, IconData icon, String title) {
-    return GestureDetector(
-      onTap: () => Get.toNamed(Routes.REPORT, arguments: title),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F7FF),
-          borderRadius: BorderRadius.circular(12),
+  Widget _buildCategoryItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            backgroundColor: Colors.white,
+          ),
+          child: Icon(icon, size: 30, color: navyColor),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: const Color(0xFF003366), size: 28),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF003366))),
-          ],
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildActivityCard({
     required IconData icon,
     required String title,
-    required String id,
-    required String time,
-    required String status,
-    required Color statusColor,
-    Color textColor = Colors.black54,
+    required String subtitle,
+    required IconData statusIcon,
+    required String statusLabel,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black12.withValues(alpha: 0.05)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.black12)),
-            child: Icon(icon, color: const Color(0xFF003366)),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF003366))),
-                const SizedBox(height: 4),
-                Text("Reported: $time • ID: $id", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(15)),
-                    child: Text(
-                      status == "Resolved" ? "✓ $status" : "🕒 $status",
-                      style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFC7C7C7), width: 1),
+                ),
+                child: Icon(icon, size: 30, color: const Color(0xFF9F9F9F)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: navyColor,
+                      ),
                     ),
-                  ),
-                )
-              ],
-            ),
-          )
+                    Text(subtitle),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDECFF),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Row(
+                  children: [
+                    Icon(statusIcon, size: 18, color: navyColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: navyColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -26,4 +26,16 @@ class SplashScreenController extends GetxController {
     await Future.delayed(const Duration(milliseconds: 500));
     Get.offNamed('/aktivasi');
   }
+
+  @override
+  void onReady() {
+    super.onReady();
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+  }
+
+  void increment() => count.value++;
 }
