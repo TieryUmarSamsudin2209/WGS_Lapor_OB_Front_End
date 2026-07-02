@@ -160,35 +160,6 @@ class LoginPage extends StatelessWidget {
                             ),
                           ),
                         ),
-
-                        const SizedBox(height: 30),
-
-                        Center(
-                          child: GestureDetector(
-                            onTap: () => Get.toNamed(Routes.REGISTER),
-                            child: RichText(
-                              text: TextSpan(
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontFamily: 'sans-serif',
-                                ),
-                                children: [
-                                  const TextSpan(
-                                    text: "Belum punya akun? ",
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                  TextSpan(
-                                    text: "Daftar",
-                                    style: TextStyle(
-                                      color: navyTextColor,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
