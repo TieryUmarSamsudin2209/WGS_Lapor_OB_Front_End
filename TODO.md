@@ -1,0 +1,5 @@
+- [ ] Update `AppPages.INITIAL` to `Routes.AKTIVASI` (start from Aktivasi)
+- [ ] Refactor `AktivasiView` to remove nested `MaterialApp` and render activation form placeholders (Password + Password Confirmation)
+- [ ] Wire Aktivasi button to navigate to `Routes.LOGIN`
+- [ ] Ensure Login page “Masuk” already navigates to `Routes.HOME`
+- [ ] Run `flutter analyze` to confirm no compile errors

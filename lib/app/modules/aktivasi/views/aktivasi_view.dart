@@ -1,29 +1,14 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
+
 import '../../../routes/app_pages.dart';
+import '../controllers/aktivasi_controller.dart';
 
-void main() {
-  runApp(const LoginPages());
-}
-
-class LoginPages extends StatelessWidget {
-  const LoginPages({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'sans-serif'),
-      home: const LoginPage(),
-    );
-  }
-}
-
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+class AktivasiView extends GetView<AktivasiController> {
+  const AktivasiView({super.key});
 
   final Color navyTextColor = const Color(0xFF003366);
-  final Color primaryBlue = const Color(0xFF5B9FFF);
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +29,9 @@ class LoginPage extends StatelessWidget {
               children: [
                 const SizedBox(height: 60),
 
-                // --- LOGO WGS ---
                 Image.asset(
                   'assets/images/logo_wgs.png',
-                  height: 180, 
+                  height: 180,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(
@@ -60,7 +44,6 @@ class LoginPage extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // --- LOGIN CARD ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Container(
@@ -76,8 +59,6 @@ class LoginPage extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.3),
-                          // Spread radius negatif dan Offset ke bawah (Y positif)
-                          // Memastikan shadow/bayangan HANYA muncul di bagian bawah card
                           spreadRadius: -10,
                           blurRadius: 20,
                           offset: const Offset(0, 25),
@@ -89,7 +70,7 @@ class LoginPage extends StatelessWidget {
                       children: [
                         Center(
                           child: Text(
-                            "Halo!",
+                            "Aktivasi",
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w900,
@@ -100,7 +81,7 @@ class LoginPage extends StatelessWidget {
                         const SizedBox(height: 8),
                         Center(
                           child: Text(
-                            "Selamat datang di Lapor OB!",
+                            "Masukkan password untuk aktivasi akun",
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -111,31 +92,18 @@ class LoginPage extends StatelessWidget {
 
                         const SizedBox(height: 40),
 
-                        _buildLabel("Username"),
-                        // Memanggil input field lama dengan hint kosong agar mirip difoto
-                        _buildInputField(hint: "Masukan Username"),
+                        _buildLabel("Password"),
+                        _buildInputField(
+                          hint: "Masukan Password",
+                          isPassword: true,
+                        ),
 
                         const SizedBox(height: 20),
 
-                        _buildLabel("Password"),
-                        _buildInputField(hint: "Masukan Password", isPassword: true),
-
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8, right: 8),
-                            child: GestureDetector(
-                              onTap: () {},
-                              child: Text(
-                                "Lupa Password?",
-                                style: TextStyle(
-                                  color: navyTextColor,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
+                        _buildLabel("Password Confirmation"),
+                        _buildInputField(
+                          hint: "Konfirmasi Password",
+                          isPassword: true,
                         ),
 
                         const SizedBox(height: 30),
@@ -145,7 +113,7 @@ class LoginPage extends StatelessWidget {
                             width: 130,
                             height: 38,
                             child: ElevatedButton(
-                              onPressed: () => Get.offAllNamed(Routes.HOME),
+                              onPressed: () => Get.offAllNamed(Routes.LOGIN),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4FA0FF),
                                 foregroundColor: Colors.white,
@@ -159,7 +127,7 @@ class LoginPage extends StatelessWidget {
                                 padding: EdgeInsets.zero,
                               ),
                               child: const Text(
-                                "Masuk",
+                                "Aktivasi",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w800,
@@ -198,6 +166,7 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 50),
               ],
             ),
@@ -221,7 +190,6 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  // --- MENGGUNAKAN SOURCE INPUT FIELD LAMA ANDA ---
   Widget _buildInputField({required String hint, bool isPassword = false}) {
     return Container(
       decoration: BoxDecoration(
