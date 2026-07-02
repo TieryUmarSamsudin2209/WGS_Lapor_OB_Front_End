@@ -66,7 +66,7 @@ class DashboardPage extends StatelessWidget {
 
             // Card Active Reports
             GestureDetector(
-              onTap: () => Get.toNamed(Routes.TASK),
+              onTap: () => Get.toNamed(Routes.PROFILE),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -122,7 +122,7 @@ class DashboardPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Recent Activities", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF003366))),
-                TextButton(onPressed: () => Get.toNamed(Routes.TASK), child: const Text("View All", style: TextStyle(color: Color(0xFF003366), fontWeight: FontWeight.bold))),
+                TextButton(onPressed: () => Get.toNamed(Routes.PROFILE), child: const Text("View All", style: TextStyle(color: Color(0xFF003366), fontWeight: FontWeight.bold))),
               ],
             ),
             
@@ -149,29 +149,87 @@ class DashboardPage extends StatelessWidget {
       ),
       
       // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF003366),
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 2) {
-            Get.offAllNamed(Routes.TASK);
-          } else if (index == 3) {
-            Get.offAllNamed(Routes.PROFILE);
-          } else if (index == 1) {
-            Get.toNamed(Routes.REPORT);
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: "New Report"),
-          BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), label: "Track"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profile"),
-        ],
+      bottomNavigationBar: _buildBottomNavBar(context),
+    );
+  }
+
+  Widget _buildBottomNavBar(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        height: 65,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2EAF8), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF104A7F).withValues(alpha: 0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(context, Icons.home_outlined, "Home", true, () {}),
+            _buildNavItem(context, Icons.add_circle_outline, "Report", false, () => Get.toNamed(Routes.REPORT)),
+            _buildNavItem(context, Icons.person, "Profile", false, () => Get.offAllNamed(Routes.PROFILE)),
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool isActive, VoidCallback onTap) {
+    final Color activeColor = const Color(0xFF104A7F);
+    if (isActive) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: activeColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return GestureDetector(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: activeColor, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: activeColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildCategoryCard(BuildContext context, IconData icon, String title) {
