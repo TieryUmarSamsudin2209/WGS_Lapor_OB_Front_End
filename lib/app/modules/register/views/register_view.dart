@@ -16,12 +16,11 @@ class RegisterPage extends StatelessWidget {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
             colors: [
-              Color(0xFFF0F5FF),
               Color(0xFFFFFFFF),
-              Color(0xFFF0F5FF),
+              Color(0xFFEBF2FC),
             ],
           ),
         ),
@@ -29,107 +28,132 @@ class RegisterPage extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 80),
 
                 // --- LOGO WGS ---
                 Image.asset(
                   'assets/images/logo_wgs.png',
-                  height: 100,
+                  height: 200,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(Icons.broken_image, size: 80, color: Colors.grey);
                   },
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 40),
 
                 // --- REGISTER CARD ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Container(
-                    padding: const EdgeInsets.all(35),
+                    padding: const EdgeInsets.only(left: 30, right: 30, top: 40, bottom: 35),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 20,
+                          color: const Color(0xFF003366).withValues(alpha: 0.06),
+                          blurRadius: 25,
                           offset: const Offset(0, 10),
                         )
                       ],
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          "Ciptakan Akun",
+                          "Buat Akun",
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: navyTextColor,
+                            height: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 2),
                         Text(
                           "Lapor OB-Mu!",
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: navyTextColor,
+                            height: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // Horizontal blue line
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            width: 150,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8BBAFF),
+                              borderRadius: BorderRadius.circular(1.5),
+                            ),
                           ),
                         ),
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 30),
 
                         _buildLabel("Username"),
-                        _buildInputField(hint: ""),
+                        _buildInputField(hint: "Masukan Username"),
 
                         const SizedBox(height: 20),
 
                         _buildLabel("Password"),
-                        _buildInputField(hint: "", isPassword: true),
+                        _buildInputField(hint: "Masukan Password", isPassword: true),
 
                         const SizedBox(height: 20),
 
                         _buildLabel("Confirm Password"),
-                        _buildInputField(hint: "", isPassword: true),
+                        _buildInputField(hint: "Konfirmasi Password", isPassword: true),
 
                         const SizedBox(height: 30),
 
-                        SizedBox(
-                          width: double.infinity,
-                          height: 45,
-                          child: ElevatedButton(
-                            onPressed: () => Get.offAllNamed(Routes.HOME),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryBlue,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
+                        Center(
+                          child: SizedBox(
+                            width: 140,
+                            height: 42,
+                            child: ElevatedButton(
+                              onPressed: () => Get.offAllNamed(Routes.HOME),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4FA0FF),
+                                foregroundColor: Colors.white,
+                                elevation: 4,
+                                shadowColor: const Color(0xFF4FA0FF).withValues(alpha: 0.5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                padding: EdgeInsets.zero,
                               ),
-                            ),
-                            child: const Text(
-                              "Buat akun",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                              child: const Text(
+                                "Buat akun",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 30),
 
                         Center(
                           child: GestureDetector(
                             onTap: () => Get.offNamed(Routes.LOGIN),
                             child: RichText(
                               text: TextSpan(
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'sans-serif',
+                                ),
                                 children: [
-                                  const TextSpan(text: "Sudah memiliki akun? "),
+                                  const TextSpan(
+                                    text: "Sudah memiliki akun? ",
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
                                   TextSpan(
                                     text: "Masuk",
                                     style: TextStyle(
@@ -157,7 +181,7 @@ class RegisterPage extends StatelessWidget {
 
   Widget _buildLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(left: 5, bottom: 8),
+      padding: const EdgeInsets.only(left: 8, bottom: 6),
       child: Text(
         label,
         style: TextStyle(
@@ -172,22 +196,28 @@ class RegisterPage extends StatelessWidget {
   Widget _buildInputField({required String hint, bool isPassword = false}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFF),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: const Color(0xFFE2EAF8),
+          width: 1.5,
+        ),
       ),
       child: TextField(
         obscureText: isPassword,
+        style: TextStyle(
+          color: navyTextColor,
+          fontSize: 14,
+        ),
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           border: InputBorder.none,
+          isDense: true,
           hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 13,
+          ),
         ),
       ),
     );
