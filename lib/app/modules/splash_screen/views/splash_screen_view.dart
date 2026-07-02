@@ -27,6 +27,7 @@ class SplashScreenView extends GetView<SplashScreenController> {
                         valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00355F)),
                         backgroundColor: const Color(0xFFD8D8D8),
                         value: controller.progressValue.value,
+                        borderRadius: BorderRadius.circular(50),
                       )),
                 ],
               ),
