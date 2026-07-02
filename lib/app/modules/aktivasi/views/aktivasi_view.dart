@@ -58,7 +58,7 @@ class AktivasiView extends GetView<AktivasiController> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
+                          color: Colors.grey.withValues(alpha: 0.3),
                           spreadRadius: -10,
                           blurRadius: 20,
                           offset: const Offset(0, 25),
@@ -120,7 +120,7 @@ class AktivasiView extends GetView<AktivasiController> {
                                 elevation: 0,
                                 shadowColor: const Color(
                                   0xFF4FA0FF,
-                                ).withOpacity(0.5),
+                                ).withValues(alpha: 0.5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
                                 ),
@@ -198,7 +198,7 @@ class AktivasiView extends GetView<AktivasiController> {
         border: Border.all(color: const Color(0xFFE2EAF8), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFCBE7F5).withOpacity(0.8),
+            color: const Color(0xFFCBE7F5).withValues(alpha: 0.8),
             spreadRadius: 0,
             blurRadius: 12,
             offset: const Offset(0, 5),

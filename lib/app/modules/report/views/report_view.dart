@@ -159,7 +159,7 @@ class ReportPage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color: Colors.black.withValues(alpha: 0.1),
                                         spreadRadius: 2,
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
@@ -272,7 +272,7 @@ class ReportPage extends StatelessWidget {
                                             color: Colors.white,
                                             borderRadius: BorderRadius.circular(15),
                                             border: Border.all(
-                                              color: Colors.blue.withOpacity(0.2), 
+                                              color: Colors.blue.withValues(alpha: 0.2), 
                                               width: 1.5
                                             ),
                                           ),
@@ -423,7 +423,7 @@ class ReportPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20), // Sudut melengkung penuh (stadium)
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4FA0FF).withOpacity(0.4), // Glow Biru
+                    color: const Color(0xFF4FA0FF).withValues(alpha: 0.4), // Glow Biru
                     blurRadius: 20,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -534,14 +534,14 @@ class ReportPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.2),
+            color: const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Obx(() => DropdownButtonFormField<String>(
-        value: value.value,
+        initialValue: value.value,
         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -576,7 +576,7 @@ class ReportPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05), 
+            color: Colors.black.withValues(alpha: 0.05), 
             blurRadius: 10, 
             offset: const Offset(0, 4)
           ),
@@ -619,7 +619,7 @@ class ReportPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: isActive ? Colors.transparent : Colors.white),
             boxShadow: isActive
-                ? [BoxShadow(color: const Color.fromARGB(255, 233, 233, 233).withOpacity(0.3), blurRadius: 5, offset: const Offset(0, 3))]
+                ? [BoxShadow(color: const Color.fromARGB(255, 233, 233, 233).withValues(alpha: 0.3), blurRadius: 5, offset: const Offset(0, 3))]
                 : [],
           ),
           alignment: Alignment.center,

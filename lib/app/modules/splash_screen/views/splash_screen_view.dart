@@ -68,7 +68,7 @@ class SplashScreenView extends GetView<SplashScreenController> {
                                       borderRadius: BorderRadius.circular(10),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFF003366).withOpacity(0.5),
+                                          color: const Color(0xFF003366).withValues(alpha: 0.5),
                                           blurRadius: 6,
                                           offset: const Offset(0, 2),
                                         ),

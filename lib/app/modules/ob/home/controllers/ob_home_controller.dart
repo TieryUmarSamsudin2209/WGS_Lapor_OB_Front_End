@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-class AktivasiController extends GetxController {
-  //TODO: Implement AktivasiController
+class ObHomeController extends GetxController {
+  //TODO: Implement ObHomeController
 
   final count = 0.obs;
 
