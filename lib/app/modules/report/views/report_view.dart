@@ -420,7 +420,7 @@ class ReportPage extends StatelessWidget {
               height: 70,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(35), // Sudut melengkung penuh (stadium)
+                borderRadius: BorderRadius.circular(20), // Sudut melengkung penuh (stadium)
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF4FA0FF).withOpacity(0.4), // Glow Biru
@@ -534,10 +534,9 @@ class ReportPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.3),
-            spreadRadius: 0,
-            blurRadius: 7,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -577,7 +576,7 @@ class ReportPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), 
+            color: Colors.black.withOpacity(0.05), 
             blurRadius: 10, 
             offset: const Offset(0, 4)
           ),
@@ -620,7 +619,7 @@ class ReportPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: isActive ? Colors.transparent : Colors.white),
             boxShadow: isActive
-                ? [BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 5, offset: const Offset(0, 3))]
+                ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 3))]
                 : [],
           ),
           alignment: Alignment.center,
