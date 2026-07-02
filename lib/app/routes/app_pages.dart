@@ -6,8 +6,6 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
-import '../modules/register/bindings/register_binding.dart';
-import '../modules/register/views/register_view.dart';
 import '../modules/report/bindings/report_binding.dart';
 import '../modules/report/views/report_view.dart';
 import '../modules/task/bindings/task_binding.dart';
@@ -25,11 +23,6 @@ class AppPages {
       name: _Paths.LOGIN,
       page: () => const LoginPage(),
       binding: LoginBinding(),
-    ),
-    GetPage(
-      name: _Paths.REGISTER,
-      page: () => const RegisterPage(),
-      binding: RegisterBinding(),
     ),
     GetPage(
       name: _Paths.HOME,
