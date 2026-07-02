@@ -71,9 +71,10 @@ class LoginPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF003366).withValues(alpha: 0.06),
-                          blurRadius: 25,
-                          offset: const Offset(0, 10),
+                         color: Colors.grey.withOpacity(0.5), // Warna bayangan
+                            spreadRadius: 2, 
+                            blurRadius: 7,    
+                        offset: const Offset(0, 3),
                         )
                       ],
                     ),
@@ -224,11 +225,20 @@ class LoginPage extends StatelessWidget {
           color: const Color(0xFFE2EAF8),
           width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFCBE7F5).withOpacity(0.8), 
+            spreadRadius: 0, 
+            blurRadius: 12,  
+            offset: const Offset(0, 5),
+          ),
+        ],
+       
       ),
       child: TextField(
         obscureText: isPassword,
         style: TextStyle(
-          color: navyTextColor,
+          color: navyTextColor, 
           fontSize: 14,
         ),
         decoration: InputDecoration(

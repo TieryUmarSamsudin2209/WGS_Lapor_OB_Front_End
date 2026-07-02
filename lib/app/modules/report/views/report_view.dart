@@ -73,12 +73,14 @@ class ReportPage extends StatelessWidget {
             const SizedBox(height: 25),
 
             // --- ISSUE CATEGORY DROPDOWN ---
-            _buildLabel("Issue Category *"),
+            _buildLabel("Kategori Masalah"),
             const SizedBox(height: 8),
             Obx(() => DropdownButtonFormField<String>(
                   value: controller.selectedCategory.value,
                   decoration: _buildInputDecoration("Select a category"),
-                  icon: Icon(Icons.keyboard_arrow_down, color: navyColor),
+                  icon: Icon(Icons.expand_more, color: navyColor, size:22),
+                  borderRadius: BorderRadius.circular(14),
+                  style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500),
                   items: categories.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -89,24 +91,44 @@ class ReportPage extends StatelessWidget {
                 )),
             const SizedBox(height: 20),
 
-            // --- PRIORITY LEVEL ---
-            _buildLabel("Priority Level"),
-            const SizedBox(height: 8),
-            Obx(() => Row(
-                  children: [
-                    _buildPriorityButton(
-                      label: "Standard",
-                      isSelected: controller.priorityLevel.value == "Standard",
-                      onTap: () => controller.setPriority("Standard"),
-                    ),
-                    const SizedBox(width: 12),
-                    _buildPriorityButton(
-                      label: "Urgent",
-                      isSelected: controller.priorityLevel.value == "Urgent",
-                      onTap: () => controller.setPriority("Urgent"),
-                    ),
-                  ],
-                )),
+            // --- PRIORITY LEVEL (CARD WITH SHADOW) ---
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 5,
+                    blurRadius: 7,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel("Tingkat Prioritas"),
+                  const SizedBox(height: 12),
+                  Obx(() => Row(
+                        children: [
+                          _buildPriorityButton(
+                            label: "Standard",
+                            isSelected: controller.priorityLevel.value == "Standard",
+                            onTap: () => controller.setPriority("Standard"),
+                          ),
+                          const SizedBox(width: 12),
+                          _buildPriorityButton(
+                            label: "Urgent",
+                            isSelected: controller.priorityLevel.value == "Urgent",
+                            onTap: () => controller.setPriority("Urgent"),
+                          ),
+                        ],
+                      )),
+                ],
+              ),
+            ),
             const SizedBox(height: 25),
 
             // --- LOCATION CONTAINER (PURPLE CARD) ---
@@ -115,27 +137,37 @@ class ReportPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: lightPurpleBg,
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow (
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 5,
+                    blurRadius: 7,
+                    offset: const Offset(0, 3), 
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildLabel("Building *"),
-                  const SizedBox(height: 8),
-                  Obx(() => DropdownButtonFormField<String>(
-                        value: controller.selectedBuilding.value,
-                        decoration: _buildInputDecoration("Select building"),
-                        icon: Icon(Icons.keyboard_arrow_down, color: navyColor),
-                        items: buildings.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) controller.setBuilding(val);
-                        },
-                      )),
-                  const SizedBox(height: 16),
+                 _buildLabel("Kategori Masalah"),
+            const SizedBox(height: 8),
+            Obx(() => DropdownButtonFormField<String>(
+                  value: controller.selectedCategory.value,
+                  decoration: _buildInputDecoration("Select a category"),
+                  icon: Icon(Icons.expand_more, color: navyColor, size: 22), // Ikon lebih modern
+                  dropdownColor: Colors.white,
+                  borderRadius: BorderRadius.circular(14), // Membuat popup menu melengkung modern
+                  style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500),
+                  items: categories.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (val) => controller.setCategory(val),
+                )),
+            const SizedBox(height: 20),
+
                   _buildLabel("Floor / Room Number"),
                   const SizedBox(height: 8),
                   TextField(

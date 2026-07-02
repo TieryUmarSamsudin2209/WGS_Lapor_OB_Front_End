@@ -44,7 +44,7 @@ class RegisterPage extends StatelessWidget {
 
                 // --- REGISTER CARD ---
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                   padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Container(
                     padding: const EdgeInsets.only(left: 30, right: 30, top: 40, bottom: 35),
                     decoration: BoxDecoration(
@@ -52,9 +52,10 @@ class RegisterPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF003366).withValues(alpha: 0.06),
-                          blurRadius: 25,
-                          offset: const Offset(0, 10),
+                         color: Colors.grey.withOpacity(0.5), // Warna bayangan
+                            spreadRadius: 2, 
+                            blurRadius: 7,    
+                        offset: const Offset(0, 3),
                         )
                       ],
                     ),
@@ -202,6 +203,15 @@ class RegisterPage extends StatelessWidget {
           color: const Color(0xFFE2EAF8),
           width: 1.5,
         ),
+
+         boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFCBE7F5).withOpacity(0.8), 
+            spreadRadius: 0, 
+            blurRadius: 12,  
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: TextField(
         obscureText: isPassword,
