@@ -70,7 +70,7 @@ class AktivasiView extends GetView<AktivasiController> {
                       children: [
                         Center(
                           child: Text(
-                            "Aktivasi",
+                            "Halo!",
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w900,
@@ -81,7 +81,7 @@ class AktivasiView extends GetView<AktivasiController> {
                         const SizedBox(height: 8),
                         Center(
                           child: Text(
-                            "Masukkan password untuk aktivasi akun",
+                            "Selamat datang di lapor OB!",
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
