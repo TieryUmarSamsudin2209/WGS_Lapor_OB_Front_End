@@ -6,6 +6,8 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
+import '../modules/ob/detail/bindings/ob_detail_binding.dart';
+import '../modules/ob/detail/views/ob_detail_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/report/bindings/report_binding.dart';
@@ -50,6 +52,16 @@ class AppPages {
       name: _Paths.AKTIVASI,
       page: () => const AktivasiView(),
       binding: AktivasiBinding(),
+    ),
+    GetPage(
+      name: Routes.OB_DETAIL,
+      page: () => const ObDetailView(),
+      binding: ObDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.DETAIL,
+      page: () => const ObDetailView(),
+      binding: ObDetailBinding(),
     ),
   ];
 }
