@@ -43,6 +43,12 @@
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
 					<key>UISceneStoryboardFile</key>
 					<string>Main</string>
+					<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikasi membutuhkan akses ke galeri untuk mengambil foto bukti laporan.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi membutuhkan akses ke kamera untuk memotret kondisi fasilitas.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikasi membutuhkan akses ke mikrofon untuk merekam video laporan.</string>
 				</dict>
 			</array>
 		</dict>

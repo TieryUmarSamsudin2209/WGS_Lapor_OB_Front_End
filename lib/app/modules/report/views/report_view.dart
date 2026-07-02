@@ -1,12 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../controllers/report_controller.dart';
-import '../../../routes/app_pages.dart';
+import '../../../routes/app_pages.dart'; 
 
 class ReportPage extends StatelessWidget {
   const ReportPage({super.key});
 
   final Color navyColor = const Color(0xFF003366);
+  final Color urgentRed = const Color(0xFFC62828);
   final Color lightPurpleBg = const Color(0xFFF3F5FF);
 
   @override
@@ -26,6 +29,9 @@ class ReportPage extends StatelessWidget {
       'Warehouse (Sector C)',
       'Office Wing (East)'
     ];
+
+    // Local state untuk Dropdown Building
+    final RxnString selectedBuilding = RxnString(null);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -48,362 +54,581 @@ class ReportPage extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Submit a Report",
-              style: TextStyle(
-                color: navyColor,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              "Detail the facility issue below. Providing clear photos and accurate locations helps our team respond faster.",
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 13,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // --- ISSUE CATEGORY DROPDOWN ---
-            _buildLabel("Kategori Masalah"),
-            const SizedBox(height: 8),
-            Obx(() => DropdownButtonFormField<String>(
-                  value: controller.selectedCategory.value,
-                  decoration: _buildInputDecoration("Select a category"),
-                  icon: Icon(Icons.expand_more, color: navyColor, size:22),
-                  borderRadius: BorderRadius.circular(14),
-                  style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500),
-                  items: categories.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (val) => controller.setCategory(val),
-                )),
-            const SizedBox(height: 20),
-
-            // --- PRIORITY LEVEL (CARD WITH SHADOW) ---
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: const Offset(0, 3),
+      // MENGGUNAKAN STACK AGAR NAVIGATION BAR BISA MELAYANG DI ATAS KONTEN
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLabel("Tingkat Prioritas"),
-                  const SizedBox(height: 12),
-                  Obx(() => Row(
-                        children: [
-                          _buildPriorityButton(
-                            label: "Standard",
-                            isSelected: controller.priorityLevel.value == "Standard",
-                            onTap: () => controller.setPriority("Standard"),
-                          ),
-                          const SizedBox(width: 12),
-                          _buildPriorityButton(
-                            label: "Urgent",
-                            isSelected: controller.priorityLevel.value == "Urgent",
-                            onTap: () => controller.setPriority("Urgent"),
-                          ),
-                        ],
-                      )),
-                ],
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // --- LOCATION CONTAINER (PURPLE CARD) ---
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: lightPurpleBg,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow (
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: const Offset(0, 3), 
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                 _buildLabel("Kategori Masalah"),
-            const SizedBox(height: 8),
-            Obx(() => DropdownButtonFormField<String>(
-                  value: controller.selectedCategory.value,
-                  decoration: _buildInputDecoration("Select a category"),
-                  icon: Icon(Icons.expand_more, color: navyColor, size: 22), // Ikon lebih modern
-                  dropdownColor: Colors.white,
-                  borderRadius: BorderRadius.circular(14), // Membuat popup menu melengkung modern
-                  style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500),
-                  items: categories.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (val) => controller.setCategory(val),
-                )),
-            const SizedBox(height: 20),
-
-                  _buildLabel("Floor / Room Number"),
-                  const SizedBox(height: 8),
-                  TextField(
-                    onChanged: (val) => controller.floorRoomController.value = val,
-                    decoration: _buildInputDecoration("e.g., Floor 4, Meeting Room B"),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // --- PROBLEM DESCRIPTION ---
-            _buildLabel("Problem Description *"),
-            const SizedBox(height: 8),
-            TextField(
-              maxLines: 4,
-              onChanged: (val) => controller.descriptionController.value = val,
-              decoration: _buildInputDecoration(
-                "Describe the issue in detail. What is broken? Is it causing immediate disruption?",
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // --- PHOTO EVIDENCE ---
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildLabel("Photo Evidence"),
-                Text(
-                  "Max 3 files (5MB each)",
-                  style: TextStyle(color: Colors.grey[500], fontSize: 11),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            
-            // Photo Upload Trigger Box
-            GestureDetector(
-              onTap: () => controller.addMockPhoto(),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey[300]!,
-                    width: 1.5,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(Icons.camera_alt_outlined, color: Colors.grey[400], size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Tap to upload photos",
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Uploaded Photo Thumbnails Row
-            Obx(() => controller.attachedPhotos.isEmpty
-                ? const SizedBox.shrink()
-                : SizedBox(
-                    height: 90,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: controller.attachedPhotos.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Stack(
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // --- HEADER SECTION (LATAR PUTIH) ---
+                        Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  controller.attachedPhotos[index],
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
+                              Text(
+                                "Submit a Report",
+                                style: TextStyle(
+                                  color: navyColor,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
-                              Positioned(
-                                top: 4,
-                                right: 4,
-                                child: GestureDetector(
-                                  onTap: () => controller.removePhoto(index),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.black54,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 14,
-                                    ),
-                                  ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Detail the facility issue below. Providing clear photos and accurate locations helps our team respond faster.",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                  height: 1.4,
                                 ),
                               ),
+                              const SizedBox(height: 15),
                             ],
                           ),
-                        );
-                      },
-                    ),
-                  )),
-            const SizedBox(height: 35),
+                        ),
 
-            // --- SUBMIT BUTTON ---
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  if (controller.selectedCategory.value == null) {
-                    Get.snackbar(
-                      "Peringatan",
-                      "Harap pilih kategori masalah terlebih dahulu.",
-                      backgroundColor: Colors.orangeAccent,
-                      colorText: Colors.white,
-                      snackPosition: SnackPosition.BOTTOM,
-                      margin: const EdgeInsets.all(16),
-                      borderRadius: 12,
-                    );
-                    return;
-                  }
-                  
-                  Get.snackbar(
-                    "Laporan Terkirim!",
-                    "Laporan Anda telah berhasil terkirim.",
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: const Color(0xFF003366),
-                    colorText: Colors.white,
-                    margin: const EdgeInsets.all(16),
-                    borderRadius: 12,
-                    duration: const Duration(seconds: 2),
-                  );
-                  
-                  Future.delayed(const Duration(seconds: 2), () {
-                    controller.clearForm();
-                    Get.back();
-                  });
-                },
-                icon: const Icon(Icons.send, color: Colors.white, size: 18),
-                label: const Text(
-                  "Submit Report",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                        // --- FORM SECTION (CARD BIRU TUA YANG IKUT SCROLL) ---
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: navyColor,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(30),
+                              ),
+                            ),
+                            // Padding bawah 120 untuk memberikan ruang bagi Floating Nav Bar
+                            padding: const EdgeInsets.only(top: 25, left: 20, right: 20, bottom: 120),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildLabel("Issue Category", isRequired: true, color: Colors.white),
+                                const SizedBox(height: 8),
+                                
+                                // DROPDOWN KATEGORI
+                                _buildModernDropdown(
+                                  value: RxnString(controller.selectedCategory.value),
+                                  hint: "Select a category",
+                                  items: categories,
+                                  onChanged: (val) => controller.setCategory(val),
+                                ),
+                                
+                                const SizedBox(height: 20),
+
+                                _buildLabel("Priority Level", color: Colors.white),
+                                const SizedBox(height: 8),
+                                
+                                // TOGGLE BUTTON PRIORITAS
+                                Obx(() => Row(
+                                  children: [
+                                    _buildPriorityButton(
+                                      label: "Standard",
+                                      isActive: controller.priorityLevel.value == "Standard",
+                                      activeColor: Colors.white,
+                                      activeTextColor: navyColor,
+                                      onTap: () => controller.setPriority("Standard"),
+                                    ),
+                                    const SizedBox(width: 15),
+                                    _buildPriorityButton(
+                                      label: "Urgent",
+                                      isActive: controller.priorityLevel.value == "Urgent",
+                                      activeColor: urgentRed,
+                                      activeTextColor: Colors.white,
+                                      onTap: () => controller.setPriority("Urgent"),
+                                    ),
+                                  ],
+                                )),
+
+                                const SizedBox(height: 25),
+
+                                // --- INNER CARD (FORM DETAIL - LIGHT PURPLE) ---
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: lightPurpleBg,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        spreadRadius: 2,
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildLabel("Building", isRequired: true, color: navyColor),
+                                      const SizedBox(height: 8),
+                                      
+                                      // DROPDOWN BUILDING
+                                      _buildModernDropdown(
+                                        value: selectedBuilding,
+                                        hint: "Pilih lokasi gedung",
+                                        items: buildings,
+                                        onChanged: (val) => selectedBuilding.value = val,
+                                      ),
+
+                                      const SizedBox(height: 20),
+
+                                      _buildLabel("Floor / Room Number", color: navyColor),
+                                      const SizedBox(height: 8),
+                                      _buildTextField(
+                                        hint: "Keterangan Tempat",
+                                        onChanged: (val) => controller.floorRoomController.value = val,
+                                      ),
+
+                                      const SizedBox(height: 20),
+
+                                      _buildLabel("Problem Description", isRequired: true, color: navyColor),
+                                      const SizedBox(height: 8),
+                                      _buildTextField(
+                                        hint: "Jelaskan deskripsi apa yang rusak?",
+                                        maxLines: 4,
+                                        onChanged: (val) => controller.descriptionController.value = val,
+                                      ),
+
+                                      const SizedBox(height: 20),
+
+                                      // --- PHOTO EVIDENCE ---
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          _buildLabel("Photo Evidence", color: navyColor),
+                                          Text(
+                                            "Max 3 files (5MB each)",
+                                            style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      
+                                      // Upload Box dengan Modal Bottom Sheet
+                                      GestureDetector(
+                                        onTap: () {
+                                          Get.bottomSheet(
+                                            Container(
+                                              padding: const EdgeInsets.all(20),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(20),
+                                                  topRight: Radius.circular(20),
+                                                ),
+                                              ),
+                                              child: Wrap(
+                                                children: [
+                                                  const Padding(
+                                                    padding: EdgeInsets.only(bottom: 20),
+                                                    child: Text(
+                                                      "Pilih Sumber Foto",
+                                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                  ListTile(
+                                                    leading: Container(
+                                                      padding: const EdgeInsets.all(10),
+                                                      decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+                                                      child: const Icon(Icons.camera_alt, color: Colors.blue),
+                                                    ),
+                                                    title: const Text("Kamera"),
+                                                    onTap: () {
+                                                      Get.back();
+                                                      controller.pickImage(ImageSource.camera);
+                                                    },
+                                                  ),
+                                                  ListTile(
+                                                    leading: Container(
+                                                      padding: const EdgeInsets.all(10),
+                                                      decoration: BoxDecoration(color: Colors.purple[50], shape: BoxShape.circle),
+                                                      child: const Icon(Icons.photo_library, color: Colors.purple),
+                                                    ),
+                                                    title: const Text("Galeri"),
+                                                    onTap: () {
+                                                      Get.back();
+                                                      controller.pickImage(ImageSource.gallery);
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          width: double.infinity,
+                                          height: 90,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(15),
+                                            border: Border.all(
+                                              color: Colors.blue.withOpacity(0.2), 
+                                              width: 1.5
+                                            ),
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.camera_alt_outlined, color: Colors.grey[400], size: 30),
+                                              const SizedBox(height: 8),
+                                              const Text(
+                                                "Tap to upload photos",
+                                                style: TextStyle(
+                                                  fontSize: 12, 
+                                                  fontWeight: FontWeight.bold, 
+                                                  color: Colors.black54
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 15),
+
+                                      // Image Thumbnails Row (MENGGUNAKAN File LOKAL)
+                                      Obx(() => controller.attachedPhotos.isEmpty
+                                          ? const SizedBox.shrink()
+                                          : SizedBox(
+                                              height: 90,
+                                              child: ListView.builder(
+                                                scrollDirection: Axis.horizontal,
+                                                itemCount: controller.attachedPhotos.length,
+                                                itemBuilder: (context, index) {
+                                                  return Padding(
+                                                    padding: const EdgeInsets.only(right: 12),
+                                                    child: Stack(
+                                                      children: [
+                                                        ClipRRect(
+                                                          borderRadius: BorderRadius.circular(12),
+                                                          child: Image.file(
+                                                            File(controller.attachedPhotos[index]),
+                                                            width: 80,
+                                                            height: 80,
+                                                            fit: BoxFit.cover,
+                                                          ),
+                                                        ),
+                                                        Positioned(
+                                                          top: -2,
+                                                          right: -2,
+                                                          child: IconButton(
+                                                            icon: Container(
+                                                              padding: const EdgeInsets.all(2),
+                                                              decoration: const BoxDecoration(
+                                                                color: Colors.white,
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: const Icon(Icons.close, color: Colors.black, size: 14),
+                                                            ),
+                                                            onPressed: () => controller.removePhoto(index),
+                                                            constraints: const BoxConstraints(),
+                                                            padding: EdgeInsets.zero,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            )),
+
+                                      const SizedBox(height: 30),
+
+                                      // --- SUBMIT BUTTON ---
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 50,
+                                        child: ElevatedButton.icon(
+                                          onPressed: () {
+                                            if (controller.selectedCategory.value == null) {
+                                              Get.snackbar(
+                                                "Peringatan",
+                                                "Harap pilih kategori masalah terlebih dahulu.",
+                                                backgroundColor: Colors.orangeAccent,
+                                                colorText: Colors.white,
+                                                snackPosition: SnackPosition.BOTTOM,
+                                                margin: const EdgeInsets.all(16),
+                                                borderRadius: 12,
+                                              );
+                                              return;
+                                            }
+                                            
+                                            Get.snackbar(
+                                              "Laporan Terkirim!",
+                                              "Laporan Anda telah berhasil terkirim.",
+                                              snackPosition: SnackPosition.BOTTOM,
+                                              backgroundColor: navyColor,
+                                              colorText: Colors.white,
+                                              margin: const EdgeInsets.all(16),
+                                              borderRadius: 12,
+                                              duration: const Duration(seconds: 2),
+                                            );
+                                            
+                                            Future.delayed(const Duration(seconds: 2), () {
+                                              controller.clearForm();
+                                              Get.back();
+                                            });
+                                          },
+                                          icon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
+                                          label: const Text(
+                                            "Submit Report",
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: navyColor,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(25),
+                                            ),
+                                            elevation: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF003366),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+              );
+            },
+          ),
+
+          // --- FLOATING NAVIGATION BAR ---
+          Positioned(
+            bottom: 25,
+            left: 20,
+            right: 20,
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(35), // Sudut melengkung penuh (stadium)
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4FA0FF).withOpacity(0.4), // Glow Biru
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 5),
                   ),
-                  elevation: 2,
-                ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // TOMBOL HOME
+                  _buildNavItem(
+                    icon: Icons.home_outlined,
+                    label: "Home",
+                    isActive: false,
+                    onTap: () => Get.offAllNamed(Routes.HOME),
+                  ),
+                  
+                  // TOMBOL REPORT (AKTIF)
+                  _buildNavItem(
+                    icon: Icons.add_circle,
+                    label: "Report",
+                    isActive: true,
+                    onTap: () {}, // Sudah di halaman report, tidak perlu aksi
+                  ),
+                  
+                  // TOMBOL PROFILE
+                  _buildNavItem(
+                    icon: Icons.person_outline,
+                    label: "Profile",
+                    isActive: false,
+                    onTap: () => Get.offAllNamed(Routes.PROFILE),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 30),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- WIDGET HELPER ---
+
+  // Helper untuk Item Navigation Bar
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: isActive
+            ? const EdgeInsets.symmetric(horizontal: 20, vertical: 12)
+            : const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: isActive
+            ? BoxDecoration(
+                color: navyColor,
+                borderRadius: BorderRadius.circular(20),
+              )
+            : null,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isActive ? Colors.white : navyColor,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? Colors.white : navyColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: TextStyle(
-        color: navyColor,
-        fontWeight: FontWeight.bold,
-        fontSize: 13,
+  Widget _buildLabel(String text, {bool isRequired = false, required Color color}) {
+    return RichText(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+        children: isRequired
+            ? [const TextSpan(text: " *", style: TextStyle(color: Colors.red))]
+            : [],
       ),
     );
   }
 
-  InputDecoration _buildInputDecoration(String hint) {
-    return InputDecoration(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
+  // Widget Dropdown Modern
+  Widget _buildModernDropdown({
+    required RxnString value,
+    required String hint,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: navyColor, width: 2),
-      ),
-      hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-      filled: true,
-      fillColor: Colors.white,
+      child: Obx(() => DropdownButtonFormField<String>(
+        value: value.value,
+        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.transparent,
+        ),
+        items: items.map((String val) {
+          return DropdownMenuItem<String>(
+            value: val,
+            child: Text(val),
+          );
+        }).toList(),
+        onChanged: onChanged,
+      )),
     );
   }
 
+  // Widget TextField Modern
+  Widget _buildTextField({required String hint, int maxLines = 1, required Function(String) onChanged}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05), 
+            blurRadius: 10, 
+            offset: const Offset(0, 4)
+          ),
+        ],
+      ),
+      child: TextField(
+        maxLines: maxLines,
+        onChanged: onChanged,
+        style: const TextStyle(fontSize: 14, color: Colors.black87),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.transparent,
+        ),
+      ),
+    );
+  }
+
+  // Toggle Prioritas 
   Widget _buildPriorityButton({
     required String label,
-    required bool isSelected,
+    required bool isActive,
+    required Color activeColor,
+    required Color activeTextColor,
     required VoidCallback onTap,
   }) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          height: 45,
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFE8F0FE) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? const Color(0xFF003366) : const Color(0xFFE0E0E0),
-              width: isSelected ? 2 : 1,
-            ),
+            color: isActive ? activeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: isActive ? Colors.transparent : Colors.white),
+            boxShadow: isActive
+                ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 3))]
+                : [],
           ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? const Color(0xFF003366) : Colors.grey[700],
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive ? activeTextColor : Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
             ),
           ),
         ),
