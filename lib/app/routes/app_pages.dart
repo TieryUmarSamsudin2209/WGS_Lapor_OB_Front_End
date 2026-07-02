@@ -28,7 +28,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.HOME,
-      page: () => const HomePages(),
+      page: () => const HomeView(),
       binding: HomeBinding(),
     ),
     GetPage(

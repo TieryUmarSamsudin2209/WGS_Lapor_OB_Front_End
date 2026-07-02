@@ -1,37 +1,29 @@
 import 'package:get/get.dart';
+// import '../../../routes/app_pages.dart'; // Uncomment nanti
 
 class SplashScreenController extends GetxController {
-  //TODO: Implement SplashScreenController
-
   var progressValue = 0.0.obs;
+  var isLoaded = false.obs;
 
-  final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
-    loadingSection();
+    startAnimation();
   }
 
-  void loadingSection() async {
-    await Future.delayed(Duration(seconds: 2));
-    progressValue.value = 0.3;
-    await Future.delayed(Duration(seconds: 2));
-    progressValue.value = 0.6;
-    await Future.delayed(Duration(seconds: 2));
+  void startAnimation() async {
+    // Jeda sebelum logo dan elemen muncul (Fade In & Slide Up)
+    await Future.delayed(const Duration(milliseconds: 300));
+    isLoaded.value = true;
+
+    for (double i = 0; i <= 1.0; i += 0.015) {
+      await Future.delayed(const Duration(milliseconds: 25));
+      progressValue.value = i;
+    }
+
     progressValue.value = 1.0;
-    await Future.delayed(Duration(milliseconds: 500));
+
+    await Future.delayed(const Duration(milliseconds: 500));
     Get.offNamed('/aktivasi');
   }
-
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
-  void increment() => count.value++;
 }
