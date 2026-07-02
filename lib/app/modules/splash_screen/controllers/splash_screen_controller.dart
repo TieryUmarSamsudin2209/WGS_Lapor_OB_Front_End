@@ -12,7 +12,6 @@ class SplashScreenController extends GetxController {
   }
 
   void startAnimation() async {
-    // Jeda sebelum logo dan elemen muncul (Fade In & Slide Up)
     await Future.delayed(const Duration(milliseconds: 300));
     isLoaded.value = true;
 
@@ -36,6 +35,4 @@ class SplashScreenController extends GetxController {
   void onClose() {
     super.onClose();
   }
-
-  void increment() => count.value++;
 }
