@@ -2,6 +2,10 @@ import 'package:get/get.dart';
 
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/ob/home/bindings/ob_home_binding.dart';
+import '../modules/ob/home/views/ob_home_view.dart';
+import '../modules/ob/profile/bindings/ob_profile_binding.dart';
+import '../modules/ob/profile/views/ob_profile_view.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
 import '../modules/splash_screen/views/splash_screen_view.dart';
 
@@ -22,6 +26,16 @@ class AppPages {
       name: _Paths.SPLASH_SCREEN,
       page: () => const SplashScreenView(),
       binding: SplashScreenBinding(),
+    ),
+    GetPage(
+      name: _Paths.OB_HOME,
+      page: () => const OBHomeView(),
+      binding: ObHomeBinding(),
+    ),
+    GetPage(
+      name: _Paths.OB_PROFILE,
+      page: () => const ObProfileView(),
+      binding: ObProfileBinding(),
     ),
   ];
 }
