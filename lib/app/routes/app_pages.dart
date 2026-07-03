@@ -6,6 +6,8 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
+import '../modules/ob/detail/bindings/ob_detail_binding.dart';
+import '../modules/ob/detail/views/ob_detail_view.dart';
 import '../modules/ob/home/bindings/ob_home_binding.dart';
 import '../modules/ob/home/views/ob_home_view.dart';
 import '../modules/ob/profil/bindings/ob_profil_binding.dart';
@@ -66,6 +68,11 @@ class AppPages {
       name: _Paths.OB_PROFIL,
       page: () => const ObProfilView(),
       binding: ObProfilBinding(),
+    ),
+    GetPage(
+      name: _Paths.OB_DETAIL,
+      page: () => const ObDetailView(),
+      binding: ObDetailBinding(),
     ),
   ];
 }

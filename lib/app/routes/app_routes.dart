@@ -10,8 +10,9 @@ abstract class Routes {
   static const REPORT = _Paths.REPORT;
   static const SPLASH_SCREEN = _Paths.SPLASH_SCREEN;
   static const AKTIVASI = _Paths.AKTIVASI;
-  static const OB_HOME =  _Paths.OB_HOME;
-  static const OB_PROFIL =  _Paths.OB_PROFIL;
+  static const OB_HOME = _Paths.OB_HOME;
+  static const OB_PROFIL = _Paths.OB_PROFIL;
+  static const OB_DETAIL = _Paths.OB_DETAIL;
 }
 
 abstract class _Paths {
@@ -25,4 +26,5 @@ abstract class _Paths {
   static const AKTIVASI = '/aktivasi';
   static const OB_HOME = '/ob-home';
   static const OB_PROFIL = '/ob-profil';
+  static const OB_DETAIL = '/ob-detail';
 }
