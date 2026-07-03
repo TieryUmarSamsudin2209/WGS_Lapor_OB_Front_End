@@ -60,7 +60,7 @@ class BottomNavigationLayout extends StatelessWidget {
                 icon: Icons.add_circle,
                 label: 'Report',
                 isActive: false,
-                onTap: () => Get.toNamed(Routes.REPORT),
+                onTap: () => Get.offNamed(Routes.REPORT),
                 navyColor: navyColor,
               ),
             ),
@@ -69,7 +69,7 @@ class BottomNavigationLayout extends StatelessWidget {
                 icon: Icons.person_outline,
                 label: 'Profile',
                 isActive: false,
-                onTap: () => Get.toNamed(Routes.PROFILE),
+                onTap: () => Get.offNamed(Routes.PROFILE),
                 navyColor: navyColor,
               ),
             ),
@@ -263,7 +263,7 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => Get.toNamed(Routes.PROFILE),
+                      onTap: () => Get.offNamed(Routes.PROFILE),
                       child: const Text(
                         'Lihat semua',
                         style: TextStyle(

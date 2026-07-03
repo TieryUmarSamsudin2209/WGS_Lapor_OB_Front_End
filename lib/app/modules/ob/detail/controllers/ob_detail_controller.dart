@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../routes/app_pages.dart';
+
 class ObDetailController extends GetxController {
   var pageState = 'initial'.obs;
   var isDetailExpanded = true.obs;
@@ -30,13 +32,13 @@ class ObDetailController extends GetxController {
   void completeReport() {
     Get.snackbar('Sukses', 'Laporan berhasil diselesaikan',
         backgroundColor: Colors.green, colorText: Colors.white);
-    Get.offNamed('/home');
+    Get.offNamed(Routes.OB_HOME);
   }
 
   void confirmReject() {
     Get.snackbar('Ditolak', 'Laporan berhasil ditolak',
         backgroundColor: Colors.red, colorText: Colors.white);
-    Get.offNamed('/home');
+    Get.offNamed(Routes.OB_HOME);
   }
 
   Future<void> pickImage(ImageSource source) async {

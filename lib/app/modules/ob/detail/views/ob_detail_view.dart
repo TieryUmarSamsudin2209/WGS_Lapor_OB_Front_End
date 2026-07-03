@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controllers/ob_detail_controller.dart';
+import '../../../../routes/app_pages.dart';
 
 class ObDetailView extends GetView<ObDetailController> {
   const ObDetailView({super.key});
@@ -20,7 +21,7 @@ class ObDetailView extends GetView<ObDetailController> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.offNamed('/home'),
+          onPressed: () => Get.offNamed(Routes.OB_HOME),
         ),
         title: const Text(
           'Detail Laporan',
@@ -64,10 +65,6 @@ class ObDetailView extends GetView<ObDetailController> {
       ),
     );
   }
-
-  // ==========================================
-  // WIDGET WIDGET BAGIAN
-  // ==========================================
 
   // 1. CARD INFORMASI UTAMA
   Widget _buildMainDetailCard() {
@@ -367,7 +364,11 @@ class ObDetailView extends GetView<ObDetailController> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Center(
-                  child: Icon(Icons.image_outlined, size: 40, color: Colors.grey),
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 40,
+                    color: Colors.grey,
+                  ),
                 ),
               );
             }
@@ -387,12 +388,16 @@ class ObDetailView extends GetView<ObDetailController> {
           Obx(() {
             return Row(
               children: [
-                ...controller.actionPhotos.asMap().entries.map((entry) => Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: _buildPhotoThumbnail(path: entry.value, index: entry.key),
-                )),
-                if (controller.actionPhotos.length < 3)
-                  _buildEmptyPhotoAdd(),
+                ...controller.actionPhotos.asMap().entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: _buildPhotoThumbnail(
+                      path: entry.value,
+                      index: entry.key,
+                    ),
+                  ),
+                ),
+                if (controller.actionPhotos.length < 3) _buildEmptyPhotoAdd(),
               ],
             );
           }),
@@ -493,7 +498,10 @@ class ObDetailView extends GetView<ObDetailController> {
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.camera_alt, color: Colors.blue),
               ),
               title: const Text('Kamera'),
@@ -505,7 +513,10 @@ class ObDetailView extends GetView<ObDetailController> {
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.purple[50], shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: Colors.purple[50],
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.photo_library, color: Colors.purple),
               ),
               title: const Text('Galeri'),
@@ -663,7 +674,10 @@ class ObDetailView extends GetView<ObDetailController> {
             right: -4,
             child: Container(
               padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.close, size: 10, color: Colors.white),
             ),
           ),
@@ -686,7 +700,9 @@ class ObDetailView extends GetView<ObDetailController> {
           ),
           borderRadius: BorderRadius.circular(6),
         ),
-        child: const Center(child: Icon(Icons.add, size: 16, color: Colors.grey)),
+        child: const Center(
+          child: Icon(Icons.add, size: 16, color: Colors.grey),
+        ),
       ),
     );
   }

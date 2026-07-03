@@ -8,6 +8,10 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/ob/detail/bindings/ob_detail_binding.dart';
 import '../modules/ob/detail/views/ob_detail_view.dart';
+import '../modules/ob/home/bindings/ob_home_binding.dart';
+import '../modules/ob/home/views/ob_home_view.dart';
+import '../modules/ob/profil/bindings/ob_profil_binding.dart';
+import '../modules/ob/profil/views/ob_profil_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/report/bindings/report_binding.dart';
@@ -32,16 +36,25 @@ class AppPages {
       name: _Paths.HOME,
       page: () => const HomeView(),
       binding: HomeBinding(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: _Paths.OB_HOME,
+      page: () => const OBHomeView(),
+      binding: ObHomeBinding(),
+      transition: Transition.fade,
     ),
     GetPage(
       name: _Paths.PROFILE,
       page: () => const ProfilePage(),
       binding: ProfileBinding(),
+      transition: Transition.fade,
     ),
     GetPage(
       name: _Paths.REPORT,
       page: () => const ReportPage(),
       binding: ReportBinding(),
+      transition: Transition.fade,
     ),
     GetPage(
       name: _Paths.SPLASH_SCREEN,
@@ -58,6 +71,11 @@ class AppPages {
       name: Routes.OB_DETAIL,
       page: () => const ObDetailView(),
       binding: ObDetailBinding(),
+    ),
+    GetPage(
+      name: Routes.OB_PROFIL,
+      page: () => const ObProfilView(),
+      binding: ObProfilBinding(),
     ),
   ];
 }

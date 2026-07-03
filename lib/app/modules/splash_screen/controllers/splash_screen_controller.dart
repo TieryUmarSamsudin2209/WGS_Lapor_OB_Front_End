@@ -12,17 +12,17 @@ class SplashScreenController extends GetxController {
   }
 
   void startAnimation() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 200));
     isLoaded.value = true;
 
-    for (double i = 0; i <= 1.0; i += 0.015) {
-      await Future.delayed(const Duration(milliseconds: 25));
+    for (double i = 0; i <= 1.0; i += 0.045) {
+      await Future.delayed(const Duration(milliseconds: 16));
       progressValue.value = i;
     }
 
     progressValue.value = 1.0;
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 200));
     final String fragment =
         Uri.base.fragment; 
     final String path = Uri.base.path; 
@@ -36,7 +36,7 @@ class SplashScreenController extends GetxController {
         current.contains('detail');
 
     if (!isDetailDeepLink) {
-      Get.offNamed(Routes.OB_DETAIL);
+      Get.offNamed(Routes.AKTIVASI);
     }
   }
 

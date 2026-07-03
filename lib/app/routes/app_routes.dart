@@ -10,6 +10,8 @@ abstract class Routes {
   static const SPLASH_SCREEN = _Paths.SPLASH_SCREEN;
   static const AKTIVASI = _Paths.AKTIVASI;
   static const OB_DETAIL = _Paths.OB_DETAIL;
+  static const OB_HOME = _Paths.OB_HOME;
+  static const OB_PROFIL = _Paths.OB_PROFIL;
 }
 
 abstract class _Paths {
@@ -21,6 +23,8 @@ abstract class _Paths {
   static const SPLASH_SCREEN = '/splash-screen';
   static const AKTIVASI = '/aktivasi';
 
-  // Add missing path segments used by OB_DETAIL
+  // OB module paths
   static const OB_DETAIL = '/ob/detail';
+  static const OB_HOME = '/ob/home';
+  static const OB_PROFIL = '/ob/profil';
 }
