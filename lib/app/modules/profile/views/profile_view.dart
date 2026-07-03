@@ -190,7 +190,9 @@ class ProfilePage extends StatelessWidget {
 
                       const SizedBox(height: 12),
 
-                      _buildLogoutButton(),
+                      _LogoutButton(
+                        onPressed: () => Get.offAllNamed(Routes.LOGIN),
+                      ),
                       
                       const SizedBox(height: 110),
                     ],
@@ -283,31 +285,6 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: () => Get.offAllNamed(Routes.LOGIN),
-        icon: const Icon(Icons.logout_rounded, size: 28),
-        label: const Text(
-          "Log Out",
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFA11E1E),
-          side: const BorderSide(color: Color(0xFFA11E1E), width: 1.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
       ),
     );
   }
@@ -488,4 +465,35 @@ class ProfilePage extends StatelessWidget {
   }
 
   // Helper untuk Item Navigation Bar (sama seperti ReportPage)
+}
+
+class _LogoutButton extends StatelessWidget {
+  const _LogoutButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.logout_rounded, size: 28),
+        label: const Text(
+          "Log Out",
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFA11E1E),
+          side: const BorderSide(color: Color(0xFFA11E1E), width: 1.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+      ),
+    );
+  }
 }
