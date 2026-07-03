@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../shared/widgets/custom_alert.dart';
 import '../controllers/ob_checklist_controller.dart';
 
 class ObChecklistView extends GetView<ObChecklistController> {
@@ -402,6 +403,31 @@ class _ChecklistDetailPopup extends StatelessWidget {
 
             // ── Photo Grid ───────────────────────────────────────
             Obx(() => _buildPhotoGrid(context, item)),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: _submitDetail,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F4C81),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Kirim',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -409,6 +435,62 @@ class _ChecklistDetailPopup extends StatelessWidget {
   }
 
   // ─── Status button ─────────────────────────────────────────────────────
+  void _submitDetail() {
+    try {
+      final validationMessage = controller.validateItemDetail(item);
+      if (validationMessage != null) {
+        _showValidationError();
+        return;
+      }
+
+      controller.submitItemDetail(item);
+      final alertContext = Get.overlayContext ?? Get.context;
+      Get.back();
+
+      if (alertContext == null) return;
+
+      Future.delayed(const Duration(milliseconds: 150), () {
+        _showAutoDismissAlert(alertContext, isSuccess: true);
+      });
+    } catch (_) {
+      _showAutoDismissAlert(
+        Get.overlayContext ?? Get.context,
+        isSuccess: false,
+        description: 'Terjadi kesalahan. Silakan coba lagi',
+      );
+    }
+  }
+
+  void _showValidationError() {
+    _showAutoDismissAlert(
+      Get.overlayContext ?? Get.context,
+      isSuccess: false,
+      description: 'Mohon isi catatan dan bukti foto',
+    );
+  }
+
+  void _showAutoDismissAlert(
+    BuildContext? alertContext, {
+    required bool isSuccess,
+    String? description,
+  }) {
+    if (alertContext == null) return;
+
+    var alertDismissed = false;
+    CustomAlert.show(
+      alertContext,
+      isSuccess: isSuccess,
+      description: description,
+    ).whenComplete(() {
+      alertDismissed = true;
+    });
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!alertDismissed) {
+        Get.back();
+      }
+    });
+  }
+
   Widget _buildStatusButton(ChecklistItem item, String statusValue) {
     final style = _statusStyle(statusValue);
 

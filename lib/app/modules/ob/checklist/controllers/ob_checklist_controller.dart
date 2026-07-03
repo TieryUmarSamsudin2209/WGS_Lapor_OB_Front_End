@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../routes/app_pages.dart';
+import '../../../../shared/widgets/custom_alert.dart';
 
 /// ==================== MODELS ====================
 
@@ -141,6 +142,27 @@ class ObChecklistController extends GetxController {
     item.note.value = noteController.text;
   }
 
+  String? validateItemDetail(ChecklistItem item) {
+    final isNoteEmpty = noteController.text.trim().isEmpty;
+    final isPhotoEmpty = item.photos.isEmpty;
+
+    if (isNoteEmpty && isPhotoEmpty) {
+      return 'Catatan dan bukti foto wajib diisi.';
+    }
+    if (isNoteEmpty) {
+      return 'Catatan wajib diisi.';
+    }
+    if (isPhotoEmpty) {
+      return 'Bukti foto wajib diisi.';
+    }
+
+    return null;
+  }
+
+  void submitItemDetail(ChecklistItem item) {
+    saveNote(item);
+  }
+
   /// Pick photo for a checklist item
   Future<void> pickItemPhoto(ChecklistItem item, ImageSource source) async {
     try {
@@ -152,17 +174,40 @@ class ObChecklistController extends GetxController {
         if (item.photos.length < 3) {
           item.photos.add(image.path);
         } else {
-          Get.snackbar('Batas Maksimal', 'Maksimal 3 foto per item.');
+          _showErrorAlert('Maksimal 3 foto per item.');
         }
       }
-    } catch (e) {
-      Get.snackbar('Error', 'Gagal mengambil foto: $e');
+    } catch (_) {
+      _showErrorAlert('Gagal mengambil foto. Silakan coba lagi.');
     }
   }
 
   /// Remove photo from item
   void removeItemPhoto(ChecklistItem item, int index) {
-    item.photos.removeAt(index);
+    try {
+      item.photos.removeAt(index);
+    } catch (_) {
+      _showErrorAlert('Gagal menghapus foto. Silakan coba lagi.');
+    }
+  }
+
+  void _showErrorAlert(String description) {
+    final alertContext = Get.overlayContext ?? Get.context;
+    if (alertContext == null) return;
+
+    var alertDismissed = false;
+    CustomAlert.show(
+      alertContext,
+      isSuccess: false,
+      description: description,
+    ).whenComplete(() {
+      alertDismissed = true;
+    });
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!alertDismissed) {
+        Get.back();
+      }
+    });
   }
 
   /// Navigation

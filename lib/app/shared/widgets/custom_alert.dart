@@ -8,8 +8,12 @@ import 'package:flutter/material.dart';
 ///   CustomAlert.show(context, isSuccess: false);
 ///
 class CustomAlert {
-  static void show(BuildContext context, {required bool isSuccess}) {
-    showGeneralDialog(
+  static Future<void> show(
+    BuildContext context, {
+    required bool isSuccess,
+    String? description,
+  }) {
+    return showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
@@ -27,7 +31,10 @@ class CustomAlert {
                 borderRadius: BorderRadius.circular(30),
               ),
               contentPadding: EdgeInsets.zero,
-              content: _AlertContent(isSuccess: isSuccess),
+              content: _AlertContent(
+                isSuccess: isSuccess,
+                description: description,
+              ),
             ),
           ),
         );
@@ -39,7 +46,11 @@ class CustomAlert {
 /// ─── Alert content ──────────────────────────────────────────────────────────
 class _AlertContent extends StatelessWidget {
   final bool isSuccess;
-  const _AlertContent({required this.isSuccess});
+  final String? description;
+  const _AlertContent({
+    required this.isSuccess,
+    this.description,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +65,11 @@ class _AlertContent extends StatelessWidget {
     final centerIcon =
         isSuccess ? Icons.check_rounded : Icons.close_rounded;
 
+    final descriptionText = description;
+
     return Container(
       width: 250,
-      height: 280,
+      height: descriptionText == null ? 280 : 320,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -75,6 +88,22 @@ class _AlertContent extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
+          if (descriptionText != null) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                descriptionText,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
