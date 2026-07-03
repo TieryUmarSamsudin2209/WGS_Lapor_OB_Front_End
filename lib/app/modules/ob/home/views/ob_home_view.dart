@@ -400,260 +400,308 @@ class ObHomePage extends StatelessWidget {
                   ),
                   Container(
                     margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
-                    width: double.infinity,
-                    padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Color(0xFFFFFFFF),
                       borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Color(0xFF878787))
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          width: double.infinity,
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFFFFFF),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border(
+                              left: BorderSide(
+                                color: Color(0xFF0D3A62),
+                                width: 6,
+                              ),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFFFDAD6),
-                                  borderRadius: BorderRadius.circular(50)
-                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Icon(Icons.error_rounded, color: Color(0xFF93000A), size: 20,),
-                                    SizedBox(width: 4,),
-                                    Text('URGENT', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF93000A), fontSize: 15))
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFFFDAD6),
+                                        borderRadius: BorderRadius.circular(50)
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.error_rounded, color: Color(0xFF93000A), size: 20,),
+                                          SizedBox(width: 4,),
+                                          Text('URGENT', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF93000A), fontSize: 15))
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFDDECFF),
+                                        borderRadius: BorderRadius.circular(50)
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.sync, color: Color(0xFF00355F), size: 18,),
+                                          SizedBox(width: 4,),
+                                          Text('Belum Diproses', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF00355F), fontSize: 13))
+                                        ],
+                                      ),
+                                    )
                                   ],
                                 ),
                               ),
                               Container(
-                                padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFDDECFF),
-                                  borderRadius: BorderRadius.circular(50)
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.sync, color: Color(0xFF00355F), size: 18,),
-                                    SizedBox(width: 4,),
-                                    Text('Belum Diproses', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF00355F), fontSize: 13))
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('HVAC Leak in Sector 4', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-                              SizedBox(height: 5,),
-                              Text('Water pooling near the main vent in hallway B. Requires immediate attention before floor damage')
-                            ],
-                          ),
-                        ),
-                        Divider(),
-                        Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text('Lihat Detail', style: TextStyle(color: Color(0xFF42474F)),),
-                                    Icon(Icons.chevron_right_outlined, size: 20, color: Color(0xFF42474F),)
-                                  ],
-                                ),
-                                onPressed: () {
-                                  //Handle logic button
-                                },
-                              )
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
-                    width: double.infinity,
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Color(0xFFFFFFFF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFFFFDCC),
-                                  borderRadius: BorderRadius.circular(50)
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.error_rounded, color: Color(0xFFFF8D28), size: 20,),
-                                    SizedBox(width: 4,),
-                                    Text('STANDARD', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFFF8D28), fontSize: 15))
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFDDECFF),
-                                  borderRadius: BorderRadius.circular(50)
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.sync, color: Color(0xFF00355F), size: 18,),
-                                    SizedBox(width: 4,),
-                                    Text('Sedang Diproses', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF00355F), fontSize: 13))
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('HVAC Leak in Sector 4', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-                              SizedBox(height: 5,),
-                              Text('Water pooling near the main vent in hallway B. Requires immediate attention before floor damage')
-                            ],
-                          ),
-                        ),
-                        Divider(),
-                        Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.fromLTRB(10, 4, 10, 4),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFFFD900),
-                                  borderRadius: BorderRadius.circular(5)
-                                ),
+                                margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Kolaborasi', style: TextStyle(fontWeight: FontWeight.w600),)
+                                    Text('HVAC Leak in Sector 4', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    SizedBox(height: 5,),
+                                    Text('Water pooling near the main vent in hallway B. Requires immediate attention before floor damage')
                                   ],
                                 ),
                               ),
-                              TextButton(
+                              Divider(),
+                              Container(
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Text('Lihat Detail', style: TextStyle(color: Color(0xFF42474F)),),
-                                    Icon(Icons.chevron_right_outlined, size: 20, color: Color(0xFF42474F),)
+                                    TextButton(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text('Lihat Detail', style: TextStyle(color: Color(0xFF42474F)),),
+                                          Icon(Icons.chevron_right_outlined, size: 20, color: Color(0xFF42474F),)
+                                        ],
+                                      ),
+                                      onPressed: () {
+                                        //Handle logic button
+                                      },
+                                    )
                                   ],
                                 ),
-                                onPressed: () {
-                                  //Handle logic button
-                                },
                               )
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
                   Container(
                     margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
-                    width: double.infinity,
-                    padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Color(0xFFFFFFFF),
                       borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Color(0xFF878787))
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          width: double.infinity,
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFFFFFF),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border(
+                              left: BorderSide(
+                                color: Color(0xFF0D3A62),
+                                width: 6,
+                              ),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFFFFDCC),
-                                  borderRadius: BorderRadius.circular(50)
-                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Icon(Icons.error_rounded, color: Color(0xFFFF8D28), size: 20,),
-                                    SizedBox(width: 4,),
-                                    Text('STANDARD', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFFF8D28), fontSize: 15))
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFFFFDCC),
+                                        borderRadius: BorderRadius.circular(50)
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.error_rounded, color: Color(0xFFFF8D28), size: 20,),
+                                          SizedBox(width: 4,),
+                                          Text('STANDARD', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFFF8D28), fontSize: 15))
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFDDECFF),
+                                        borderRadius: BorderRadius.circular(50)
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.sync, color: Color(0xFF00355F), size: 18,),
+                                          SizedBox(width: 4,),
+                                          Text('Sedang Diproses', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF00355F), fontSize: 13))
+                                        ],
+                                      ),
+                                    )
                                   ],
                                 ),
                               ),
                               Container(
-                                padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFDDECFF),
-                                  borderRadius: BorderRadius.circular(50)
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.sync, color: Color(0xFF00355F), size: 18,),
-                                    SizedBox(width: 4,),
-                                    Text('Belum Diproses', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF00355F), fontSize: 13))
+                                    Text('HVAC Leak in Sector 4', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    SizedBox(height: 5,),
+                                    Text('Water pooling near the main vent in hallway B. Requires immediate attention before floor damage')
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Container(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(10, 4, 10, 4),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFFFD900),
+                                        borderRadius: BorderRadius.circular(5)
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text('Kolaborasi', style: TextStyle(fontWeight: FontWeight.w600),)
+                                        ],
+                                      ),
+                                    ),
+                                    TextButton(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text('Lihat Detail', style: TextStyle(color: Color(0xFF42474F)),),
+                                          Icon(Icons.chevron_right_outlined, size: 20, color: Color(0xFF42474F),)
+                                        ],
+                                      ),
+                                      onPressed: () {
+                                        //Handle logic button
+                                      },
+                                    )
                                   ],
                                 ),
                               )
                             ],
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Color(0xFF878787))
+                    ),
+                    child: Column(
+                      children: [
                         Container(
-                          margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                          width: double.infinity,
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFFFFFF),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border(
+                              left: BorderSide(
+                                color: Color(0xFF0D3A62),
+                                width: 6,
+                              ),
+                            ),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('HVAC Leak in Sector 4', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-                              SizedBox(height: 5,),
-                              Text('Water pooling near the main vent in hallway B. Requires immediate attention before floor damage')
-                            ],
-                          ),
-                        ),
-                        Divider(),
-                        Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
+                              Container(
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('Lihat Detail', style: TextStyle(color: Color(0xFF42474F)),),
-                                    Icon(Icons.chevron_right_outlined, size: 20, color: Color(0xFF42474F),)
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFFFFDCC),
+                                        borderRadius: BorderRadius.circular(50)
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.error_rounded, color: Color(0xFFFF8D28), size: 20,),
+                                          SizedBox(width: 4,),
+                                          Text('STANDARD', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFFF8D28), fontSize: 15))
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.fromLTRB(10, 3, 10, 3),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFDDECFF),
+                                        borderRadius: BorderRadius.circular(50)
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.sync, color: Color(0xFF00355F), size: 18,),
+                                          SizedBox(width: 4,),
+                                          Text('Belum Diproses', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF00355F), fontSize: 13))
+                                        ],
+                                      ),
+                                    )
                                   ],
                                 ),
-                                onPressed: () {
-                                  //Handle logic button
-                                },
+                              ),
+                              Container(
+                                margin: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('HVAC Leak in Sector 4', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    SizedBox(height: 5,),
+                                    Text('Water pooling near the main vent in hallway B. Requires immediate attention before floor damage')
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Container(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text('Lihat Detail', style: TextStyle(color: Color(0xFF42474F)),),
+                                          Icon(Icons.chevron_right_outlined, size: 20, color: Color(0xFF42474F),)
+                                        ],
+                                      ),
+                                      onPressed: () {
+                                        //Handle logic button
+                                      },
+                                    )
+                                  ],
+                                ),
                               )
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
