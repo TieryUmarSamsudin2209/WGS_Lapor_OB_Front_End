@@ -210,6 +210,9 @@ class ObProfilView extends GetView<ObProfilController> {
                             );
                           }),
 
+                          const SizedBox(height: 4),
+                          _LogoutButton(onPressed: controller.logout),
+
                           const SizedBox(height: 110), // Bottom spacer for floating bar
                         ],
                       ),
@@ -270,6 +273,37 @@ class ObProfilView extends GetView<ObProfilController> {
                 },
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LogoutButton extends StatelessWidget {
+  const _LogoutButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.logout_rounded, size: 28),
+        label: const Text(
+          'Log Out',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFA11E1E),
+          side: const BorderSide(color: Color(0xFFA11E1E), width: 1.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
         ),
       ),
     );

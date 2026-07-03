@@ -116,6 +116,10 @@ class ObProfilController extends GetxController {
     Get.toNamed(Routes.OB_CHECKLIST);
   }
 
+  void logout() {
+    Get.offAllNamed(Routes.LOGIN);
+  }
+
   void openReport(ReportModel report) {
     Get.snackbar('Detail', 'Open ${report.id}');
   }

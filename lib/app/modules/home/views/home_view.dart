@@ -109,13 +109,19 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Beranda',
-                      style: TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Beranda',
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                        _buildNotificationButton(),
+                      ],
                     ),
                     const SizedBox(height: 25),
                     const Text(
@@ -337,6 +343,33 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationButton() {
+    return Tooltip(
+      message: 'Notifikasi',
+      child: Material(
+        color: const Color(0xFF0D3A62),
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: () => Get.snackbar(
+            'Notifikasi',
+            'Belum ada notifikasi baru',
+            snackPosition: SnackPosition.TOP,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          child: const SizedBox(
+            width: 38,
+            height: 38,
+            child: Icon(
+              Icons.notifications_none_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
         ),
       ),
     );

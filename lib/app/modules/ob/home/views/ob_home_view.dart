@@ -52,12 +52,18 @@ class ObHomePage extends GetView<ObHomeController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Beranda',
-                    style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFFFFFFF)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Beranda',
+                        style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFFFFFF)),
+                      ),
+                      _buildNotificationButton(),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   const Text(
@@ -156,6 +162,33 @@ class ObHomePage extends GetView<ObHomeController> {
             ),
             const SizedBox(height: 110), // bottom spacer for floating nav
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationButton() {
+    return Tooltip(
+      message: 'Notifikasi',
+      child: Material(
+        color: const Color(0xFF0D3A62),
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: () => Get.snackbar(
+            'Notifikasi',
+            'Belum ada notifikasi baru',
+            snackPosition: SnackPosition.TOP,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          child: const SizedBox(
+            width: 38,
+            height: 38,
+            child: Icon(
+              Icons.notifications_none_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
         ),
       ),
     );
