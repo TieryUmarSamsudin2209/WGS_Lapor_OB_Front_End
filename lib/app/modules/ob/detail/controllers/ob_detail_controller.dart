@@ -26,11 +26,6 @@ class ObDetailController extends GetxController {
   }
 
   void completeReport() {
-    pageState.value = 'completed';
-    isDetailExpanded.value = false;
-  }
-
-  void finishAndGoBack() {
     Get.snackbar('Sukses', 'Laporan berhasil diselesaikan',
         backgroundColor: Colors.green, colorText: Colors.white);
     Get.offNamed('/home');
@@ -39,7 +34,7 @@ class ObDetailController extends GetxController {
   void confirmReject() {
     Get.snackbar('Ditolak', 'Laporan berhasil ditolak',
         backgroundColor: Colors.red, colorText: Colors.white);
-    Get.back();
+    Get.offNamed('/home');
   }
 
   void toggleDetailExpand() {

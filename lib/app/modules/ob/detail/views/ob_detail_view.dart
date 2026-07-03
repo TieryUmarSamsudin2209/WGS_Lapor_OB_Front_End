@@ -32,7 +32,7 @@ class ObDetailView extends GetView<ObDetailController> {
           children: [
             // 1. CARD DETAIL UTAMA
             _buildMainDetailCard(),
-            
+
             const SizedBox(height: 15),
 
             // 2. FORM AKSI (Hanya muncul jika state 'working' atau 'rejecting')
@@ -86,7 +86,10 @@ class ObDetailView extends GetView<ObDetailController> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: urgentRed.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -111,14 +114,21 @@ class ObDetailView extends GetView<ObDetailController> {
                       return Padding(
                         padding: const EdgeInsets.only(left: 6),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF57C00).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.help, size: 8, color: const Color(0xFFF57C00)),
+                              Icon(
+                                Icons.help,
+                                size: 8,
+                                color: const Color(0xFFF57C00),
+                              ),
                               const SizedBox(width: 4),
                               const Text(
                                 'BUTUH BANTUAN',
@@ -144,7 +154,7 @@ class ObDetailView extends GetView<ObDetailController> {
             ],
           ),
           const SizedBox(height: 15),
-          
+
           // Judul Laporan
           const Text(
             'Kebocoran Pipa Air',
@@ -155,7 +165,7 @@ class ObDetailView extends GetView<ObDetailController> {
             ),
           ),
           const SizedBox(height: 8),
-          
+
           // Lokasi Ringkas (Biru)
           Row(
             children: [
@@ -171,16 +181,20 @@ class ObDetailView extends GetView<ObDetailController> {
               ),
             ],
           ),
-          
+
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 15),
             child: Divider(thickness: 1, color: Color(0xFFEEEEEE)),
           ),
-          
+
           // Info List (Pelapor, Lokasi, Kategori)
           _buildInfoRow(Icons.person_outline, 'Dilaporkan Oleh', 'Alex'),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.location_on_outlined, 'Lokasi', 'HQ Tower A, Lantai 3, Toilet Pria'),
+          _buildInfoRow(
+            Icons.location_on_outlined,
+            'Lokasi',
+            'HQ Tower A, Lantai 3, Toilet Pria',
+          ),
           const SizedBox(height: 12),
           _buildInfoRow(Icons.edit_outlined, 'Kategori', 'Plumbing (Pipa)'),
 
@@ -193,20 +207,32 @@ class ObDetailView extends GetView<ObDetailController> {
                   const SizedBox(height: 25),
                   const Text(
                     'DESKRIPSI LAPORAN',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Pipa di bawah wastafel bocor parah, air meluap ke area lorong utama. Segera perbaiki sebelum licin dan membahayakan karyawan yang lewat. Pastikan membawa kunci pipa dan sealant cadangan.',
-                    style: TextStyle(fontSize: 13, color: Colors.black87, height: 1.5),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 25),
                   const Text(
                     'BUKTI FOTO',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Bukti Foto dari User (Gambar dummy app)
                   Stack(
                     children: [
@@ -223,26 +249,38 @@ class ObDetailView extends GetView<ObDetailController> {
                         bottom: 10,
                         right: 10,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(5),
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.search, size: 14, color: Colors.black87),
+                              Icon(
+                                Icons.search,
+                                size: 14,
+                                color: Colors.black87,
+                              ),
                               SizedBox(width: 4),
-                              Text('Klik untuk Perbesar', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              Text(
+                                'Klik untuk Perbesar',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ],
               );
             } else {
-              // Jika ditutup (collapsed) tampilkan tombol Lihat Selengkapnya
               return Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: GestureDetector(
@@ -264,8 +302,11 @@ class ObDetailView extends GetView<ObDetailController> {
     );
   }
 
-  // 2. FORM AKSI (Ungu)
-  Widget _buildActionForm({required String titleText, required String hintText, required String photoLabel}) {
+  Widget _buildActionForm({
+    required String titleText,
+    required String hintText,
+    required String photoLabel,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -278,7 +319,11 @@ class ObDetailView extends GetView<ObDetailController> {
         children: [
           Text(
             titleText,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 10),
           Container(
@@ -301,17 +346,21 @@ class ObDetailView extends GetView<ObDetailController> {
           const SizedBox(height: 20),
           Text(
             photoLabel,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 10),
-          
+
           // Gambar Besar Preview
           Stack(
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.network(
-                  'https://i.pinimg.com/736x/21/df/b2/21dfb25d0c75cc46927eb21516e45398.jpg', // Placeholder wastafel selesai
+                  'https://i.pinimg.com/736x/21/df/b2/21dfb25d0c75cc46927eb21516e45398.jpg', 
                   width: double.infinity,
                   height: 150,
                   fit: BoxFit.cover,
@@ -322,19 +371,27 @@ class ObDetailView extends GetView<ObDetailController> {
                 left: 10,
                 child: Row(
                   children: [
-                    const Icon(Icons.location_on_outlined, color: Colors.white, size: 14),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Toilet Pria - Wastafel 02',
-                      style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 11, fontWeight: FontWeight.w600),
-                    )
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
           const SizedBox(height: 10),
-          
+
           // Thumbnail Foto
           Row(
             children: [
@@ -346,13 +403,12 @@ class ObDetailView extends GetView<ObDetailController> {
               const SizedBox(width: 10),
               _buildEmptyPhotoAdd(),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  // 3. CARD TOMBOL AKSI BAWAH
   Widget _buildBottomActionButtons() {
     return Container(
       width: double.infinity,
@@ -362,83 +418,64 @@ class ObDetailView extends GetView<ObDetailController> {
         borderRadius: BorderRadius.circular(15),
       ),
       child: Obx(() {
-        // STATE COMPLETED — setelah konfirmasi selesai, 2 tombol bawah hilang
-        if (controller.pageState.value == 'completed') {
-          return Column(
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 20),
-                    SizedBox(width: 8),
-                    Text('Laporan Selesai',
-                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildSolidButton('Kembali ke Beranda', navyColor, () => controller.finishAndGoBack()),
-            ],
-          );
-        }
-        // STATE REJECTING
-        if (controller.pageState.value == 'rejecting') {
-          return Column(
-            children: [
-              _buildSolidButton('Konfirmasi Tolak', urgentRed, () => controller.confirmReject()),
-            ],
-          );
-        }
-        // STATE INITIAL — hanya 2 tombol: Kerjakan + Butuh Bantuan
         if (controller.pageState.value == 'initial') {
           return Column(
             children: [
-              _buildSolidButton('Kerjakan Laporan', navyColor, () => controller.setWorking()),
+              _buildSolidButton(
+                'Kerjakan Laporan',
+                navyColor,
+                () => controller.setWorking(),
+              ),
               const SizedBox(height: 10),
-              _buildOutlineButton('Butuh Bantuan', () => controller.toggleNeedHelp(),
-                  icon: controller.isNeedHelp.value ? Icons.help : Icons.help_outline,
-                  isActive: controller.isNeedHelp.value),
+              _buildOutlineButton(
+                'Butuh Bantuan',
+                () => controller.toggleNeedHelp(),
+                icon: controller.isNeedHelp.value
+                    ? Icons.help
+                    : Icons.help_outline,
+                isActive: controller.isNeedHelp.value,
+              ),
+            ],
+          );
+        } else if (controller.pageState.value == 'working') {
+          return Column(
+            children: [
+              _buildSolidButton(
+                'Selesaikan Laporan',
+                navyColor,
+                () => controller.completeReport(),
+              ),
+              const SizedBox(height: 10),
+              _buildSolidButton(
+                'Tolak Laporan',
+                urgentRed,
+                () => controller.setRejecting(),
+              ),
+              const SizedBox(height: 10),
+              _buildOutlineButton(
+                'Butuh Bantuan',
+                () => controller.toggleNeedHelp(),
+                icon: controller.isNeedHelp.value
+                    ? Icons.help
+                    : Icons.help_outline,
+                isActive: controller.isNeedHelp.value,
+              ),
+            ],
+          );
+        } else if (controller.pageState.value == 'rejecting') {
+          return Column(
+            children: [
+              _buildSolidButton(
+                'Konfirmasi Tolak',
+                urgentRed,
+                () => controller.confirmReject(),
+                icon: Icons.block,
+              ),
             ],
           );
         }
-        // STATE WORKING — muncul setelah klik Kerjakan Laporan
-        return Column(
-          children: [
-            _buildSolidButton('Selesaikan Laporan', navyColor, () => _showCompleteConfirmDialog()),
-            const SizedBox(height: 10),
-            _buildSolidButton('Tolak Laporan', urgentRed, () => controller.setRejecting()),
-            const SizedBox(height: 10),
-            _buildOutlineButton('Butuh Bantuan', () => controller.toggleNeedHelp(),
-                icon: controller.isNeedHelp.value ? Icons.help : Icons.help_outline,
-                isActive: controller.isNeedHelp.value),
-          ],
-        );
+        return const SizedBox.shrink();
       }),
-    );
-  }
-
-  void _showCompleteConfirmDialog() {
-    Get.defaultDialog(
-      title: 'Selesaikan Laporan',
-      titlePadding: const EdgeInsets.only(top: 20),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      middleText: 'Yakin ingin menyelesaikan laporan ini?',
-      textConfirm: 'Ya, Selesaikan',
-      textCancel: 'Batal',
-      confirmTextColor: Colors.white,
-      buttonColor: navyColor,
-      cancelTextColor: navyColor,
-      onConfirm: () {
-        Get.back();
-        controller.completeReport();
-      },
     );
   }
 
@@ -460,24 +497,41 @@ class ObDetailView extends GetView<ObDetailController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              ),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
 
-  Widget _buildSolidButton(String text, Color color, VoidCallback onTap, {IconData? icon}) {
+  Widget _buildSolidButton(
+    String text,
+    Color color,
+    VoidCallback onTap, {
+    IconData? icon,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 45,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           elevation: 0,
         ),
         onPressed: onTap,
@@ -488,16 +542,31 @@ class ObDetailView extends GetView<ObDetailController> {
               Icon(icon, size: 16, color: Colors.white),
               const SizedBox(width: 6),
             ],
-            Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildOutlineButton(String text, VoidCallback onTap, {IconData? icon, bool isActive = false, Color activeColor = const Color(0xFFF57C00)}) {
+  Widget _buildOutlineButton(
+    String text,
+    VoidCallback onTap, {
+    IconData? icon,
+    bool isActive = false,
+    Color activeColor = const Color(0xFFF57C00),
+  }) {
     final borderColor = isActive ? activeColor : Colors.grey.shade300;
-    final bgColor = isActive ? activeColor.withOpacity(0.1) : Colors.transparent;
+    final bgColor = isActive
+        ? activeColor.withOpacity(0.1)
+        : Colors.transparent;
     final fgColor = isActive ? activeColor : Colors.black87;
     final usedIcon = icon ?? Icons.help_outline;
     return SizedBox(
@@ -507,7 +576,9 @@ class ObDetailView extends GetView<ObDetailController> {
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: borderColor, width: 1.5),
           backgroundColor: bgColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         onPressed: onTap,
         child: Row(
@@ -515,7 +586,14 @@ class ObDetailView extends GetView<ObDetailController> {
           children: [
             Icon(usedIcon, size: 16, color: fgColor),
             const SizedBox(width: 6),
-            Text(text, style: TextStyle(color: fgColor, fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(
+              text,
+              style: TextStyle(
+                color: fgColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ],
         ),
       ),
@@ -527,13 +605,19 @@ class ObDetailView extends GetView<ObDetailController> {
       width: 35,
       height: 35,
       decoration: BoxDecoration(
-        border: Border.all(color: isActive ? Colors.blue : Colors.transparent, width: 2),
+        border: Border.all(
+          color: isActive ? Colors.blue : Colors.transparent,
+          width: 2,
+        ),
         borderRadius: BorderRadius.circular(6),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: hasImage
-            ? Image.network('https://i.pinimg.com/736x/21/df/b2/21dfb25d0c75cc46927eb21516e45398.jpg', fit: BoxFit.cover)
+            ? Image.network(
+                'https://i.pinimg.com/736x/21/df/b2/21dfb25d0c75cc46927eb21516e45398.jpg',
+                fit: BoxFit.cover,
+              )
             : Container(color: Colors.grey.shade200),
       ),
     );
@@ -545,12 +629,13 @@ class ObDetailView extends GetView<ObDetailController> {
       height: 35,
       decoration: BoxDecoration(
         color: Colors.transparent,
-        border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+        border: Border.all(
+          color: Colors.grey.shade300,
+          style: BorderStyle.solid,
+        ),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: const Center(
-        child: Icon(Icons.add, size: 16, color: Colors.grey),
-      ),
+      child: const Center(child: Icon(Icons.add, size: 16, color: Colors.grey)),
     );
   }
 }

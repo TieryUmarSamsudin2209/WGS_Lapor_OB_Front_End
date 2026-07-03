@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-// import '../../../routes/app_pages.dart'; // Uncomment nanti
 
 class SplashScreenController extends GetxController {
   var progressValue = 0.0.obs;
@@ -23,15 +22,12 @@ class SplashScreenController extends GetxController {
     progressValue.value = 1.0;
 
     await Future.delayed(const Duration(milliseconds: 500));
-
-    // If user is deep-linking to a route (e.g. /detail on web),
-    // don't force redirect to Aktivasi.
     final String fragment =
-        Uri.base.fragment; // e.g. "detail" when URL is /# /detail
-    final String path = Uri.base.path; // e.g. "/detail" or "/ob/detail"
+        Uri.base.fragment; 
+    final String path = Uri.base.path; 
 
     final String current = Get
-        .currentRoute; // e.g. "/ob/detail" or "/detail" depending on routing mode
+        .currentRoute;
 
     final bool isDetailDeepLink =
         fragment.contains('detail') ||
