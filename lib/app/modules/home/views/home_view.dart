@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../../../routes/app_pages.dart';
+import '../../../shared/widgets/bottom_nav.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -29,102 +30,49 @@ class BottomNavigationLayout extends StatelessWidget {
       padding: const EdgeInsets.only(left: 20, right: 20, bottom: 25),
       child: Container(
         height: 70,
-        padding: const EdgeInsets.all(8), // Jarak dari pinggir putih ke item aktif
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(40),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF4FA0FF).withValues(alpha: 0.3),
+              color: const Color(0xFF4FA0FF).withOpacity(0.3),
               blurRadius: 25,
               spreadRadius: 2,
               offset: const Offset(0, 8),
-            )
+            ),
           ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Item 1: Home (AKTIF)
             Expanded(
-              child: _buildNavItem(
+              child: BottomNavItem(
                 icon: Icons.home_outlined,
                 label: 'Home',
                 isActive: true,
                 onTap: () {},
+                navyColor: navyColor,
               ),
             ),
-            
-            // Item 2: Report
             Expanded(
-              child: _buildNavItem(
-                icon: Icons.add_circle, // Ikon bulat dengan plus di tengah
+              child: BottomNavItem(
+                icon: Icons.add_circle,
                 label: 'Report',
                 isActive: false,
                 onTap: () => Get.toNamed(Routes.REPORT),
+                navyColor: navyColor,
               ),
             ),
-            
-            // Item 3: Profile
             Expanded(
-              child: _buildNavItem(
+              child: BottomNavItem(
                 icon: Icons.person_outline,
                 label: 'Profile',
                 isActive: false,
                 onTap: () => Get.toNamed(Routes.PROFILE),
+                navyColor: navyColor,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: double.infinity,
-        decoration: BoxDecoration(
-          color: isActive ? navyColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(30), // Kapsul melengkung
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isActive ? Colors.white : navyColor,
-              size: 24,
-            ),
-            if (isActive) const SizedBox(width: 6),
-            if (isActive)
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            // Jika tidak aktif, tampilkan teks kecil di bawah ikon? 
-            // Di desain Anda, ikon tidak aktif HANYA icon dan teks kecil di sebelahnya
-            if (!isActive) const SizedBox(width: 6),
-            if (!isActive)
-              Text(
-                label,
-                style: TextStyle(
-                  color: navyColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
           ],
         ),
       ),
@@ -175,37 +123,45 @@ class HomePage extends StatelessWidget {
                       style: TextStyle(fontSize: 13, color: Colors.white70),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Alex Karyawan',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Alex Karyawan',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 25),
                     
                     // TOMBOL LAPORKAN MASALAH
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: navyColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                    Hero(
+                      tag: 'submit-report',
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: navyColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            elevation: 0,
                           ),
-                          elevation: 0,
-                        ),
-                        onPressed: () => Get.toNamed(Routes.REPORT),
-                        icon: Icon(Icons.add, size: 20, color: navyColor),
-                        label: Text(
-                          'Laporkan masalah baru',
-                          style: TextStyle(
-                            color: navyColor, 
-                            fontSize: 15, 
-                            fontWeight: FontWeight.bold
+                          onPressed: () => Get.toNamed(Routes.REPORT),
+                          icon: Icon(Icons.add, size: 20, color: navyColor),
+                          label: Text(
+                            'Laporkan masalah baru',
+                            style: TextStyle(
+                              color: navyColor, 
+                              fontSize: 15, 
+                              fontWeight: FontWeight.bold
+                            ),
                           ),
                         ),
                       ),
@@ -227,20 +183,29 @@ class HomePage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildCategoryItem(
-                          icon: Icons.home_outlined,
-                          label: 'Kebersihan',
-                          onTap: () => Get.toNamed(Routes.REPORT, arguments: 'Plumbing'),
+                        Hero(
+                          tag: 'category-Plumbing',
+                          child: _buildCategoryItem(
+                            icon: Icons.home_outlined,
+                            label: 'Kebersihan',
+                            onTap: () => Get.toNamed(Routes.REPORT, arguments: 'Plumbing'),
+                          ),
                         ),
-                        _buildCategoryItem(
-                          icon: Icons.chair_outlined,
-                          label: 'Peralatan',
-                          onTap: () => Get.toNamed(Routes.REPORT, arguments: 'Furniture'),
+                        Hero(
+                          tag: 'category-Furniture',
+                          child: _buildCategoryItem(
+                            icon: Icons.chair_outlined,
+                            label: 'Peralatan',
+                            onTap: () => Get.toNamed(Routes.REPORT, arguments: 'Furniture'),
+                          ),
                         ),
-                        _buildCategoryItem(
-                          icon: Icons.local_laundry_service_outlined,
-                          label: 'Maintenance',
-                          onTap: () => Get.toNamed(Routes.REPORT, arguments: 'HVAC'),
+                        Hero(
+                          tag: 'category-HVAC',
+                          child: _buildCategoryItem(
+                            icon: Icons.local_laundry_service_outlined,
+                            label: 'Maintenance',
+                            onTap: () => Get.toNamed(Routes.REPORT, arguments: 'HVAC'),
+                          ),
                         ),
                       ],
                     ),
@@ -248,10 +213,13 @@ class HomePage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildCategoryItem(
-                          icon: Icons.home_outlined,
-                          label: 'Miscellaneous',
-                          onTap: () => Get.toNamed(Routes.REPORT, arguments: 'Miscellaneous'),
+                        Hero(
+                          tag: 'category-Miscellaneous',
+                          child: _buildCategoryItem(
+                            icon: Icons.home_outlined,
+                            label: 'Miscellaneous',
+                            onTap: () => Get.toNamed(Routes.REPORT, arguments: 'Miscellaneous'),
+                          ),
                         ),
                         _buildCategoryItem(
                           icon: Icons.chair_outlined,

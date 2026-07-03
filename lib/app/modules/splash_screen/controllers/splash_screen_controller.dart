@@ -24,6 +24,6 @@ class SplashScreenController extends GetxController {
     progressValue.value = 1.0;
 
     await Future.delayed(const Duration(milliseconds: 500));
-    Get.offNamed('/ob-profil'); // Ganti dengan route yang sesuai
+    Get.offNamed('/ob-home'); // Ganti dengan route yang sesuai
   }
 }

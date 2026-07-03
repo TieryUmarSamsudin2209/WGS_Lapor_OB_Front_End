@@ -48,11 +48,11 @@ class ObProfilView extends GetView<ObProfilController> {
                       ),
                     ),
 
-                    // White body container
+                    // Body container
                     Container(
                       width: double.infinity,
                       decoration: const BoxDecoration(
-                        color: Colors.white,
+                        color: _bg,
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(30),
                           topRight: Radius.circular(30),
@@ -534,8 +534,8 @@ class _BottomBar extends StatelessWidget {
           border: Border.all(color: const Color(0xFFC3C9FA), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
+              color: const Color(0xFF2F6FE0).withValues(alpha: 1),
+              blurRadius: 1,
               offset: const Offset(0, 4),
             ),
           ],
@@ -573,7 +573,7 @@ class _BottomBar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
-                    Icon(Icons.add_circle_outline_rounded, color: ObProfilView._navy, size: 22),
+                    Icon(Icons.checklist_rounded, color: ObProfilView._navy, size: 22),
                     const SizedBox(width: 6),
                     const Text(
                       'Checklist',

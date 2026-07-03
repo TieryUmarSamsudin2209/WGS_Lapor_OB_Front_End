@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controllers/report_controller.dart';
-import '../../../routes/app_pages.dart'; 
+import '../../../routes/app_pages.dart';
+import '../../../shared/widgets/bottom_nav.dart';
+import '../../../shared/widgets/custom_alert.dart';
 
 class ReportPage extends StatelessWidget {
   const ReportPage({super.key});
@@ -11,6 +13,14 @@ class ReportPage extends StatelessWidget {
   final Color navyColor = const Color(0xFF003366);
   final Color urgentRed = const Color(0xFFC62828);
   final Color lightPurpleBg = const Color(0xFFF3F5FF);
+
+  static const Map<String, IconData> _categoryIconMap = {
+    'Plumbing': Icons.home_outlined,
+    'Furniture': Icons.chair_outlined,
+    'HVAC': Icons.local_laundry_service_outlined,
+    'Miscellaneous': Icons.home_outlined,
+    'Electrical': Icons.electric_bolt_outlined,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +133,38 @@ class ReportPage extends StatelessWidget {
                                   onChanged: (val) => controller.setCategory(val),
                                 ),
                                 
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 12),
+
+                                // HERO: Kategori terpilih
+                                Obx(() {
+                                  final cat = controller.selectedCategory.value;
+                                  if (cat == null || cat.isEmpty) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Hero(
+                                    tag: 'category-$cat',
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(_categoryIconMap[cat] ?? Icons.help_outline, color: Colors.white, size: 18),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            cat,
+                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+
+                                const SizedBox(height: 12),
 
                                 _buildLabel("Priority Level", color: Colors.white),
                                 const SizedBox(height: 8),
@@ -159,7 +200,7 @@ class ReportPage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.1),
+                                        color: Colors.black.withOpacity(0.1),
                                         spreadRadius: 2,
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
@@ -272,7 +313,7 @@ class ReportPage extends StatelessWidget {
                                             color: Colors.white,
                                             borderRadius: BorderRadius.circular(15),
                                             border: Border.all(
-                                              color: Colors.blue.withValues(alpha: 0.2), 
+                                              color: Colors.blue.withOpacity(0.2), 
                                               width: 1.5
                                             ),
                                           ),
@@ -344,55 +385,50 @@ class ReportPage extends StatelessWidget {
                                       const SizedBox(height: 30),
 
                                       // --- SUBMIT BUTTON ---
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: 50,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () {
-                                            if (controller.selectedCategory.value == null) {
-                                              Get.snackbar(
-                                                "Peringatan",
-                                                "Harap pilih kategori masalah terlebih dahulu.",
-                                                backgroundColor: Colors.orangeAccent,
-                                                colorText: Colors.white,
-                                                snackPosition: SnackPosition.BOTTOM,
-                                                margin: const EdgeInsets.all(16),
-                                                borderRadius: 12,
-                                              );
-                                              return;
-                                            }
-                                            
-                                            Get.snackbar(
-                                              "Laporan Terkirim!",
-                                              "Laporan Anda telah berhasil terkirim.",
-                                              snackPosition: SnackPosition.BOTTOM,
+                                      Hero(
+                                        tag: 'submit-report',
+                                        child: SizedBox(
+                                          width: double.infinity,
+                                          height: 50,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () {
+                                              if (controller.selectedCategory.value == null) {
+                                                Get.snackbar(
+                                                  "Peringatan",
+                                                  "Harap pilih kategori masalah terlebih dahulu.",
+                                                  backgroundColor: Colors.orangeAccent,
+                                                  colorText: Colors.white,
+                                                  snackPosition: SnackPosition.BOTTOM,
+                                                  margin: const EdgeInsets.all(16),
+                                                  borderRadius: 12,
+                                                );
+                                                return;
+                                              }
+
+                                              // ── Custom alert berhasil ──
+                                              CustomAlert.show(context, isSuccess: true);
+
+                                              Future.delayed(const Duration(milliseconds: 1800), () {
+                                                controller.clearForm();
+                                                Get.back();
+                                              });
+                                            },
+                                            icon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
+                                            label: const Text(
+                                              "Submit Report",
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
                                               backgroundColor: navyColor,
-                                              colorText: Colors.white,
-                                              margin: const EdgeInsets.all(16),
-                                              borderRadius: 12,
-                                              duration: const Duration(seconds: 2),
-                                            );
-                                            
-                                            Future.delayed(const Duration(seconds: 2), () {
-                                              controller.clearForm();
-                                              Get.back();
-                                            });
-                                          },
-                                          icon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
-                                          label: const Text(
-                                            "Submit Report",
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(25),
+                                              ),
+                                              elevation: 2,
                                             ),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: navyColor,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(25),
-                                            ),
-                                            elevation: 2,
                                           ),
                                         ),
                                       ),
@@ -423,7 +459,7 @@ class ReportPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20), // Sudut melengkung penuh (stadium)
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4FA0FF).withValues(alpha: 0.4), // Glow Biru
+                    color: const Color(0xFF4FA0FF).withOpacity(0.4), // Glow Biru
                     blurRadius: 20,
                     spreadRadius: 2,
                     offset: const Offset(0, 5),
@@ -433,78 +469,38 @@ class ReportPage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // TOMBOL HOME
-                  _buildNavItem(
-                    icon: Icons.home_outlined,
-                    label: "Home",
-                    isActive: false,
-                    onTap: () => Get.offAllNamed(Routes.HOME),
+                  Expanded(
+                    child: BottomNavItem(
+                      icon: Icons.home_outlined,
+                      label: "Home",
+                      isActive: false,
+                      onTap: () => Get.offAllNamed(Routes.HOME),
+                      navyColor: navyColor,
+                    ),
                   ),
-                  
-                  // TOMBOL REPORT (AKTIF)
-                  _buildNavItem(
-                    icon: Icons.add_circle,
-                    label: "Report",
-                    isActive: true,
-                    onTap: () {}, // Sudah di halaman report, tidak perlu aksi
+                  Expanded(
+                    child: BottomNavItem(
+                      icon: Icons.add_circle,
+                      label: "Report",
+                      isActive: true,
+                      onTap: () {},
+                      navyColor: navyColor,
+                    ),
                   ),
-                  
-                  // TOMBOL PROFILE
-                  _buildNavItem(
-                    icon: Icons.person_outline,
-                    label: "Profile",
-                    isActive: false,
-                    onTap: () => Get.offAllNamed(Routes.PROFILE),
+                  Expanded(
+                    child: BottomNavItem(
+                      icon: Icons.person_outline,
+                      label: "Profile",
+                      isActive: false,
+                      onTap: () => Get.offAllNamed(Routes.PROFILE),
+                      navyColor: navyColor,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // --- WIDGET HELPER ---
-
-  // Helper untuk Item Navigation Bar
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: isActive
-            ? const EdgeInsets.symmetric(horizontal: 20, vertical: 12)
-            : const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: isActive
-            ? BoxDecoration(
-                color: navyColor,
-                borderRadius: BorderRadius.circular(20),
-              )
-            : null,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isActive ? Colors.white : navyColor,
-              size: 24,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? Colors.white : navyColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -534,14 +530,14 @@ class ReportPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.2),
+            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Obx(() => DropdownButtonFormField<String>(
-        initialValue: value.value,
+        value: value.value,
         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -576,7 +572,7 @@ class ReportPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05), 
+            color: Colors.black.withOpacity(0.05), 
             blurRadius: 10, 
             offset: const Offset(0, 4)
           ),
@@ -619,7 +615,7 @@ class ReportPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: isActive ? Colors.transparent : Colors.white),
             boxShadow: isActive
-                ? [BoxShadow(color: const Color.fromARGB(255, 233, 233, 233).withValues(alpha: 0.3), blurRadius: 5, offset: const Offset(0, 3))]
+                ? [BoxShadow(color: const Color.fromARGB(255, 233, 233, 233).withOpacity(0.3), blurRadius: 5, offset: const Offset(0, 3))]
                 : [],
           ),
           alignment: Alignment.center,

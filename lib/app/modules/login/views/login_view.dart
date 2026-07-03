@@ -2,23 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 
-void main() {
-  runApp(const LoginPages());
-}
-
-class LoginPages extends StatelessWidget {
-  const LoginPages({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'sans-serif'),
-      home: const LoginPage(),
-    );
-  }
-}
-
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
@@ -75,13 +58,10 @@ class LoginPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.3),
-                          // Spread radius negatif dan Offset ke bawah (Y positif)
-                          // Memastikan shadow/bayangan HANYA muncul di bagian bawah card
-                          spreadRadius: -10,
-                          blurRadius: 20,
-                          offset: const Offset(0, 25),
-                        ),
+                          color: const Color(0xFF003366).withValues(alpha: 0.06),
+                          blurRadius: 25,
+                          offset: const Offset(0, 10),
+                        )
                       ],
                     ),
                     child: Column(
@@ -112,7 +92,6 @@ class LoginPage extends StatelessWidget {
                         const SizedBox(height: 40),
 
                         _buildLabel("Username"),
-                        // Memanggil input field lama dengan hint kosong agar mirip difoto
                         _buildInputField(hint: "Masukan Username"),
 
                         const SizedBox(height: 20),
@@ -152,7 +131,7 @@ class LoginPage extends StatelessWidget {
                                 elevation: 0,
                                 shadowColor: const Color(
                                   0xFF4FA0FF,
-                                ).withValues(alpha: 0.5),
+                                ).withOpacity(0.5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
                                 ),
@@ -230,7 +209,7 @@ class LoginPage extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE2EAF8), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFCBE7F5).withValues(alpha: 0.8),
+            color: const Color(0xFFCBE7F5).withOpacity(0.8),
             spreadRadius: 0,
             blurRadius: 12,
             offset: const Offset(0, 5),

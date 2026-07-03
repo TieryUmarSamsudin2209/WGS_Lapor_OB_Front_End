@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../../routes/app_pages.dart';
 
 /// ================= MODEL =================
 class ReportModel {
@@ -108,11 +109,11 @@ class ObProfilController extends GetxController {
   }
 
   void goHome() {
-    Get.snackbar('Navigation', 'Go to Home');
+    Get.offAllNamed(Routes.OB_HOME);
   }
 
   void createReport() {
-    Get.snackbar('Action', 'Create Report');
+    Get.toNamed(Routes.OB_CHECKLIST);
   }
 
   void openReport(ReportModel report) {

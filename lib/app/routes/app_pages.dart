@@ -6,18 +6,21 @@ import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
-import '../modules/ob/detail/bindings/ob_detail_binding.dart';
-import '../modules/ob/detail/views/ob_detail_view.dart';
 import '../modules/ob/home/bindings/ob_home_binding.dart';
 import '../modules/ob/home/views/ob_home_view.dart';
-import '../modules/ob/profil/bindings/ob_profil_binding.dart';
-import '../modules/ob/profil/views/ob_profil_view.dart';
+import '../modules/ob/detail/bindings/ob_detail_binding.dart';
+import '../modules/ob/detail/views/ob_detail_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/report/bindings/report_binding.dart';
 import '../modules/report/views/report_view.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
 import '../modules/splash_screen/views/splash_screen_view.dart';
+
+import '../modules/ob/profil/bindings/ob_profil_binding.dart';
+import '../modules/ob/profil/views/ob_profil_view.dart';
+import '../modules/ob/checklist/bindings/ob_checklist_binding.dart';
+import '../modules/ob/checklist/views/ob_checklist_view.dart';
 
 part 'app_routes.dart';
 
@@ -36,13 +39,6 @@ class AppPages {
       name: _Paths.HOME,
       page: () => const HomeView(),
       binding: HomeBinding(),
-      children: [
-        GetPage(
-          name: _Paths.OB_HOME,
-          page: () => const ObHomeView(),
-          binding: ObHomeBinding(),
-        ),
-      ],
     ),
     GetPage(
       name: _Paths.PROFILE,
@@ -58,6 +54,7 @@ class AppPages {
       name: _Paths.SPLASH_SCREEN,
       page: () => const SplashScreenView(),
       binding: SplashScreenBinding(),
+      transition: Transition.fade,
     ),
     GetPage(
       name: _Paths.AKTIVASI,
@@ -65,14 +62,24 @@ class AppPages {
       binding: AktivasiBinding(),
     ),
     GetPage(
-      name: _Paths.OB_PROFIL,
+      name: Routes.OB_DETAIL,
+      page: () => const ObDetailView(),
+      binding: ObDetailBinding(),
+    ),
+    GetPage(
+      name: Routes.OB_HOME,
+      page: () => const OBHomeView(),
+      binding: ObHomeBinding(),
+    ),
+    GetPage(
+      name: Routes.OB_PROFIL,
       page: () => const ObProfilView(),
       binding: ObProfilBinding(),
     ),
     GetPage(
-      name: _Paths.OB_DETAIL,
-      page: () => const ObDetailView(),
-      binding: ObDetailBinding(),
+      name: Routes.OB_CHECKLIST,
+      page: () => const ObChecklistView(),
+      binding: ObChecklistBinding(),
     ),
   ];
 }
