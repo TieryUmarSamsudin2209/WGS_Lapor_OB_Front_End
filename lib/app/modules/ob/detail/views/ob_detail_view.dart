@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../controllers/ob_detail_controller.dart';
 
 class ObDetailView extends GetView<ObDetailController> {
@@ -354,56 +356,46 @@ class ObDetailView extends GetView<ObDetailController> {
           ),
           const SizedBox(height: 10),
 
-          // Gambar Besar Preview
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  'https://i.pinimg.com/736x/21/df/b2/21dfb25d0c75cc46927eb21516e45398.jpg', 
-                  width: double.infinity,
-                  height: 150,
-                  fit: BoxFit.cover,
+          // Preview Foto Dinamis
+          Obx(() {
+            if (controller.actionPhotos.isEmpty) {
+              return Container(
+                width: double.infinity,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ),
-              Positioned(
-                bottom: 10,
-                left: 10,
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Toilet Pria - Wastafel 02',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: const Center(
+                  child: Icon(Icons.image_outlined, size: 40, color: Colors.grey),
                 ),
+              );
+            }
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.file(
+                File(controller.actionPhotos.first),
+                width: double.infinity,
+                height: 150,
+                fit: BoxFit.cover,
               ),
-            ],
-          ),
+            );
+          }),
           const SizedBox(height: 10),
 
-          // Thumbnail Foto
-          Row(
-            children: [
-              _buildPhotoThumbnail(isActive: true),
-              const SizedBox(width: 10),
-              _buildPhotoThumbnail(isActive: false, hasImage: true),
-              const SizedBox(width: 10),
-              _buildEmptyPhotoAdd(),
-              const SizedBox(width: 10),
-              _buildEmptyPhotoAdd(),
-            ],
-          ),
+          // Thumbnail Foto Dinamis
+          Obx(() {
+            return Row(
+              children: [
+                ...controller.actionPhotos.asMap().entries.map((entry) => Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: _buildPhotoThumbnail(path: entry.value, index: entry.key),
+                )),
+                if (controller.actionPhotos.length < 3)
+                  _buildEmptyPhotoAdd(),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -476,6 +468,55 @@ class ObDetailView extends GetView<ObDetailController> {
         }
         return const SizedBox.shrink();
       }),
+    );
+  }
+
+  void _showPhotoSourceSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Pilih Sumber Foto',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
+                child: const Icon(Icons.camera_alt, color: Colors.blue),
+              ),
+              title: const Text('Kamera'),
+              onTap: () {
+                Get.back();
+                controller.pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.purple[50], shape: BoxShape.circle),
+                child: const Icon(Icons.photo_library, color: Colors.purple),
+              ),
+              title: const Text('Galeri'),
+              onTap: () {
+                Get.back();
+                controller.pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -600,42 +641,53 @@ class ObDetailView extends GetView<ObDetailController> {
     );
   }
 
-  Widget _buildPhotoThumbnail({bool isActive = false, bool hasImage = true}) {
-    return Container(
-      width: 35,
-      height: 35,
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: isActive ? Colors.blue : Colors.transparent,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: hasImage
-            ? Image.network(
-                'https://i.pinimg.com/736x/21/df/b2/21dfb25d0c75cc46927eb21516e45398.jpg',
-                fit: BoxFit.cover,
-              )
-            : Container(color: Colors.grey.shade200),
+  Widget _buildPhotoThumbnail({required String path, required int index}) {
+    return GestureDetector(
+      onTap: () => controller.removePhoto(index),
+      child: Stack(
+        children: [
+          Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blue, width: 2),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.file(File(path), fit: BoxFit.cover),
+            ),
+          ),
+          Positioned(
+            top: -4,
+            right: -4,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              child: const Icon(Icons.close, size: 10, color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildEmptyPhotoAdd() {
-    return Container(
-      width: 35,
-      height: 35,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(
-          color: Colors.grey.shade300,
-          style: BorderStyle.solid,
+    return GestureDetector(
+      onTap: _showPhotoSourceSheet,
+      child: Container(
+        width: 35,
+        height: 35,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border.all(
+            color: Colors.grey.shade300,
+            style: BorderStyle.solid,
+          ),
+          borderRadius: BorderRadius.circular(6),
         ),
-        borderRadius: BorderRadius.circular(6),
+        child: const Center(child: Icon(Icons.add, size: 16, color: Colors.grey)),
       ),
-      child: const Center(child: Icon(Icons.add, size: 16, color: Colors.grey)),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../routes/app_pages.dart';
 
 class SplashScreenController extends GetxController {
   var progressValue = 0.0.obs;
@@ -35,7 +36,7 @@ class SplashScreenController extends GetxController {
         current.contains('detail');
 
     if (!isDetailDeepLink) {
-      Get.offNamed('/ob/detail');
+      Get.offNamed(Routes.OB_DETAIL);
     }
   }
 

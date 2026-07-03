@@ -47,6 +47,7 @@ class AppPages {
       name: _Paths.SPLASH_SCREEN,
       page: () => const SplashScreenView(),
       binding: SplashScreenBinding(),
+      transition: Transition.fade,
     ),
     GetPage(
       name: _Paths.AKTIVASI,
@@ -55,11 +56,6 @@ class AppPages {
     ),
     GetPage(
       name: Routes.OB_DETAIL,
-      page: () => const ObDetailView(),
-      binding: ObDetailBinding(),
-    ),
-    GetPage(
-      name: _Paths.DETAIL,
       page: () => const ObDetailView(),
       binding: ObDetailBinding(),
     ),

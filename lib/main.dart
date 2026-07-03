@@ -10,6 +10,8 @@ void main() {
       title: "Lapor OB",
       initialRoute: AppPages.INITIAL,
       getPages: AppPages.routes,
+      defaultTransition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 350),
     ),
   );
 }

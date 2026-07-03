@@ -2,23 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 
-void main() {
-  runApp(const LoginPages());
-}
-
-class LoginPages extends StatelessWidget {
-  const LoginPages({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'sans-serif'),
-      home: const LoginPage(),
-    );
-  }
-}
-
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
@@ -109,7 +92,6 @@ class LoginPage extends StatelessWidget {
                         const SizedBox(height: 40),
 
                         _buildLabel("Username"),
-                        // Memanggil input field lama dengan hint kosong agar mirip difoto
                         _buildInputField(hint: "Masukan Username"),
 
                         const SizedBox(height: 20),

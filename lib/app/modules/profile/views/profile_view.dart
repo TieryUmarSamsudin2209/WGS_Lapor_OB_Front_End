@@ -1,23 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
-
-void main() {
-  runApp(const FacilityFixApp());
-}
-
-class FacilityFixApp extends StatelessWidget {
-  const FacilityFixApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'sans-serif'),
-      home: const ProfilePage(),
-    );
-  }
-}
+import '../../../shared/widgets/bottom_nav.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -226,10 +210,13 @@ class ProfilePage extends StatelessWidget {
                     )
                   ],
                 ),
-                child: const CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256',
+                child: Hero(
+                  tag: 'profile-avatar',
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage(
+                      'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256',
+                    ),
                   ),
                 ),
               ),
@@ -260,23 +247,32 @@ class ProfilePage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildNavItem(
-                icon: Icons.home_outlined,
-                label: "Home",
-                isActive: false,
-                onTap: () => Get.offAllNamed(Routes.HOME),
+              Expanded(
+                child: BottomNavItem(
+                  icon: Icons.home_outlined,
+                  label: "Home",
+                  isActive: false,
+                  onTap: () => Get.offAllNamed(Routes.HOME),
+                  navyColor: navyTextColor,
+                ),
               ),
-              _buildNavItem(
-                icon: Icons.add_circle_outline,
-                label: "Report",
-                isActive: false,
-                onTap: () => Get.toNamed(Routes.REPORT),
+              Expanded(
+                child: BottomNavItem(
+                  icon: Icons.add_circle_outline,
+                  label: "Report",
+                  isActive: false,
+                  onTap: () => Get.toNamed(Routes.REPORT),
+                  navyColor: navyTextColor,
+                ),
               ),
-              _buildNavItem(
-                icon: Icons.person,
-                label: "Profile",
-                isActive: true,
-                onTap: () {},
+              Expanded(
+                child: BottomNavItem(
+                  icon: Icons.person,
+                  label: "Profile",
+                  isActive: true,
+                  onTap: () {},
+                  navyColor: navyTextColor,
+                ),
               ),
             ],
           ),
@@ -463,44 +459,4 @@ class ProfilePage extends StatelessWidget {
   }
 
   // Helper untuk Item Navigation Bar (sama seperti ReportPage)
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: isActive
-            ? const EdgeInsets.symmetric(horizontal: 20, vertical: 12)
-            : const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: isActive
-            ? BoxDecoration(
-                color: navyTextColor,
-                borderRadius: BorderRadius.circular(20),
-              )
-            : null,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isActive ? Colors.white : navyTextColor,
-              size: 24,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? Colors.white : navyTextColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

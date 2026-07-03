@@ -6,7 +6,6 @@ abstract class Routes {
   static const LOGIN = _Paths.LOGIN;
   static const HOME = _Paths.HOME;
   static const PROFILE = _Paths.PROFILE;
-  static const TASK = _Paths.TASK;
   static const REPORT = _Paths.REPORT;
   static const SPLASH_SCREEN = _Paths.SPLASH_SCREEN;
   static const AKTIVASI = _Paths.AKTIVASI;
@@ -18,13 +17,10 @@ abstract class _Paths {
   static const LOGIN = '/login';
   static const HOME = '/home';
   static const PROFILE = '/profile';
-  static const TASK = '/task';
   static const REPORT = '/report';
   static const SPLASH_SCREEN = '/splash-screen';
   static const AKTIVASI = '/aktivasi';
 
   // Add missing path segments used by OB_DETAIL
-  static const OB = '/ob';
-  static const DETAIL = '/detail';
   static const OB_DETAIL = '/ob/detail';
 }

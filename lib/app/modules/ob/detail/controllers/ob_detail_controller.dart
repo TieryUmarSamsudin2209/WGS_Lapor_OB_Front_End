@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ObDetailController extends GetxController {
   var pageState = 'initial'.obs;
@@ -8,6 +9,7 @@ class ObDetailController extends GetxController {
 
   final noteController = TextEditingController();
   final actionPhotos = <String>[].obs;
+  final ImagePicker _picker = ImagePicker();
 
   void setWorking() {
     pageState.value = 'working';
@@ -35,6 +37,28 @@ class ObDetailController extends GetxController {
     Get.snackbar('Ditolak', 'Laporan berhasil ditolak',
         backgroundColor: Colors.red, colorText: Colors.white);
     Get.offNamed('/home');
+  }
+
+  Future<void> pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        if (actionPhotos.length < 3) {
+          actionPhotos.add(image.path);
+        } else {
+          Get.snackbar('Batas Maksimal', 'Anda hanya dapat mengunggah maksimal 3 foto.');
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengambil foto: $e');
+    }
+  }
+
+  void removePhoto(int index) {
+    actionPhotos.removeAt(index);
   }
 
   void toggleDetailExpand() {
