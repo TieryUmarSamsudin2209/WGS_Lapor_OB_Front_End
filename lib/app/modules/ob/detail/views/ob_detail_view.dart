@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,7 +22,7 @@ class ObDetailView extends GetView<ObDetailController> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.offNamed(Routes.OB_HOME),
+          onPressed: () => Get.back(),
         ),
         title: const Text(
           'Detail Laporan',
@@ -356,30 +357,52 @@ class ObDetailView extends GetView<ObDetailController> {
           // Preview Foto Dinamis
           Obx(() {
             if (controller.actionPhotos.isEmpty) {
-              return Container(
-                width: double.infinity,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.image_outlined,
-                    size: 40,
-                    color: Colors.grey,
+              return GestureDetector(
+                onTap: _showPhotoSourceSheet,
+                child: Container(
+                  width: double.infinity,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.add_a_photo_outlined,
+                        size: 40,
+                        color: Color(0xFF0F4C81),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Ambil / Pilih Foto Bukti',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
             }
             return ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.file(
-                File(controller.actionPhotos.first),
-                width: double.infinity,
-                height: 150,
-                fit: BoxFit.cover,
-              ),
+              child: kIsWeb
+                  ? Image.network(
+                      controller.actionPhotos.first,
+                      width: double.infinity,
+                      height: 150,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.file(
+                      File(controller.actionPhotos.first),
+                      width: double.infinity,
+                      height: 150,
+                      fit: BoxFit.cover,
+                    ),
             );
           }),
           const SizedBox(height: 10),
@@ -658,20 +681,22 @@ class ObDetailView extends GetView<ObDetailController> {
       child: Stack(
         children: [
           Container(
-            width: 35,
-            height: 35,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
               border: Border.all(color: Colors.blue, width: 2),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Image.file(File(path), fit: BoxFit.cover),
+              borderRadius: BorderRadius.circular(6),
+              child: kIsWeb
+                  ? Image.network(path, fit: BoxFit.cover)
+                  : Image.file(File(path), fit: BoxFit.cover),
             ),
           ),
           Positioned(
-            top: -4,
-            right: -4,
+            top: 0,
+            right: 0,
             child: Container(
               padding: const EdgeInsets.all(2),
               decoration: const BoxDecoration(
@@ -690,18 +715,18 @@ class ObDetailView extends GetView<ObDetailController> {
     return GestureDetector(
       onTap: _showPhotoSourceSheet,
       child: Container(
-        width: 35,
-        height: 35,
+        width: 50,
+        height: 50,
         decoration: BoxDecoration(
           color: Colors.transparent,
           border: Border.all(
             color: Colors.grey.shade300,
             style: BorderStyle.solid,
           ),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: const Center(
-          child: Icon(Icons.add, size: 16, color: Colors.grey),
+          child: Icon(Icons.add, size: 20, color: Colors.grey),
         ),
       ),
     );

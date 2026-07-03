@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -351,12 +352,19 @@ class ReportPage extends StatelessWidget {
                                                       children: [
                                                         ClipRRect(
                                                           borderRadius: BorderRadius.circular(12),
-                                                          child: Image.file(
-                                                            File(controller.attachedPhotos[index]),
-                                                            width: 80,
-                                                            height: 80,
-                                                            fit: BoxFit.cover,
-                                                          ),
+                                                          child: kIsWeb
+                                                              ? Image.network(
+                                                                  controller.attachedPhotos[index],
+                                                                  width: 80,
+                                                                  height: 80,
+                                                                  fit: BoxFit.cover,
+                                                                )
+                                                              : Image.file(
+                                                                  File(controller.attachedPhotos[index]),
+                                                                  width: 80,
+                                                                  height: 80,
+                                                                  fit: BoxFit.cover,
+                                                                ),
                                                         ),
                                                         Positioned(
                                                           top: -2,
