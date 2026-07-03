@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../controllers/ob_checklist_controller.dart';
 
 class ObChecklistView extends GetView<ObChecklistController> {
@@ -14,7 +17,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
       backgroundColor: _bg,
       body: Stack(
         children: [
-          // ── Scrollable body ──────────────────────────────────
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -27,8 +29,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
               ],
             ),
           ),
-
-          // ── Floating Bottom Nav ──────────────────────────────
           Positioned(
             bottom: 0,
             left: 0,
@@ -40,7 +40,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
     );
   }
 
-  // ─── Header ─────────────────────────────────────────────────────────────
+  // ─── Header ───────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -69,7 +69,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
     );
   }
 
-  // ─── Sections list ───────────────────────────────────────────────────────
+  // ─── Sections list ─────────────────────────────────────────────────────
   Widget _buildSectionsList() {
     return Obx(() {
       if (controller.isLoading.value) {
@@ -86,7 +86,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
     });
   }
 
-  // ─── Section card ────────────────────────────────────────────────────────
+  // ─── Section card ──────────────────────────────────────────────────────
   Widget _buildSectionCard(ChecklistSection section) {
     return Container(
       decoration: BoxDecoration(
@@ -105,7 +105,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section title
             Padding(
               padding: const EdgeInsets.only(bottom: 14, left: 2),
               child: Text(
@@ -118,8 +117,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
                 ),
               ),
             ),
-
-            // Item cards
             ...section.items.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -132,7 +129,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
     );
   }
 
-  // ─── Item card ───────────────────────────────────────────────────────────
+  // ─── Item card ─────────────────────────────────────────────────────────
   Widget _buildItemCard(ChecklistItem item) {
     return Obx(() {
       final status = item.status.value;
@@ -142,14 +139,13 @@ class ObChecklistView extends GetView<ObChecklistController> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: () => controller.toggleItem(item),
+          onTap: () => _showItemDetailPopup(Get.context!, item),
           borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Leading colored circle icon
                 Container(
                   width: 36,
                   height: 36,
@@ -157,20 +153,13 @@ class ObChecklistView extends GetView<ObChecklistController> {
                     color: style.bgColor,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    style.icon,
-                    color: style.color,
-                    size: 19,
-                  ),
+                  child: Icon(style.icon, color: style.color, size: 19),
                 ),
                 const SizedBox(width: 12),
-
-                // Text + badge
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
                       Text(
                         item.title,
                         style: TextStyle(
@@ -186,8 +175,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
                         ),
                       ),
                       const SizedBox(height: 3),
-
-                      // Description
                       Text(
                         item.description,
                         maxLines: 2,
@@ -201,8 +188,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
                         ),
                       ),
                       const SizedBox(height: 8),
-
-                      // Status badge — aligned to right
                       Align(
                         alignment: Alignment.centerRight,
                         child: Container(
@@ -215,8 +200,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(style.icon,
-                                  size: 11, color: style.color),
+                              Icon(style.icon, size: 11, color: style.color),
                               const SizedBox(width: 4),
                               Text(
                                 style.label,
@@ -240,9 +224,378 @@ class ObChecklistView extends GetView<ObChecklistController> {
       );
     });
   }
+
+  // ─── POPUP DETAIL ──────────────────────────────────────────────────────
+  void _showItemDetailPopup(BuildContext context, ChecklistItem item) {
+    // Pre-populate note text field
+    controller.noteController.text = item.note.value;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 350),
+      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+      transitionBuilder: (ctx, a1, a2, _) {
+        final curve = Curves.easeOutBack.transform(a1.value);
+        return Transform.scale(
+          scale: curve,
+          child: Opacity(
+            opacity: a1.value.clamp(0.0, 1.0),
+            child: Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: _ChecklistDetailPopup(
+                item: item,
+                controller: controller,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
-// ─── Status style helper ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── POPUP WIDGET ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _ChecklistDetailPopup extends StatelessWidget {
+  final ChecklistItem item;
+  final ObChecklistController controller;
+
+  const _ChecklistDetailPopup({
+    required this.item,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 400),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header: Title + Close ────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1B2559),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        item.description,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    controller.saveNote(item);
+                    Get.back();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close, size: 20, color: Colors.grey.shade600),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── Status Buttons ───────────────────────────────────
+            _buildStatusButton(item, 'resolved'),
+            const SizedBox(height: 8),
+            _buildStatusButton(item, 'pending'),
+            const SizedBox(height: 8),
+            _buildStatusButton(item, 'todo'),
+
+            const SizedBox(height: 24),
+
+            // ── Catatan Label ────────────────────────────────────
+            RichText(
+              text: const TextSpan(
+                text: 'Catatan',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1B2559),
+                ),
+                children: [
+                  TextSpan(
+                    text: '*',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── Catatan TextField ────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: TextField(
+                controller: controller.noteController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Tambahkan catatan',
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 13,
+                  ),
+                  contentPadding: const EdgeInsets.all(14),
+                  border: InputBorder.none,
+                ),
+                onChanged: (_) => controller.saveNote(item),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ── Bukti Foto Label ─────────────────────────────────
+            const Text(
+              'Bukti Foto',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1B2559),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // ── Photo Grid ───────────────────────────────────────
+            Obx(() => _buildPhotoGrid(context, item)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Status button ─────────────────────────────────────────────────────
+  Widget _buildStatusButton(ChecklistItem item, String statusValue) {
+    final style = _statusStyle(statusValue);
+
+    return Obx(() {
+      final isActive = item.status.value == statusValue;
+
+      return GestureDetector(
+        onTap: () => controller.setItemStatus(item, statusValue),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isActive ? style.bgColor : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isActive ? style.color.withValues(alpha: 0.4) : Colors.grey.shade200,
+              width: isActive ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isActive ? style.icon : Icons.circle_outlined,
+                size: 18,
+                color: isActive ? style.color : Colors.grey.shade400,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                style.label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                  color: isActive ? style.color : Colors.grey.shade500,
+                ),
+              ),
+              const Spacer(),
+              if (isActive)
+                Icon(Icons.check_rounded, size: 18, color: style.color),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ─── Photo grid ────────────────────────────────────────────────────────
+  Widget _buildPhotoGrid(BuildContext context, ChecklistItem item) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFDAE2F5)),
+      ),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          // Existing photos
+          ...item.photos.asMap().entries.map(
+            (entry) => _buildPhotoThumb(item, entry.key, entry.value),
+          ),
+          // Add button (max 3)
+          if (item.photos.length < 3) _buildAddPhotoButton(context, item),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhotoThumb(ChecklistItem item, int index, String path) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFF0F4C81), width: 2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: kIsWeb
+                ? Image.network(path, fit: BoxFit.cover)
+                : Image.file(File(path), fit: BoxFit.cover),
+          ),
+        ),
+        Positioned(
+          top: -6,
+          right: -6,
+          child: GestureDetector(
+            onTap: () => controller.removeItemPhoto(item, index),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, size: 12, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddPhotoButton(BuildContext context, ChecklistItem item) {
+    return GestureDetector(
+      onTap: () => _showPhotoSourceSheet(item),
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: Colors.grey.shade300,
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: Icon(Icons.add, size: 24, color: Colors.grey.shade500),
+      ),
+    );
+  }
+
+  void _showPhotoSourceSheet(ChecklistItem item) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Pilih Sumber Foto',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.camera_alt, color: Colors.blue),
+              ),
+              title: const Text('Kamera'),
+              onTap: () {
+                Get.back();
+                controller.pickItemPhoto(item, ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.purple[50],
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.photo_library, color: Colors.purple),
+              ),
+              title: const Text('Galeri'),
+              onTap: () {
+                Get.back();
+                controller.pickItemPhoto(item, ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Status style helper ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
 class _StatusStyle {
   final Color color;
   final Color bgColor;
@@ -267,7 +620,7 @@ _StatusStyle _statusStyle(String status) {
         Icons.access_time_rounded,
         'Pending',
       );
-    default: // 'todo'
+    default:
       return const _StatusStyle(
         Color(0xFFD9534F),
         Color(0xFFFBE7E6),
@@ -277,7 +630,10 @@ _StatusStyle _statusStyle(String status) {
   }
 }
 
-// ─── Bottom Navigation Bar ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Bottom Navigation Bar ────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
 class _BottomBar extends StatelessWidget {
   const _BottomBar({required this.controller});
   final ObChecklistController controller;
@@ -306,7 +662,6 @@ class _BottomBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Home
             InkWell(
               onTap: controller.goHome,
               borderRadius: BorderRadius.circular(12),
@@ -329,8 +684,6 @@ class _BottomBar extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Checklist — ACTIVE
             Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -340,8 +693,7 @@ class _BottomBar extends StatelessWidget {
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.checklist_rounded,
-                      color: Colors.white, size: 18),
+                  Icon(Icons.checklist_rounded, color: Colors.white, size: 18),
                   SizedBox(width: 6),
                   Text(
                     'Checklist',
@@ -354,8 +706,6 @@ class _BottomBar extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Profile
             InkWell(
               onTap: controller.goProfile,
               borderRadius: BorderRadius.circular(12),
@@ -364,8 +714,7 @@ class _BottomBar extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   children: [
-                    Icon(Icons.person_outline_rounded,
-                        color: _navy, size: 22),
+                    Icon(Icons.person_outline_rounded, color: _navy, size: 22),
                     const SizedBox(width: 6),
                     const Text(
                       'Profile',

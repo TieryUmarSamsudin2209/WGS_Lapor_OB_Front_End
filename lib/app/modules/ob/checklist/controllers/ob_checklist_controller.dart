@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../routes/app_pages.dart';
 
 /// ==================== MODELS ====================
@@ -9,13 +11,18 @@ class ChecklistItem {
   final String title;
   final String description;
   final RxString status;
+  final RxString note;
+  final RxList<String> photos;
 
   ChecklistItem({
     required this.id,
     required this.title,
     required this.description,
     required String status,
-  }) : status = status.obs;
+    String note = '',
+  })  : status = status.obs,
+        note = note.obs,
+        photos = <String>[].obs;
 }
 
 class ChecklistSection {
@@ -30,11 +37,21 @@ class ChecklistSection {
 class ObChecklistController extends GetxController {
   final sections = <ChecklistSection>[].obs;
   final isLoading = false.obs;
+  final ImagePicker _picker = ImagePicker();
+
+  // Temporary controller for note text field inside popup
+  final noteController = TextEditingController();
 
   @override
   void onInit() {
     super.onInit();
     _loadDummyData();
+  }
+
+  @override
+  void onClose() {
+    noteController.dispose();
+    super.onClose();
   }
 
   void _loadDummyData() {
@@ -113,19 +130,39 @@ class ObChecklistController extends GetxController {
     isLoading.value = false;
   }
 
-  /// Cycle: resolved → pending → todo → resolved
-  void toggleItem(ChecklistItem item) {
-    switch (item.status.value) {
-      case 'resolved':
-        item.status.value = 'pending';
-        break;
-      case 'pending':
-        item.status.value = 'todo';
-        break;
-      default:
-        item.status.value = 'resolved';
-    }
+  /// Set status directly from popup
+  void setItemStatus(ChecklistItem item, String newStatus) {
+    item.status.value = newStatus;
     sections.refresh();
+  }
+
+  /// Save note from popup
+  void saveNote(ChecklistItem item) {
+    item.note.value = noteController.text;
+  }
+
+  /// Pick photo for a checklist item
+  Future<void> pickItemPhoto(ChecklistItem item, ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        if (item.photos.length < 3) {
+          item.photos.add(image.path);
+        } else {
+          Get.snackbar('Batas Maksimal', 'Maksimal 3 foto per item.');
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengambil foto: $e');
+    }
+  }
+
+  /// Remove photo from item
+  void removeItemPhoto(ChecklistItem item, int index) {
+    item.photos.removeAt(index);
   }
 
   /// Navigation
