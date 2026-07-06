@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../../shared/widgets/logout_confirmation_dialog.dart';
 import '../controllers/ob_profil_controller.dart';
 
@@ -8,7 +11,7 @@ class ObProfilView extends GetView<ObProfilController> {
   const ObProfilView({super.key});
 
   static const _navy = Color(0xFF0F2A5E);
-  static const _bg = Color(0xFFF5F6FA);
+  static const _bg = Colors.white;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +40,7 @@ class ObProfilView extends GetView<ObProfilController> {
                           child: Padding(
                             padding: EdgeInsets.only(top: 25),
                             child: Text(
-                              'My Profile',
+                              'Profil Saya',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -65,14 +68,47 @@ class ObProfilView extends GetView<ObProfilController> {
                           const SizedBox(height: 75), // Spacing for the overlapping avatar
 
                           // Name
-                          Obx(() => Text(
-                                controller.name.value,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: _navy,
+                          Obx(
+                            () => Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    controller.name.value,
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
+                                      color: _navy,
+                                    ),
+                                  ),
                                 ),
-                              )),
+                                const SizedBox(width: 8),
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () => EditProfileDialog.show(
+                                    context,
+                                    avatarUrl: controller.avatarUrl.value,
+                                    firstName: controller.firstName,
+                                    lastName: controller.lastName,
+                                    onSave: controller.updateProfile,
+                                    onAvatarChanged:
+                                        controller.updateAvatar,
+                                  ),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(
+                                      Icons.edit_outlined,
+                                      size: 18,
+                                      color: _navy,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           // Username
                           Obx(() => Text(
@@ -349,6 +385,9 @@ class _Avatar extends StatelessWidget {
               color: Colors.grey.shade200,
               child: const Icon(Icons.person, size: 60, color: Colors.grey),
             );
+          }
+          if (!url.startsWith('http')) {
+            return Image.file(File(url), fit: BoxFit.cover);
           }
           return Image.network(url, fit: BoxFit.cover);
         }),

@@ -51,6 +51,14 @@ class ObProfilController extends GetxController {
   var username = '@username'.obs;
   var avatarUrl = 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400'.obs;
 
+  String get firstName => name.value.trim().split(RegExp(r'\s+')).first;
+
+  String get lastName {
+    final parts = name.value.trim().split(RegExp(r'\s+'));
+    if (parts.length <= 1) return '';
+    return parts.skip(1).join(' ');
+  }
+
   /// ---- State ----
   var isLoading = false.obs;
 
@@ -135,6 +143,23 @@ class ObProfilController extends GetxController {
 
   void createReport() {
     Get.toNamed(Routes.OB_CHECKLIST);
+  }
+
+  void updateProfile(String firstName, String lastName) {
+    final sanitizedFirstName = firstName.trim();
+    final sanitizedLastName = lastName.trim();
+    if (sanitizedFirstName.isEmpty) return;
+
+    name.value = [sanitizedFirstName, sanitizedLastName]
+        .where((part) => part.isNotEmpty)
+        .join(' ');
+  }
+
+  void updateAvatar(String avatarPath) {
+    final sanitizedAvatarPath = avatarPath.trim();
+    if (sanitizedAvatarPath.isEmpty) return;
+
+    avatarUrl.value = sanitizedAvatarPath;
   }
 
   void logout() {

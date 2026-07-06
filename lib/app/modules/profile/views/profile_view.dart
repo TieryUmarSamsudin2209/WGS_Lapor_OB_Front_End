@@ -1,13 +1,26 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../../../shared/widgets/bottom_nav.dart';
+import '../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../shared/widgets/logout_confirmation_dialog.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String avatarUrl =
+      'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256';
+
   final Color navyTextColor = const Color(0xFF003366);
+  String firstName = 'Alex';
+  String lastName = 'Karyawan';
 
   final List<Map<String, dynamic>> reports = const [
     {
@@ -46,6 +59,8 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fullName = '$firstName $lastName'.trim();
+
     return Scaffold(
       backgroundColor: const Color(0xFF104A7F),
       body: Stack(
@@ -97,13 +112,52 @@ class ProfilePage extends StatelessWidget {
                       const SizedBox(height: 70), // Spacing for the overlapping avatar
                       
                       // Name and Username
-                      Text(
-                        "Alex Karyawan",
-                        style: TextStyle(
-                          color: navyTextColor,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              fullName,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: navyTextColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => EditProfileDialog.show(
+                              context,
+                              avatarUrl: avatarUrl,
+                              firstName: firstName,
+                              lastName: lastName,
+                              onSave: (newFirstName, newLastName) {
+                                setState(() {
+                                  firstName = newFirstName.isEmpty
+                                      ? firstName
+                                      : newFirstName;
+                                  lastName = newLastName;
+                                });
+                              },
+                              onAvatarChanged: (newAvatarPath) {
+                                setState(() => avatarUrl = newAvatarPath);
+                              },
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: navyTextColor,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -221,11 +275,20 @@ class ProfilePage extends StatelessWidget {
                 ),
                 child: Hero(
                   tag: 'profile-avatar',
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundImage: NetworkImage(
-                      'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256',
-                    ),
+                  child: ClipOval(
+                    child: avatarUrl.startsWith('http')
+                        ? Image.network(
+                            avatarUrl,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            File(avatarUrl),
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
               ),
