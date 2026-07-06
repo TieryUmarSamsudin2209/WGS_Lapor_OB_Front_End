@@ -69,7 +69,7 @@ class LoginPage extends StatelessWidget {
                       children: [
                         Center(
                           child: Text(
-                            "Halo!",
+                            "Halo,Usn!",
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w900,

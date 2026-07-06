@@ -70,7 +70,7 @@ class AktivasiView extends GetView<AktivasiController> {
                       children: [
                         Center(
                           child: Text(
-                            "Halo!",
+                            "Halo, Usn!",
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w900,
