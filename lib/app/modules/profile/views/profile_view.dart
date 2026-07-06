@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../../../shared/widgets/bottom_nav.dart';
+import '../../../shared/widgets/logout_confirmation_dialog.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -191,7 +192,10 @@ class ProfilePage extends StatelessWidget {
                       const SizedBox(height: 12),
 
                       _LogoutButton(
-                        onPressed: () => Get.offAllNamed(Routes.LOGIN),
+                        onPressed: () => LogoutConfirmationDialog.show(
+                          context,
+                          onConfirm: () => Get.offAllNamed(Routes.LOGIN),
+                        ),
                       ),
                       
                       const SizedBox(height: 110),

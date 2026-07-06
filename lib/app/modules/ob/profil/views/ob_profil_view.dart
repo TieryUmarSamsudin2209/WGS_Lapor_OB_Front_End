@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../shared/widgets/logout_confirmation_dialog.dart';
 import '../controllers/ob_profil_controller.dart';
 
 class ObProfilView extends GetView<ObProfilController> {
@@ -211,7 +212,12 @@ class ObProfilView extends GetView<ObProfilController> {
                           }),
 
                           const SizedBox(height: 4),
-                          _LogoutButton(onPressed: controller.logout),
+                          _LogoutButton(
+                            onPressed: () => LogoutConfirmationDialog.show(
+                              context,
+                              onConfirm: controller.logout,
+                            ),
+                          ),
 
                           const SizedBox(height: 110), // Bottom spacer for floating bar
                         ],
