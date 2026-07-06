@@ -9,39 +9,38 @@ class ProfilePage extends StatelessWidget {
 
   final Color navyTextColor = const Color(0xFF003366);
 
-  // Sample data to match the mockup
   final List<Map<String, dynamic>> reports = const [
     {
-      "id": "#REP-8492",
-      "title": "HVAC Leak in Sector 4",
-      "description": "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
-      "status": "In Progress",
-      "date": "Oct 24, 2023",
-      "color": 0xFF1A73E8, // Blue
+      "priority": "URGENT",
+      "status": "Selesai",
+      "title": "Kebocoran Pipa Air",
+      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
+      "description":
+          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
     },
     {
-      "id": "#REP-8490",
-      "title": "Broken Entry Door Lock",
-      "description": "The electronic strike on the north entrance is failing to engage. Security concern.",
+      "priority": "STANDARD",
       "status": "Pending",
-      "date": "Oct 22, 2023",
-      "color": 0xFFF9A825, // Orange
+      "title": "Kebocoran Pipa Air",
+      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
+      "description":
+          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
     },
     {
-      "id": "#REP-8475",
-      "title": "Flickering Lights in Breakroom",
-      "description": "Fluorescent tubes in the main staff breakroom are flickering constantly causing headaches.",
-      "status": "Rejected",
-      "date": "Oct 18, 2023",
-      "color": 0xFFD93025, // Red
+      "priority": "URGENT",
+      "status": "Ditolak",
+      "title": "Kebocoran Pipa Air",
+      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
+      "description":
+          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
     },
     {
-      "id": "#REP-8412",
-      "title": "Restroom Sink Clog",
-      "description": "Men's restroom sink on floor 2 is completely blocked and overflowing slightly.",
-      "status": "Resolved",
-      "date": "Oct 10, 2023",
-      "color": 0xFF137333, // Green
+      "priority": "STANDARD",
+      "status": "Pending",
+      "title": "Kebocoran Pipa Air",
+      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
+      "description":
+          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
     },
   ];
 
@@ -294,121 +293,120 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildReportCard(Map<String, dynamic> report) {
-    final String id = report["id"] as String;
-    final String title = report["title"] as String;
-    final String description = report["description"] as String;
+    final String priority = report["priority"] as String;
     final String status = report["status"] as String;
-    final String date = report["date"] as String;
-    final Color statusColor = Color(report["color"] as int);
-    
+    final String title = report["title"] as String;
+    final String location = report["location"] as String;
+    final String description = report["description"] as String;
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2EAF8), width: 1.5),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: const Color(0xFFD6DCE8), width: 1),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF104A7F).withValues(alpha: 0.06),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Left indicator line
-            Container(
-              width: 4,
-              decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  bottomLeft: Radius.circular(10),
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(7),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 4,
+                color: const Color(0xFF00518E),
               ),
-            ),
-            
-            // Content area
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ID and Status Tag Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          id,
-                          style: TextStyle(
-                            color: navyTextColor.withValues(alpha: 0.6),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 14, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          _buildPriorityBadge(priority),
+                          const Spacer(),
+                          _buildStatusBadge(status),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Color(0xFF1E2A3A),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          height: 1.05,
                         ),
-                        _buildStatusBadge(status),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    
-                    // Title
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: navyTextColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        decoration: status == "Resolved" ? TextDecoration.lineThrough : null,
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    
-                    // Description
-                    Text(
-                      description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        height: 1.3,
-                      ),
-                    ),
-                    
-                    const Divider(height: 24, color: Color(0xFFE2EAF8)),
-                    
-                    // Date & Chevron Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey[500]),
-                            const SizedBox(width: 6),
-                            Text(
-                              date,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                      const SizedBox(height: 5),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 1),
+                            child: Icon(
+                              Icons.location_on_outlined,
+                              size: 16,
+                              color: Color(0xFF0057D9),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF0057D9),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
                               ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF3F4653),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          height: 1.25,
                         ),
-                        Icon(Icons.chevron_right, size: 16, color: Colors.grey[400]),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPriorityBadge(String priority) {
+    final isUrgent = priority == "URGENT";
+    final color = isUrgent ? const Color(0xFFD11C25) : const Color(0xFFFFB020);
+    final bgColor = isUrgent ? const Color(0xFFFFE4E7) : const Color(0xFFFFF2C8);
+
+    return _ReportBadge(
+      text: priority,
+      icon: Icons.error_outline,
+      color: color,
+      bgColor: bgColor,
     );
   }
 
@@ -416,59 +414,80 @@ class ProfilePage extends StatelessWidget {
     Color bgColor;
     Color textColor;
     IconData icon;
-    
+
     switch (status) {
-      case "In Progress":
-        bgColor = const Color(0xFFE8F0FE);
-        textColor = const Color(0xFF1A73E8);
-        icon = Icons.sync;
-        break;
-      case "Pending":
-        bgColor = const Color(0xFFFFF9E6);
-        textColor = const Color(0xFFF9A825);
-        icon = Icons.hourglass_empty;
-        break;
-      case "Rejected":
-        bgColor = const Color(0xFFFCE8E6);
-        textColor = const Color(0xFFD93025);
-        icon = Icons.cancel_outlined;
-        break;
-      case "Resolved":
-        bgColor = const Color(0xFFE6F4EA);
-        textColor = const Color(0xFF137333);
+      case "Selesai":
+        bgColor = const Color(0xFFDDF8E9);
+        textColor = const Color(0xFF2B9A57);
         icon = Icons.check_circle_outline;
         break;
+      case "Pending":
+        bgColor = const Color(0xFFFFF2C8);
+        textColor = const Color(0xFFFFA000);
+        icon = Icons.schedule_outlined;
+        break;
+      case "Ditolak":
+        bgColor = const Color(0xFFFFE4E7);
+        textColor = const Color(0xFFD11C25);
+        icon = Icons.cancel_outlined;
+        break;
       default:
-        bgColor = Colors.grey[200]!;
-        textColor = Colors.grey[700]!;
+        bgColor = const Color(0xFFE8ECF3);
+        textColor = const Color(0xFF596273);
         icon = Icons.info_outline;
     }
-    
+
+    return _ReportBadge(
+      text: status,
+      icon: icon,
+      color: textColor,
+      bgColor: bgColor,
+    );
+  }
+
+  // Helper untuk Item Navigation Bar (sama seperti ReportPage)
+}
+
+class _ReportBadge extends StatelessWidget {
+  const _ReportBadge({
+    required this.text,
+    required this.icon,
+    required this.color,
+    required this.bgColor,
+  });
+
+  final String text;
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: textColor),
+          Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
           Text(
-            status,
+            text,
             style: TextStyle(
-              color: textColor,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              height: 1,
             ),
           ),
         ],
       ),
     );
   }
-
-  // Helper untuk Item Navigation Bar (sama seperti ReportPage)
 }
 
 class _LogoutButton extends StatelessWidget {

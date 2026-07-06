@@ -4,14 +4,18 @@ import '../../../../routes/app_pages.dart';
 /// ================= MODEL =================
 class ReportModel {
   final String id;
+  final String priority;
   final String title;
+  final String location;
   final String description;
   final DateTime date;
   final ReportStatus status;
 
   ReportModel({
     required this.id,
+    required this.priority,
     required this.title,
+    required this.location,
     required this.description,
     required this.date,
     required this.status,
@@ -25,13 +29,13 @@ extension ReportStatusExt on ReportStatus {
   String get label {
     switch (this) {
       case ReportStatus.inProgress:
-        return 'In Progress';
+        return 'Selesai';
       case ReportStatus.pending:
         return 'Pending';
       case ReportStatus.rejected:
-        return 'Rejected';
+        return 'Ditolak';
       case ReportStatus.resolved:
-        return 'Resolved';
+        return 'Selesai';
     }
   }
 
@@ -70,31 +74,48 @@ class ObProfilController extends GetxController {
     reports.value = [
       ReportModel(
         id: '#REP-8492',
-        title: 'HVAC Leak in Sector 4',
+        priority: 'URGENT',
+        title: 'Kebocoran Pipa Air',
+        location: 'HQ Tower A, Lantai 4 (Toilet Pria)',
         description: 'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
         date: DateTime(2023, 10, 24),
-        status: ReportStatus.inProgress,
+        status: ReportStatus.resolved,
       ),
       ReportModel(
         id: '#REP-8490',
-        title: 'Broken Entry Door Lock',
-        description: 'The electronic strike on the north entrance is failing to engage. Security concern.',
+        priority: 'URGENT',
+        title: 'Kebocoran Pipa Air',
+        location: 'HQ Tower A, Lantai 4 (Toilet Pria)',
+        description: 'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
         date: DateTime(2023, 10, 22),
-        status: ReportStatus.pending,
-      ),
-      ReportModel(
-        id: '#REP-8475',
-        title: 'Flickering Lights in Breakroom',
-        description: 'Fluorescent tubes in the main staff breakroom are flickering constantly causing headaches.',
-        date: DateTime(2023, 10, 18),
         status: ReportStatus.rejected,
       ),
       ReportModel(
+        id: '#REP-8475',
+        priority: 'STANDARD',
+        title: 'Kebocoran Pipa Air',
+        location: 'HQ Tower A, Lantai 4 (Toilet Pria)',
+        description: 'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
+        date: DateTime(2023, 10, 18),
+        status: ReportStatus.pending,
+      ),
+      ReportModel(
         id: '#REP-8412',
-        title: 'Restroom Sink Clog',
-        description: "Men's restroom sink on floor 2 is completely blocked and overflowing slightly.",
+        priority: 'URGENT',
+        title: 'Kebocoran Pipa Air',
+        location: 'HQ Tower A, Lantai 4 (Toilet Pria)',
+        description: 'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
         date: DateTime(2023, 10, 10),
         status: ReportStatus.resolved,
+      ),
+      ReportModel(
+        id: '#REP-8408',
+        priority: 'URGENT',
+        title: 'Kebocoran Pipa Air',
+        location: 'HQ Tower A, Lantai 4 (Toilet Pria)',
+        description: 'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
+        date: DateTime(2023, 10, 8),
+        status: ReportStatus.rejected,
       ),
     ];
 
@@ -148,7 +169,9 @@ class ObProfilController extends GetxController {
     if (searchQuery.isNotEmpty) {
       result = result.where((r) {
         return r.id.toLowerCase().contains(searchQuery) ||
+            r.priority.toLowerCase().contains(searchQuery) ||
             r.title.toLowerCase().contains(searchQuery) ||
+            r.location.toLowerCase().contains(searchQuery) ||
             r.description.toLowerCase().contains(searchQuery);
       }).toList();
     }

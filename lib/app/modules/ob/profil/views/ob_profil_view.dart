@@ -260,7 +260,7 @@ class ObProfilView extends GetView<ObProfilController> {
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('Filter by status',
+              child: Text('Filter berdasarkan status',
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             ),
             ListTile(
@@ -270,7 +270,11 @@ class ObProfilView extends GetView<ObProfilController> {
                 Get.back();
               },
             ),
-            for (final status in ReportStatus.values)
+            for (final status in const [
+              ReportStatus.resolved,
+              ReportStatus.pending,
+              ReportStatus.rejected,
+            ])
               ListTile(
                 title: Text(status.label),
                 onTap: () {
@@ -353,42 +357,6 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-class _StatusStyle {
-  final Color color;
-  final Color bg;
-  final IconData icon;
-  const _StatusStyle(this.color, this.bg, this.icon);
-}
-
-_StatusStyle _statusStyle(ReportStatus status) {
-  switch (status) {
-    case ReportStatus.inProgress:
-      return const _StatusStyle(
-        Color(0xFF2F6FE0),
-        Color(0xFFE7EFFD),
-        Icons.access_time_rounded,
-      );
-    case ReportStatus.pending:
-      return const _StatusStyle(
-        Color(0xFFC98A1B),
-        Color(0xFFFCF1DC),
-        Icons.access_time_rounded,
-      );
-    case ReportStatus.rejected:
-      return const _StatusStyle(
-        Color(0xFFD9534F),
-        Color(0xFFFBE7E6),
-        Icons.error_outline_rounded,
-      );
-    case ReportStatus.resolved:
-      return const _StatusStyle(
-        Color(0xFF3FA76B),
-        Color(0xFFE4F6EA),
-        Icons.check_circle_outline_rounded,
-      );
-  }
-}
-
 class _ReportCard extends StatelessWidget {
   const _ReportCard({required this.report, required this.onTap});
   final ReportModel report;
@@ -396,165 +364,232 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _statusStyle(report.status);
-    final closed = report.status.isClosed;
-    final dateStr =
-        '${_month(report.date.month)} ${report.date.day}, ${report.date.year}';
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(7),
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.shade200),
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(color: const Color(0xFFD6DCE8), width: 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.035),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Stack(
-              children: [
-                // Left accent status line
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 4,
-                  child: Container(color: style.color),
-                ),
-                // Card contents
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header: ID and Status badge
-                      Row(
+            borderRadius: BorderRadius.circular(7),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 4,
+                    color: const Color(0xFF00518E),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 10, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              report.id,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          Row(
+                            children: [
+                              _PriorityBadge(priority: report.priority),
+                              const Spacer(),
+                              _StatusBadge(status: report.status),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            report.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF1E2A3A),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              height: 1.05,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: style.bg,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  style.icon,
-                                  size: 12,
-                                  color: style.color,
+                          const SizedBox(height: 4),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 1),
+                                child: Icon(
+                                  Icons.location_on_outlined,
+                                  size: 15,
+                                  color: Color(0xFF0057D9),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  report.status.label,
-                                  style: TextStyle(
+                              ),
+                              const SizedBox(width: 3),
+                              Expanded(
+                                child: Text(
+                                  report.location,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFF0057D9),
                                     fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: style.color,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.15,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Title
-                      Text(
-                        report.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: closed ? Colors.grey.shade400 : const Color(0xFF1F2937),
-                          decoration: closed
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
-                          decorationColor: closed ? Colors.grey.shade400 : null,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Description
-                      Text(
-                        report.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          height: 1.4,
-                          color: closed ? Colors.grey.shade400 : Colors.grey.shade600,
-                          decoration: closed
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
-                          decorationColor: closed ? Colors.grey.shade400 : null,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Thin divider line
-                      Container(
-                        height: 1,
-                        color: Colors.grey.shade100,
-                      ),
-                      const SizedBox(height: 10),
-                      // Footer: Date and Chevron
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today_outlined,
-                              size: 13, color: Colors.grey.shade400),
-                          const SizedBox(width: 6),
+                          const SizedBox(height: 4),
                           Text(
-                            dateStr,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade500,
+                            report.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF3F4653),
+                              fontSize: 11,
                               fontWeight: FontWeight.w500,
+                              height: 1.25,
                             ),
                           ),
-                          const Spacer(),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.grey.shade400,
-                            size: 20,
+                          const SizedBox(height: 7),
+                          Container(
+                            height: 1,
+                            color: const Color(0xFFE3E8F0),
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              const Text(
+                                'Lihat Detail',
+                                style: TextStyle(
+                                  color: Color(0xFF1F2937),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 16,
+                                color: Colors.grey.shade500,
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  static String _month(int m) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return months[m - 1];
+class _PriorityBadge extends StatelessWidget {
+  const _PriorityBadge({required this.priority});
+  final String priority;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUrgent = priority == 'URGENT';
+
+    return _ReportBadge(
+      text: priority,
+      icon: Icons.error_outline,
+      color: isUrgent ? const Color(0xFFD11C25) : const Color(0xFFFFB020),
+      bgColor: isUrgent ? const Color(0xFFFFE4E7) : const Color(0xFFFFF2C8),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+  final ReportStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    Color bgColor;
+    IconData icon;
+
+    switch (status) {
+      case ReportStatus.inProgress:
+      case ReportStatus.resolved:
+        color = const Color(0xFF2B9A57);
+        bgColor = const Color(0xFFDDF8E9);
+        icon = Icons.check_circle_outline;
+        break;
+      case ReportStatus.pending:
+        color = const Color(0xFFFFA000);
+        bgColor = const Color(0xFFFFF2C8);
+        icon = Icons.schedule_outlined;
+        break;
+      case ReportStatus.rejected:
+        color = const Color(0xFFD11C25);
+        bgColor = const Color(0xFFFFE4E7);
+        icon = Icons.cancel_outlined;
+        break;
+    }
+
+    return _ReportBadge(
+      text: status.label,
+      icon: icon,
+      color: color,
+      bgColor: bgColor,
+    );
+  }
+}
+
+class _ReportBadge extends StatelessWidget {
+  const _ReportBadge({
+    required this.text,
+    required this.icon,
+    required this.color,
+    required this.bgColor,
+  });
+
+  final String text;
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 23,
+      padding: const EdgeInsets.symmetric(horizontal: 9),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
