@@ -87,7 +87,7 @@ class ReportPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Submit a Report",
+                                "Kirim Laporan",
                                 style: TextStyle(
                                   color: navyColor,
                                   fontSize: 28,
@@ -96,7 +96,7 @@ class ReportPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                "Detail the facility issue below. Providing clear photos and accurate locations helps our team respond faster.",
+                                "Jelaskan secara rinci masalah fasilitas di bawah ini. Menyertakan foto yang jelas dan lokasi yang akurat akan membantu tim kami merespons lebih cepat.",
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 13,
@@ -123,13 +123,13 @@ class ReportPage extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel("Issue Category", isRequired: true, color: Colors.white),
+                                _buildLabel("Kategori Masalah", isRequired: true, color: Colors.white),
                                 const SizedBox(height: 8),
                                 
                                 // DROPDOWN KATEGORI
                                 _buildModernDropdown(
                                   value: RxnString(controller.selectedCategory.value),
-                                  hint: "Select a category",
+                                  hint: "Pilih Kategori",
                                   items: categories,
                                   onChanged: (val) => controller.setCategory(val),
                                 ),
@@ -211,7 +211,7 @@ class ReportPage extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      _buildLabel("Building", isRequired: true, color: navyColor),
+                                      _buildLabel("Lokasi", isRequired: true, color: navyColor),
                                       const SizedBox(height: 8),
                                       
                                       // DROPDOWN BUILDING
@@ -224,7 +224,7 @@ class ReportPage extends StatelessWidget {
 
                                       const SizedBox(height: 20),
 
-                                      _buildLabel("Floor / Room Number", color: navyColor),
+                                      _buildLabel("Lantai / Nomor Ruangan *", color: navyColor),
                                       const SizedBox(height: 8),
                                       _buildTextField(
                                         hint: "Keterangan Tempat",
@@ -233,10 +233,10 @@ class ReportPage extends StatelessWidget {
 
                                       const SizedBox(height: 20),
 
-                                      _buildLabel("Problem Description", isRequired: true, color: navyColor),
+                                      _buildLabel("Deskripsi Masalah", isRequired: true, color: navyColor),
                                       const SizedBox(height: 8),
                                       _buildTextField(
-                                        hint: "Jelaskan deskripsi apa yang rusak?",
+                                        hint: "JJelaskan masalahnya secara rinci.",
                                         maxLines: 4,
                                         onChanged: (val) => controller.descriptionController.value = val,
                                       ),
@@ -247,9 +247,9 @@ class ReportPage extends StatelessWidget {
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          _buildLabel("Photo Evidence", color: navyColor),
+                                          _buildLabel("Bukti Foto", color: navyColor),
                                           Text(
-                                            "Max 3 files (5MB each)",
+                                            "Max 3 foto (1MB)",
                                             style: TextStyle(color: Colors.grey[500], fontSize: 11),
                                           ),
                                         ],
@@ -324,7 +324,7 @@ class ReportPage extends StatelessWidget {
                                               Icon(Icons.camera_alt_outlined, color: Colors.grey[400], size: 30),
                                               const SizedBox(height: 8),
                                               const Text(
-                                                "Tap to upload photos",
+                                                "Ketuk untuk mengunggah foto",
                                                 style: TextStyle(
                                                   fontSize: 12, 
                                                   fontWeight: FontWeight.bold, 
@@ -423,7 +423,7 @@ class ReportPage extends StatelessWidget {
                                             },
                                             icon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
                                             label: const Text(
-                                              "Submit Report",
+                                              "Kirim Laporan",
                                               style: TextStyle(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.bold,

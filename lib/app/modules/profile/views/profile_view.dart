@@ -70,7 +70,7 @@ class ProfilePage extends StatelessWidget {
                       child: Padding(
                         padding: EdgeInsets.only(top: 25),
                         child: Text(
-                          "My Profile",
+                          "Profil Saya",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,
@@ -137,7 +137,7 @@ class ProfilePage extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
                         ),
                         child: const Text(
-                          "My Reports",
+                          "Laporan Saya",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
