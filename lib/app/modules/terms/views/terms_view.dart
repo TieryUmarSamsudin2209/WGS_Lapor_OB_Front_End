@@ -187,7 +187,7 @@ class TermsView extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      height: 52,
+      height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
         color: Colors.white,

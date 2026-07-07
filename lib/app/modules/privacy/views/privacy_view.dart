@@ -254,12 +254,12 @@ class PrivacyView extends StatelessWidget {
               onTap: () => Get.back(),
               borderRadius: BorderRadius.circular(8),
               child: const SizedBox(
-                width: 32,
-                height: 32,
+                width: 30,
+                height: 30,
                 child: Icon(
                   Icons.arrow_back_rounded,
                   color: _primaryBlue,
-                  size: 27,
+                  size: 24,
                 ),
               ),
             ),
@@ -267,7 +267,7 @@ class PrivacyView extends StatelessWidget {
           const SizedBox(width: 10),
           Image.asset(
             'assets/images/logo_wgs.png',
-            width: 52,
+            width: 48,
             fit: BoxFit.contain,
           ),
           const SizedBox(width: 4),
@@ -287,7 +287,7 @@ class PrivacyView extends StatelessWidget {
   Widget _buildImportantCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(19, 19, 18, 19),
+      padding: const EdgeInsets.fromLTRB(22, 30, 22, 28),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -344,7 +344,7 @@ class PrivacyView extends StatelessWidget {
             children: [
               Image.asset(
                 'assets/images/logo_wgs.png',
-                width: 54,
+                width: 50,
                 fit: BoxFit.contain,
               ),
               const SizedBox(width: 4),
@@ -352,13 +352,13 @@ class PrivacyView extends StatelessWidget {
                 'Lapor OB',
                 style: TextStyle(
                   color: Color(0xFF003366),
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 17),
+          const SizedBox(height: 14),
           const Text(
             '© 2026 Lapor-OB. Hak Cipta Dilindungi Undang-Undang.',
             textAlign: TextAlign.center,
@@ -380,7 +380,7 @@ class PrivacyView extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 18),
+              const SizedBox(width: 16),
               GestureDetector(
                 onTap: () => Get.toNamed(Routes.TERMS),
                 child: const Text(
