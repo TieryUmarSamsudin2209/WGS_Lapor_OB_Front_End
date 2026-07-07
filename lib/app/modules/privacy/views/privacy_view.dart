@@ -239,7 +239,7 @@ class PrivacyView extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -264,7 +264,7 @@ class PrivacyView extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Image.asset(
             'assets/images/logo_wgs.png',
             width: 48,
@@ -275,10 +275,12 @@ class PrivacyView extends StatelessWidget {
             'Lapor OB',
             style: TextStyle(
               color: Color(0xFF003366),
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w900,
             ),
           ),
+          const Spacer(),
+          const Icon(Icons.info_outline_rounded, color: Color(0xFF4B5563)),
         ],
       ),
     );

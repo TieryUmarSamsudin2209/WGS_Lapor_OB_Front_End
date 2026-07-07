@@ -14,12 +14,21 @@ class TermsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _pageBg,
-      body: SafeArea(
-        child: Column(
+    final canNavigateBack = Navigator.of(context).canPop();
+
+    return PopScope(
+      canPop: canNavigateBack,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _openPreviousRoute();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: _pageBg,
+        body: SafeArea(
+          child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -180,12 +189,32 @@ class TermsView extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  void _goBack(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    _openPreviousRoute();
+  }
+
+  void _openPreviousRoute() {
+    final previousRoute = Get.previousRoute;
+    if (previousRoute.isNotEmpty && previousRoute != Routes.TERMS) {
+      Get.offNamed(previousRoute);
+      return;
+    }
+
+    Get.offNamed(Routes.LOGIN);
+  }
+
+  Widget _buildHeader(BuildContext context) {
     return Container(
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -200,7 +229,7 @@ class TermsView extends StatelessWidget {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => Get.back(),
+              onTap: () => _goBack(context),
               borderRadius: BorderRadius.circular(8),
               child: const SizedBox(
                 width: 30,
