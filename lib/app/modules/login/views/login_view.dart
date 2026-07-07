@@ -177,7 +177,9 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 28),
+                _buildPolicyLinks(),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -200,7 +202,6 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  // --- MENGGUNAKAN SOURCE INPUT FIELD LAMA ANDA ---
   Widget _buildInputField({required String hint, bool isPassword = false}) {
     return Container(
       decoration: BoxDecoration(
@@ -228,6 +229,41 @@ class LoginPage extends StatelessWidget {
           isDense: true,
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPolicyLinks() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildPolicyText("Kebijakan Privasi"),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5),
+          child: Text(
+            "•",
+            style: TextStyle(
+              color: Color(0xFF7B879D),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        _buildPolicyText("Syarat & Ketentuan"),
+      ],
+    );
+  }
+
+  Widget _buildPolicyText(String label) {
+    return GestureDetector(
+      onTap: () {},
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF7B879D),
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

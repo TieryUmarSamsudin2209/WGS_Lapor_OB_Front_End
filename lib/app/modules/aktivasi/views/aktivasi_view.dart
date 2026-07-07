@@ -58,10 +58,9 @@ class AktivasiView extends GetView<AktivasiController> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.3),
-                          spreadRadius: -10,
-                          blurRadius: 20,
-                          offset: const Offset(0, 25),
+                          color: const Color(0xFF003366).withValues(alpha: 0.06),
+                          blurRadius: 25,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
@@ -70,7 +69,7 @@ class AktivasiView extends GetView<AktivasiController> {
                       children: [
                         Center(
                           child: Text(
-                            "Halo, Usn!",
+                            "Halo,Usn!",
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.w900,
@@ -81,7 +80,7 @@ class AktivasiView extends GetView<AktivasiController> {
                         const SizedBox(height: 8),
                         Center(
                           child: Text(
-                            "Selamat datang di lapor OB!",
+                            "Selamat datang di Lapor OB!",
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -167,7 +166,9 @@ class AktivasiView extends GetView<AktivasiController> {
                   ),
                 ),
 
-                const SizedBox(height: 50),
+                const SizedBox(height: 28),
+                _buildPolicyLinks(),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -217,6 +218,41 @@ class AktivasiView extends GetView<AktivasiController> {
           isDense: true,
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPolicyLinks() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildPolicyText("Kebijakan Privasi"),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5),
+          child: Text(
+            "•",
+            style: TextStyle(
+              color: Color(0xFF7B879D),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        _buildPolicyText("Syarat & Ketentuan"),
+      ],
+    );
+  }
+
+  Widget _buildPolicyText(String label) {
+    return GestureDetector(
+      onTap: () {},
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF7B879D),
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
