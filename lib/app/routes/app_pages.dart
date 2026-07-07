@@ -16,6 +16,7 @@ import '../modules/report/bindings/report_binding.dart';
 import '../modules/report/views/report_view.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
 import '../modules/splash_screen/views/splash_screen_view.dart';
+import '../modules/terms/views/terms_view.dart';
 
 import '../modules/ob/profil/bindings/ob_profil_binding.dart';
 import '../modules/ob/profil/views/ob_profil_view.dart';
@@ -81,5 +82,6 @@ class AppPages {
       page: () => const ObChecklistView(),
       binding: ObChecklistBinding(),
     ),
+    GetPage(name: Routes.TERMS, page: () => const TermsView()),
   ];
 }

@@ -239,14 +239,17 @@ class AktivasiView extends GetView<AktivasiController> {
             ),
           ),
         ),
-        _buildPolicyText("Syarat & Ketentuan"),
+        _buildPolicyText(
+          "Syarat & Ketentuan",
+          onTap: () => Get.toNamed(Routes.TERMS),
+        ),
       ],
     );
   }
 
-  Widget _buildPolicyText(String label) {
+  Widget _buildPolicyText(String label, {VoidCallback? onTap}) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap,
       child: Text(
         label,
         style: const TextStyle(
