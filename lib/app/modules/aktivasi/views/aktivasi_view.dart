@@ -227,7 +227,10 @@ class AktivasiView extends GetView<AktivasiController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildPolicyText("Kebijakan Privasi"),
+        _buildPolicyText(
+          "Kebijakan Privasi",
+          onTap: () => Get.toNamed(Routes.PRIVACY),
+        ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 5),
           child: Text(

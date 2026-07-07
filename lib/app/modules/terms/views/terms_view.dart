@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../routes/app_pages.dart';
+
 class TermsView extends StatelessWidget {
   const TermsView({super.key});
 
@@ -133,7 +135,7 @@ class TermsView extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 16),
                                 GestureDetector(
-                                  onTap: () {},
+                                  onTap: () => Get.toNamed(Routes.PRIVACY),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: const [
@@ -271,17 +273,20 @@ class TermsView extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text(
-                'Kebijakan Privasi',
-                style: TextStyle(
-                  color: Color(0xFF4B5563),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+            children: [
+              GestureDetector(
+                onTap: () => Get.toNamed(Routes.PRIVACY),
+                child: const Text(
+                  'Kebijakan Privasi',
+                  style: TextStyle(
+                    color: Color(0xFF4B5563),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              SizedBox(width: 16),
-              Text(
+              const SizedBox(width: 16),
+              const Text(
                 'Syarat & Ketentuan',
                 style: TextStyle(
                   color: _primaryBlue,

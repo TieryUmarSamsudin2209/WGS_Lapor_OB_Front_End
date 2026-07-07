@@ -12,6 +12,7 @@ import '../modules/ob/detail/bindings/ob_detail_binding.dart';
 import '../modules/ob/detail/views/ob_detail_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
+import '../modules/privacy/views/privacy_view.dart';
 import '../modules/report/bindings/report_binding.dart';
 import '../modules/report/views/report_view.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
@@ -83,5 +84,6 @@ class AppPages {
       binding: ObChecklistBinding(),
     ),
     GetPage(name: Routes.TERMS, page: () => const TermsView()),
+    GetPage(name: Routes.PRIVACY, page: () => const PrivacyView()),
   ];
 }
