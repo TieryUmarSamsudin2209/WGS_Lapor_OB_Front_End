@@ -22,17 +22,23 @@ class ObChecklistView extends GetView<ObChecklistController> {
       backgroundColor: isDark ? AppDarkColors.background : _bg,
       body: Stack(
         children: [
-          SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 16),
-                _buildSectionsList(),
-                const SizedBox(height: 110),
-              ],
-            ),
+          Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildSectionsList(),
+                      const SizedBox(height: 110),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           Positioned(
             bottom: 0,

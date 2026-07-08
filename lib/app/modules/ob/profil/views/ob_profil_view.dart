@@ -30,11 +30,18 @@ class ObProfilView extends GetView<ObProfilController> {
       body: Stack(
         children: [
           // Scrollable Content
-          SingleChildScrollView(
-            clipBehavior: Clip.none,
-            child: Stack(
-              alignment: Alignment.topCenter,
-              children: [
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const headerHeight = 190.0;
+                final bodyMinHeight = (constraints.maxHeight - headerHeight)
+                    .clamp(0.0, double.infinity);
+
+                return SingleChildScrollView(
+                  clipBehavior: Clip.none,
+                  child: Stack(
+                alignment: Alignment.topCenter,
+                children: [
                 // Background & Content Column
                 Column(
                   children: [
@@ -65,6 +72,9 @@ class ObProfilView extends GetView<ObProfilController> {
                     // Body container
                     Container(
                       width: double.infinity,
+                      constraints: BoxConstraints(
+                        minHeight: bodyMinHeight,
+                      ),
                       decoration: BoxDecoration(
                         color: surface,
                         borderRadius: const BorderRadius.only(
@@ -73,8 +83,9 @@ class ObProfilView extends GetView<ObProfilController> {
                         ),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: [
+                      child: IntrinsicHeight(
+                        child: Column(
+                          children: [
                           const SizedBox(height: 75), // Spacing for the overlapping avatar
 
                           // Name
@@ -264,6 +275,7 @@ class ObProfilView extends GetView<ObProfilController> {
                             );
                           }),
 
+                          const Spacer(),
                           const SizedBox(height: 4),
                           _LogoutButton(
                             onPressed: () => LogoutConfirmationDialog.show(
@@ -272,8 +284,9 @@ class ObProfilView extends GetView<ObProfilController> {
                             ),
                           ),
 
-                          const SizedBox(height: 110), // Bottom spacer for floating bar
-                        ],
+                            const SizedBox(height: 110), // Bottom spacer for floating bar
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -284,7 +297,10 @@ class ObProfilView extends GetView<ObProfilController> {
                   top: 130, // 190 (header height) - 60 (avatar radius) = 130
                   child: _Avatar(controller: controller),
                 ),
-              ],
+                ],
+                  ),
+                );
+              },
             ),
           ),
 
@@ -307,51 +323,56 @@ class ObProfilView extends GetView<ObProfilController> {
     final itemColor = isDark ? Colors.white70 : const Color(0xFF1E2A3A);
 
     Get.bottomSheet(
-      Material(
-        color: sheetColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        clipBehavior: Clip.antiAlias,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'Filter berdasarkan status',
-                  style: TextStyle(
-                    color: titleColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+      Padding(
+        padding: const EdgeInsets.only(bottom: 104),
+        child: Material(
+          color: sheetColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Filter berdasarkan status',
+                    style: TextStyle(
+                      color: titleColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-              ),
-              ListTile(
-                tileColor: sheetColor,
-                title: Text('All', style: TextStyle(color: itemColor)),
-                onTap: () {
-                  controller.setStatusFilter(null);
-                  Get.back();
-                },
-              ),
-              for (final status in const [
-                ReportStatus.resolved,
-                ReportStatus.pending,
-                ReportStatus.rejected,
-              ])
                 ListTile(
                   tileColor: sheetColor,
-                  title: Text(status.label, style: TextStyle(color: itemColor)),
+                  title: Text('All', style: TextStyle(color: itemColor)),
                   onTap: () {
-                    controller.setStatusFilter(status);
+                    controller.setStatusFilter(null);
                     Get.back();
                   },
                 ),
-            ],
+                for (final status in const [
+                  ReportStatus.resolved,
+                  ReportStatus.pending,
+                  ReportStatus.rejected,
+                ])
+                  ListTile(
+                    tileColor: sheetColor,
+                    title:
+                        Text(status.label, style: TextStyle(color: itemColor)),
+                    onTap: () {
+                      controller.setStatusFilter(status);
+                      Get.back();
+                    },
+                  ),
+              ],
+            ),
           ),
         ),
       ),
+      backgroundColor: Colors.transparent,
     );
   }
 }

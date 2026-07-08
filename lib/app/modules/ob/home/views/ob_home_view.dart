@@ -42,7 +42,7 @@ class ObHomePage extends GetView<ObHomeController> {
       bottom: false,
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(13, 128, 13, 104),
+        padding: const EdgeInsets.fromLTRB(16, 132, 16, 110),
         child: Column(
           children: [
             _SectionCard(
@@ -56,7 +56,7 @@ class ObHomePage extends GetView<ObHomeController> {
                 ),
               ),
             ),
-            const SizedBox(height: 13),
+            const SizedBox(height: 16),
             _SectionCard(
               title: 'Laporan',
               onSeeAll: () {
@@ -228,15 +228,15 @@ class _SectionCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
       decoration: BoxDecoration(
         color: isDark ? AppDarkColors.surface : _blue,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: (isDark ? Colors.black : _blue).withValues(alpha: 0.22),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -249,34 +249,34 @@ class _SectionCard extends StatelessWidget {
                   title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    height: 1,
+                    fontSize: 15,
+                    height: 1.3,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
               TextButton(
                 onPressed: onSeeAll,
-                style: TextButton.styleFrom(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  minimumSize: Size.zero,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 2,
-                    vertical: 4,
+                  style: TextButton.styleFrom(
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 4,
                   ),
                 ),
                 child: const Text(
                   'Lihat semua',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 8,
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 13),
+          const SizedBox(height: 14),
           child,
         ],
       ),
@@ -300,11 +300,11 @@ class _TaskCard extends StatelessWidget {
 
       return Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.fromLTRB(21, 13, 15, 10),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
         decoration: BoxDecoration(
           color: isDark ? AppDarkColors.card : Colors.white,
-          borderRadius: BorderRadius.circular(7),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
               color: isDark
@@ -327,7 +327,7 @@ class _TaskCard extends StatelessWidget {
                   ? const Color(0xFF16A05C)
                   : const Color(0xFFFF9B24),
             ),
-            const SizedBox(width: 11),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,8 +338,8 @@ class _TaskCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: isDark ? Colors.white : _blue,
-                      fontSize: 14,
-                      height: 1.15,
+                      fontSize: 14.5,
+                      height: 1.2,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -350,12 +350,12 @@ class _TaskCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: isDark ? Colors.white70 : _muted,
-                      fontSize: 10.5,
-                      height: 1.16,
+                      fontSize: 11.5,
+                      height: 1.4,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
                     child: _StatusPill(
@@ -399,13 +399,13 @@ class _ReportCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => Get.toNamed(Routes.OB_DETAIL, arguments: report),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(14),
           child: Container(
             width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 7),
+            margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
               color: isDark ? AppDarkColors.card : Colors.white,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isDark ? AppDarkColors.border : Colors.white,
                 width: 1,
@@ -416,18 +416,18 @@ class _ReportCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    width: 4,
+                    width: 5,
                     decoration: const BoxDecoration(
                       color: Color(0xFF094976),
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(6),
-                        bottomLeft: Radius.circular(6),
+                        topLeft: Radius.circular(14),
+                        bottomLeft: Radius.circular(14),
                       ),
                     ),
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 8, 6),
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -438,25 +438,25 @@ class _ReportCard extends StatelessWidget {
                               _Badge(style: status),
                             ],
                           ),
-                          const SizedBox(height: 7),
+                          const SizedBox(height: 10),
                           Text(
                             report.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 13,
-                              height: 1,
+                              fontSize: 14.5,
+                              height: 1.2,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 5),
                           Row(
                             children: [
                               const Icon(
                                 Icons.location_on_outlined,
                                 color: Color(0xFF1E32F5),
-                                size: 13,
+                                size: 15,
                               ),
                               Expanded(
                                 child: Text(
@@ -465,15 +465,15 @@ class _ReportCard extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     color: Color(0xFF1E32F5),
-                                    fontSize: 9,
-                                    height: 1.1,
+                                    fontSize: 11,
+                                    height: 1.2,
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 4),
                           Text(
                             report.description,
                             maxLines: 2,
@@ -482,12 +482,12 @@ class _ReportCard extends StatelessWidget {
                               color: isDark
                                   ? Colors.white70
                                   : const Color(0xFF42474F),
-                              fontSize: 8.6,
-                              height: 1.18,
+                              fontSize: 11.5,
+                              height: 1.4,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 8),
                           Divider(
                             height: 1,
                             thickness: 1,
@@ -495,7 +495,7 @@ class _ReportCard extends StatelessWidget {
                                 ? Colors.white12
                                 : const Color(0xFFE3E7ED),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
                               Obx(
@@ -517,13 +517,13 @@ class _ReportCard extends StatelessWidget {
                                   color: isDark
                                       ? Colors.white70
                                       : const Color(0xFF42474F),
-                                  fontSize: 9,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                               Icon(
                                 Icons.chevron_right_rounded,
-                                size: 13,
+                                size: 16,
                                 color: isDark
                                     ? Colors.white70
                                     : const Color(0xFF42474F),
@@ -558,22 +558,13 @@ class _TinyIconBox extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      width: 16,
-      height: 16,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
-        borderRadius: BorderRadius.circular(3),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : const Color(0x330015B0),
-            blurRadius: 3,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: isDark ? AppDarkColors.surfaceVariant : color.withValues(alpha: 0.14),
+        shape: BoxShape.circle,
       ),
-      child: Icon(icon, color: color, size: 11),
+      child: Icon(icon, color: color, size: 19),
     );
   }
 }
@@ -594,7 +585,7 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(20),
@@ -602,15 +593,15 @@ class _StatusPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: foreground, size: 10),
-          const SizedBox(width: 3),
+          Icon(icon, color: foreground, size: 11),
+          const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               color: foreground,
-              fontSize: 9,
+              fontSize: 11,
               height: 1,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -641,7 +632,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: style.background,
         borderRadius: BorderRadius.circular(20),
@@ -649,15 +640,15 @@ class _Badge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(style.icon, color: style.foreground, size: 9),
-          const SizedBox(width: 3),
+          Icon(style.icon, color: style.foreground, size: 11),
+          const SizedBox(width: 4),
           Text(
             style.label,
             style: TextStyle(
               color: style.foreground,
-              fontSize: 8,
+              fontSize: 11,
               height: 1,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

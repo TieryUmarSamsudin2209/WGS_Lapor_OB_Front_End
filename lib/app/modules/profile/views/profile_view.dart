@@ -109,350 +109,377 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: pageBg,
       body: Stack(
         children: [
-      SingleChildScrollView(
-        child: Stack(
-          alignment: Alignment.topCenter,
-          children: [
-            // Background & Content Column
-            Column(
-              children: [
-                // Blue header background with title
-                Container(
-                  width: double.infinity,
-                  height: 180,
-                  color: pageBg,
-                  child: const SafeArea(
-                    bottom: false,
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 25),
-                        child: Text(
-                          "Profil Saya",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                
-                // White body container
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: surface,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const headerHeight = 180.0;
+                final bodyMinHeight = (constraints.maxHeight - headerHeight)
+                    .clamp(0.0, double.infinity);
+
+                return SingleChildScrollView(
+                  child: Stack(
+                    alignment: Alignment.topCenter,
                     children: [
-                      const SizedBox(height: 70), // Spacing for the overlapping avatar
-                      
-                      // Name and Username
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
+                      // Background & Content Column
+                      Column(
                         children: [
-                          Flexible(
-                            child: Text(
-                              fullName,
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () => EditProfileDialog.show(
-                              context,
-                              avatarUrl: avatarUrl,
-                              firstName: firstName,
-                              lastName: lastName,
-                              onSave: (newFirstName, newLastName) {
-                                setState(() {
-                                  firstName = newFirstName.isEmpty
-                                      ? firstName
-                                      : newFirstName;
-                                  lastName = newLastName;
-                                });
-                              },
-                              onAvatarChanged: (newAvatarPath) {
-                                setState(() => avatarUrl = newAvatarPath);
-                              },
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: Icon(
-                                Icons.edit_outlined,
-                                size: 18,
-                                color: textColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.person_pin, size: 14, color: mutedColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            "@username",
-                            style: TextStyle(
-                              color: mutedColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // "My Reports" Button
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF104A7F),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 28,
-                            vertical: 10,
-                          ),
-                        ),
-                        child: const Text(
-                          "Laporan Saya",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // Search Bar
+                      // Blue header background with title
                       Container(
+                        width: double.infinity,
+                        height: 180,
+                        color: pageBg,
+                        child: const SafeArea(
+                          bottom: false,
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 25),
+                              child: Text(
+                                "Profil Saya",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // White body container
+                      Container(
+                        width: double.infinity,
+                        constraints: BoxConstraints(
+                          minHeight: bodyMinHeight,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppDarkColors.surfaceVariant
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isDark
-                                ? AppDarkColors.accent
-                                : const Color(0xFFE2EAF8),
-                            width: 1.5,
+                          color: surface,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(30),
+                            topRight: Radius.circular(30),
                           ),
                         ),
-                        child: TextField(
-                          onChanged: (value) {
-                            setState(() => _searchQuery = value);
-                          },
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 13,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: "Search reports by ID or category...",
-                            hintStyle: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 13,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.search,
-                              color: Colors.grey,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      
-                      // Filter Button
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          onPressed: _showFilterSheet,
-                          icon: Icon(
-                            Icons.tune,
-                            size: 16,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                          label: Text(
-                            _selectedStatus ?? "Filter",
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.black87,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: isDark
-                                  ? AppDarkColors.border
-                                  : const Color(0xFFE2EAF8),
-                              width: 1.5,
-                            ),
-                            backgroundColor: isDark
-                                ? AppDarkColors.surfaceVariant
-                                : Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      
-                      // List of Reports
-                      if (filteredReports.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 30),
-                          child: Text(
-                            "Tidak ada laporan yang cocok",
-                            style: TextStyle(
-                              color: mutedColor,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        )
-                      else
-                        ...filteredReports.map(
-                          (report) => _buildReportCard(report),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: IntrinsicHeight(
+                          child: Column(
+                              children: [
+                              const SizedBox(
+                              height: 70,
+                            ), // Spacing for the overlapping avatar
 
-                      const SizedBox(height: 12),
+                            // Name and Username
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    fullName,
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () => EditProfileDialog.show(
+                                    context,
+                                    avatarUrl: avatarUrl,
+                                    firstName: firstName,
+                                    lastName: lastName,
+                                    onSave: (newFirstName, newLastName) {
+                                      setState(() {
+                                        firstName = newFirstName.isEmpty
+                                            ? firstName
+                                            : newFirstName;
+                                        lastName = newLastName;
+                                      });
+                                    },
+                                    onAvatarChanged: (newAvatarPath) {
+                                      setState(() => avatarUrl = newAvatarPath);
+                                    },
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Icon(
+                                      Icons.edit_outlined,
+                                      size: 18,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.person_pin,
+                                  size: 14,
+                                  color: mutedColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "@username",
+                                  style: TextStyle(
+                                    color: mutedColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
 
-                      _LogoutButton(
-                        onPressed: () => LogoutConfirmationDialog.show(
-                          context,
-                          onConfirm: () => Get.offAllNamed(Routes.LOGIN),
+                            // "My Reports" Button
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF104A7F),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 28,
+                                  vertical: 10,
+                                ),
+                              ),
+                              child: const Text(
+                                "Laporan Saya",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Search Bar
+                            Container(
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppDarkColors.surfaceVariant
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppDarkColors.accent
+                                      : const Color(0xFFE2EAF8),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: TextField(
+                                onChanged: (value) {
+                                  setState(() => _searchQuery = value);
+                                },
+                                style: TextStyle(
+                                  color:
+                                      isDark ? Colors.white : Colors.black87,
+                                  fontSize: 13,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: "Search reports by ID or category...",
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 13,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.search,
+                                    color: Colors.grey,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+
+                            // Filter Button
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: OutlinedButton.icon(
+                                onPressed: _showFilterSheet,
+                                icon: Icon(
+                                  Icons.tune,
+                                  size: 16,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black87,
+                                ),
+                                label: Text(
+                                  _selectedStatus ?? "Filter",
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black87,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(
+                                    color: isDark
+                                        ? AppDarkColors.border
+                                        : const Color(0xFFE2EAF8),
+                                    width: 1.5,
+                                  ),
+                                  backgroundColor: isDark
+                                      ? AppDarkColors.surfaceVariant
+                                      : Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+
+                            // List of Reports
+                            if (filteredReports.isEmpty)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 30),
+                                child: Text(
+                                  "Tidak ada laporan yang cocok",
+                                  style: TextStyle(
+                                    color: mutedColor,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              )
+                            else
+                              ...filteredReports.map(
+                                (report) => _buildReportCard(report),
+                              ),
+
+                            const Spacer(),
+                            const SizedBox(height: 12),
+
+                            _LogoutButton(
+                              onPressed: () => LogoutConfirmationDialog.show(
+                                context,
+                                onConfirm: () => Get.offAllNamed(Routes.LOGIN),
+                              ),
+                            ),
+
+                            const SizedBox(height: 120),
+                            ],
+                          ),
                         ),
                       ),
-                      
-                      const SizedBox(height: 110),
+                        ],
+                      ),
+
+                  // Positioned Avatar drawn ON TOP of the white container
+                  Positioned(
+                    top: 126, // 180 (header height) - 54 (radius + border)
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
+                      ),
+                      child: Hero(
+                        tag: 'profile-avatar',
+                        child: ClipOval(
+                          child: avatarUrl.startsWith('http')
+                              ? Image.network(
+                                  avatarUrl,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.file(
+                                  File(avatarUrl),
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
                     ],
                   ),
-                ),
-              ],
+                );
+              },
             ),
-            
-            // Positioned Avatar drawn ON TOP of the white container
-            Positioned(
-              top: 126, // 180 (header height) - 54 (radius + border) = 126
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    )
-                  ],
-                ),
-                child: Hero(
-                  tag: 'profile-avatar',
-                  child: ClipOval(
-                    child: avatarUrl.startsWith('http')
-                        ? Image.network(
-                            avatarUrl,
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            File(avatarUrl),
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
 
-      // --- FLOATING NAVIGATION BAR ---
-      Positioned(
-        bottom: 25,
-        left: 20,
-        right: 20,
-        child: Container(
-          height: 70,
-          decoration: BoxDecoration(
-            color: isDark ? AppDarkColors.surface : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF4FA0FF).withValues(alpha: 0.4),
-                blurRadius: 20,
-                spreadRadius: 2,
-                offset: const Offset(0, 5),
+          // --- FLOATING NAVIGATION BAR ---
+          Positioned(
+            bottom: 25,
+            left: 20,
+            right: 20,
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: isDark ? AppDarkColors.surface : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4FA0FF).withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-            ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: BottomNavItem(
+                      icon: Icons.home_outlined,
+                      label: "Home",
+                      isActive: false,
+                      onTap: () => Get.offAllNamed(Routes.HOME),
+                      navyColor: navyTextColor,
+                    ),
+                  ),
+                  Expanded(
+                    child: BottomNavItem(
+                      icon: Icons.add_circle_outline,
+                      label: "Report",
+                      isActive: false,
+                      onTap: () => Get.toNamed(Routes.REPORT),
+                      navyColor: navyTextColor,
+                    ),
+                  ),
+                  Expanded(
+                    child: BottomNavItem(
+                      icon: Icons.person,
+                      label: "Profile",
+                      isActive: true,
+                      onTap: () {},
+                      navyColor: navyTextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: BottomNavItem(
-                  icon: Icons.home_outlined,
-                  label: "Home",
-                  isActive: false,
-                  onTap: () => Get.offAllNamed(Routes.HOME),
-                  navyColor: navyTextColor,
-                ),
-              ),
-              Expanded(
-                child: BottomNavItem(
-                  icon: Icons.add_circle_outline,
-                  label: "Report",
-                  isActive: false,
-                  onTap: () => Get.toNamed(Routes.REPORT),
-                  navyColor: navyTextColor,
-                ),
-              ),
-              Expanded(
-                child: BottomNavItem(
-                  icon: Icons.person,
-                  label: "Profile",
-                  isActive: true,
-                  onTap: () {},
-                  navyColor: navyTextColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
         ],
       ),
     );
@@ -577,14 +604,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: sheetColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return SafeArea(
-          child: Padding(
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(0, 0, 0, 120),
             padding: const EdgeInsets.fromLTRB(8, 12, 8, 16),
+            decoration: BoxDecoration(
+              color: sheetColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
