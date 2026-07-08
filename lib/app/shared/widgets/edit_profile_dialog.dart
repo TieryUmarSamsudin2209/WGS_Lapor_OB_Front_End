@@ -38,8 +38,8 @@ class EditProfileDialog extends StatefulWidget {
       barrierLabel: 'Tutup',
       barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
-      transitionBuilder: (context, animation, _, __) {
+      pageBuilder: (_, _, _) => const SizedBox.shrink(),
+      transitionBuilder: (context, animation, _, _) {
         final curved = CurvedAnimation(
           parent: animation,
           curve: Curves.easeOutCubic,

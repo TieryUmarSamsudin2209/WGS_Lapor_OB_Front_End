@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/theme_controller.dart';
+
 class BottomNavItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -18,13 +20,18 @@ class BottomNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? const Color(0xFF052C58) : navyColor;
+    final activeContentColor = isDark ? AppDarkColors.accent : Colors.white;
+    final inactiveColor = isDark ? const Color(0xFF8B929C) : navyColor;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         height: double.infinity,
         decoration: BoxDecoration(
-          color: isActive ? navyColor : Colors.transparent,
+          color: isActive ? activeColor : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
@@ -32,15 +39,15 @@ class BottomNavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isActive ? Colors.white : navyColor,
+              color: isActive ? activeContentColor : inactiveColor,
               size: 24,
             ),
             if (isActive) const SizedBox(width: 6),
             if (isActive)
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: activeContentColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
@@ -50,7 +57,7 @@ class BottomNavItem extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: navyColor,
+                  color: inactiveColor,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),

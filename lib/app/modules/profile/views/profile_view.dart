@@ -6,6 +6,7 @@ import '../../../routes/app_pages.dart';
 import '../../../shared/widgets/bottom_nav.dart';
 import '../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../shared/widgets/logout_confirmation_dialog.dart';
+import '../../../shared/theme/theme_controller.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -60,9 +61,14 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final fullName = '$firstName $lastName'.trim();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pageBg = isDark ? AppDarkColors.background : const Color(0xFF104A7F);
+    final surface = isDark ? AppDarkColors.surface : Colors.white;
+    final textColor = isDark ? Colors.white : navyTextColor;
+    final mutedColor = isDark ? Colors.white70 : navyTextColor.withValues(alpha: 0.7);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF104A7F),
+      backgroundColor: pageBg,
       body: Stack(
         children: [
       SingleChildScrollView(
@@ -76,7 +82,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Container(
                   width: double.infinity,
                   height: 180,
-                  color: const Color(0xFF104A7F),
+                  color: pageBg,
                   child: const SafeArea(
                     bottom: false,
                     child: Align(
@@ -99,9 +105,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 // White body container
                 Container(
                   width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: surface,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
                     ),
@@ -122,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: navyTextColor,
+                                color: textColor,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -153,7 +159,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               child: Icon(
                                 Icons.edit_outlined,
                                 size: 18,
-                                color: navyTextColor,
+                                color: textColor,
                               ),
                             ),
                           ),
@@ -163,12 +169,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person_pin, size: 14, color: navyTextColor.withValues(alpha: 0.7)),
+                          Icon(Icons.person_pin, size: 14, color: mutedColor),
                           const SizedBox(width: 4),
                           Text(
                             "@username",
                             style: TextStyle(
-                              color: navyTextColor.withValues(alpha: 0.7),
+                              color: mutedColor,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -202,9 +208,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Search Bar
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFE2EAF8), width: 1.5),
+                          border: Border.all(
+                            color: isDark ? AppDarkColors.accent : const Color(0xFFE2EAF8),
+                            width: 1.5,
+                          ),
                         ),
                         child: const TextField(
                           decoration: InputDecoration(
@@ -305,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Container(
           height: 70,
           decoration: BoxDecoration(
-            color: Colors.white,
+                            color: isDark ? AppDarkColors.surface : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -361,13 +370,18 @@ class _ProfilePageState extends State<ProfilePage> {
     final String title = report["title"] as String;
     final String location = report["location"] as String;
     final String description = report["description"] as String;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
+    final bodyColor = isDark ? Colors.white70 : const Color(0xFF3F4653);
+    final borderColor = isDark ? AppDarkColors.accent : const Color(0xFFD6DCE8);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: const Color(0xFFD6DCE8), width: 1),
+        border: Border.all(color: borderColor, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.035),
@@ -402,8 +416,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(height: 14),
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Color(0xFF1E2A3A),
+                        style: TextStyle(
+                          color: titleColor,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           height: 1.05,
@@ -442,8 +456,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF3F4653),
+                        style: TextStyle(
+                          color: bodyColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           height: 1.25,

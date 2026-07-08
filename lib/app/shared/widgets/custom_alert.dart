@@ -19,7 +19,7 @@ class CustomAlert {
       barrierLabel: 'Dismiss',
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 400),
-      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+      pageBuilder: (_, _, _) => const SizedBox.shrink(),
       transitionBuilder: (ctx, a1, a2, _) {
         final curve = Curves.easeOutBack.transform(a1.value);
         return Transform.scale(

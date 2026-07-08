@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../modules/aktivasi/bindings/aktivasi_binding.dart';
@@ -31,10 +32,17 @@ class AppPages {
 
   static const INITIAL = Routes.SPLASH_SCREEN;
 
+  static Widget _lightOnly(Widget child) {
+    return Theme(
+      data: ThemeData.light(useMaterial3: true),
+      child: child,
+    );
+  }
+
   static final routes = [
     GetPage(
       name: _Paths.LOGIN,
-      page: () => const LoginPage(),
+      page: () => _lightOnly(const LoginPage()),
       binding: LoginBinding(),
     ),
     GetPage(
@@ -54,13 +62,13 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.SPLASH_SCREEN,
-      page: () => const SplashScreenView(),
+      page: () => _lightOnly(const SplashScreenView()),
       binding: SplashScreenBinding(),
       transition: Transition.fade,
     ),
     GetPage(
       name: _Paths.AKTIVASI,
-      page: () => const AktivasiView(),
+      page: () => _lightOnly(const AktivasiView()),
       binding: AktivasiBinding(),
     ),
     GetPage(
@@ -83,7 +91,7 @@ class AppPages {
       page: () => const ObChecklistView(),
       binding: ObChecklistBinding(),
     ),
-    GetPage(name: Routes.TERMS, page: () => const TermsView()),
-    GetPage(name: Routes.PRIVACY, page: () => const PrivacyView()),
+    GetPage(name: Routes.TERMS, page: () => _lightOnly(const TermsView())),
+    GetPage(name: Routes.PRIVACY, page: () => _lightOnly(const PrivacyView())),
   ];
 }

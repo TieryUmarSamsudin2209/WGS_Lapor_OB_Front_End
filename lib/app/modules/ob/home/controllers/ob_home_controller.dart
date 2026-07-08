@@ -16,6 +16,7 @@ class DailyTask {
 class HomeReport {
   final String id;
   final String title;
+  final String location;
   final String description;
   final String priority; // 'URGENT' or 'STANDARD'
   final RxString status; // 'Belum Diproses', 'Sedang Diproses', 'Selesai', 'Ditolak'
@@ -24,6 +25,7 @@ class HomeReport {
   HomeReport({
     required this.id,
     required this.title,
+    required this.location,
     required this.description,
     required this.priority,
     required String status,
@@ -50,13 +52,13 @@ class ObHomeController extends GetxController {
   void _loadDummyData() {
     dailyTasks.value = [
       DailyTask(
-        title: 'Mengepel',
-        location: 'Gedung Baru, Lantai 1',
+        title: 'Mengepel & Menyapu',
+        location: 'Membersihkan seluruh lantai area kerja dan koridor',
         status: 'resolved',
       ),
       DailyTask(
-        title: 'Menyapu',
-        location: 'Gedung Lama, Toilet Lantai 1',
+        title: 'Dusting (Mengelap Debu)',
+        location: 'Mengelap meja kerja, meja meeting, kursi, rak buku, dan ambang jendela.',
         status: 'pending',
       ),
     ];
@@ -65,23 +67,25 @@ class ObHomeController extends GetxController {
       HomeReport(
         id: '#REP-01',
         title: 'Kebocoran Pipa Air',
+        location: 'HO Tower A, Lantai 4 (Toilet Pria)',
         description:
             'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
         priority: 'URGENT',
-        status: 'Belum Diproses',
+        status: 'Selesai',
       ),
       HomeReport(
         id: '#REP-02',
-        title: 'HVAC Leak in Sector 4',
+        title: 'Kebocoran Pipa Air',
+        location: 'HO Tower A, Lantai 4 (Toilet Pria)',
         description:
             'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
-        priority: 'STANDARD',
-        status: 'Sedang Diproses',
-        hasCollaboration: true,
+        priority: 'URGENT',
+        status: 'Ditolak',
       ),
       HomeReport(
         id: '#REP-03',
-        title: 'HVAC Leak in Sector 4',
+        title: 'Kebocoran Pipa Air',
+        location: 'HO Tower A, Lantai 4 (Toilet Pria)',
         description:
             'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage',
         priority: 'STANDARD',
@@ -113,6 +117,6 @@ class ObHomeController extends GetxController {
   }
 
   void openReportDetail(HomeReport report) {
-    Get.toNamed(Routes.OB_DETAIL);
+    Get.toNamed(Routes.OB_DETAIL, arguments: report);
   }
 }

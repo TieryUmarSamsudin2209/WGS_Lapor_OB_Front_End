@@ -7,6 +7,7 @@ import '../controllers/report_controller.dart';
 import '../../../routes/app_pages.dart';
 import '../../../shared/widgets/bottom_nav.dart';
 import '../../../shared/widgets/custom_alert.dart';
+import '../../../shared/theme/theme_controller.dart';
 
 class ReportPage extends StatelessWidget {
   const ReportPage({super.key});
@@ -26,6 +27,25 @@ class ReportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<ReportController>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pageBg = isDark ? AppDarkColors.background : Colors.white;
+    final formPanelColor = isDark ? AppDarkColors.header : navyColor;
+    final surface = isDark ? AppDarkColors.card : lightPurpleBg;
+    final titleColor = isDark ? Colors.white : navyColor;
+    final bodyColor = isDark ? Colors.white70 : Colors.grey[600];
+    final mutedTextColor = isDark ? Colors.white60 : Colors.grey[500];
+    final navBarColor = isDark ? const Color(0xFF101418) : Colors.white;
+    final navBorderColor =
+        isDark ? AppDarkColors.border.withValues(alpha: 0.75) : Colors.transparent;
+    final navShadowColor = isDark
+        ? Colors.black.withValues(alpha: 0.55)
+        : const Color(0xFF4FA0FF).withValues(alpha: 0.4);
+    final uploadBackground = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final uploadBorder = isDark
+        ? AppDarkColors.border
+        : Colors.blue.withValues(alpha: 0.2);
+    final uploadIconColor = isDark ? AppDarkColors.accent : Colors.grey[400];
+    final uploadTextColor = isDark ? Colors.white70 : Colors.black54;
 
     // Check if category was passed as argument
     final String? passedCategory = Get.arguments as String?;
@@ -45,12 +65,12 @@ class ReportPage extends StatelessWidget {
     final RxnString selectedBuilding = RxnString(null);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: pageBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: pageBg,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: navyColor),
+          icon: Icon(Icons.arrow_back, color: titleColor),
           onPressed: () {
             controller.clearForm();
             Get.back();
@@ -59,7 +79,7 @@ class ReportPage extends StatelessWidget {
         title: Text(
           "Lapor OB",
           style: TextStyle(
-            color: navyColor,
+            color: titleColor,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -81,7 +101,7 @@ class ReportPage extends StatelessWidget {
                       children: [
                         // --- HEADER SECTION (LATAR PUTIH) ---
                         Container(
-                          color: Colors.white,
+                          color: pageBg,
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +109,7 @@ class ReportPage extends StatelessWidget {
                               Text(
                                 "Kirim Laporan",
                                 style: TextStyle(
-                                  color: navyColor,
+                                  color: titleColor,
                                   fontSize: 28,
                                   fontWeight: FontWeight.w900,
                                 ),
@@ -98,7 +118,7 @@ class ReportPage extends StatelessWidget {
                               Text(
                                 "Jelaskan secara rinci masalah fasilitas di bawah ini. Menyertakan foto yang jelas dan lokasi yang akurat akan membantu tim kami merespons lebih cepat.",
                                 style: TextStyle(
-                                  color: Colors.grey[600],
+                                  color: bodyColor,
                                   fontSize: 13,
                                   height: 1.4,
                                 ),
@@ -113,7 +133,7 @@ class ReportPage extends StatelessWidget {
                           child: Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: navyColor,
+                              color: formPanelColor,
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(30),
                               ),
@@ -147,7 +167,7 @@ class ReportPage extends StatelessWidget {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.15),
+                                        color: Colors.white.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Row(
@@ -176,8 +196,12 @@ class ReportPage extends StatelessWidget {
                                     _buildPriorityButton(
                                       label: "Standard",
                                       isActive: controller.priorityLevel.value == "Standard",
-                                      activeColor: Colors.white,
-                                      activeTextColor: navyColor,
+                                      activeColor: isDark
+                                          ? AppDarkColors.surfaceVariant
+                                          : Colors.white,
+                                      activeTextColor: isDark
+                                          ? AppDarkColors.accent
+                                          : navyColor,
                                       onTap: () => controller.setPriority("Standard"),
                                     ),
                                     const SizedBox(width: 15),
@@ -197,11 +221,11 @@ class ReportPage extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
-                                    color: lightPurpleBg,
+                                    color: surface,
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
+                                        color: Colors.black.withValues(alpha: 0.1),
                                         spreadRadius: 2,
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
@@ -211,7 +235,7 @@ class ReportPage extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      _buildLabel("Lokasi", isRequired: true, color: navyColor),
+                                      _buildLabel("Lokasi", isRequired: true, color: titleColor),
                                       const SizedBox(height: 8),
                                       
                                       // DROPDOWN BUILDING
@@ -224,7 +248,7 @@ class ReportPage extends StatelessWidget {
 
                                       const SizedBox(height: 20),
 
-                                      _buildLabel("Lantai / Nomor Ruangan *", color: navyColor),
+                                      _buildLabel("Lantai / Nomor Ruangan *", color: titleColor),
                                       const SizedBox(height: 8),
                                       _buildTextField(
                                         hint: "Keterangan Tempat",
@@ -233,7 +257,7 @@ class ReportPage extends StatelessWidget {
 
                                       const SizedBox(height: 20),
 
-                                      _buildLabel("Deskripsi Masalah", isRequired: true, color: navyColor),
+                                      _buildLabel("Deskripsi Masalah", isRequired: true, color: titleColor),
                                       const SizedBox(height: 8),
                                       _buildTextField(
                                         hint: "JJelaskan masalahnya secara rinci.",
@@ -247,10 +271,10 @@ class ReportPage extends StatelessWidget {
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          _buildLabel("Bukti Foto", color: navyColor),
+                                          _buildLabel("Bukti Foto", color: titleColor),
                                           Text(
                                             "Max 3 foto (1MB)",
-                                            style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                                            style: TextStyle(color: mutedTextColor, fontSize: 11),
                                           ),
                                         ],
                                       ),
@@ -262,29 +286,44 @@ class ReportPage extends StatelessWidget {
                                           Get.bottomSheet(
                                             Container(
                                               padding: const EdgeInsets.all(20),
-                                              decoration: const BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.only(
+                                              decoration: BoxDecoration(
+                                                color: uploadBackground,
+                                                borderRadius: const BorderRadius.only(
                                                   topLeft: Radius.circular(20),
                                                   topRight: Radius.circular(20),
                                                 ),
                                               ),
                                               child: Wrap(
                                                 children: [
-                                                  const Padding(
-                                                    padding: EdgeInsets.only(bottom: 20),
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 20),
                                                     child: Text(
                                                       "Pilih Sumber Foto",
-                                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                                      style: TextStyle(
+                                                        color: titleColor,
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
                                                     ),
                                                   ),
                                                   ListTile(
                                                     leading: Container(
                                                       padding: const EdgeInsets.all(10),
-                                                      decoration: BoxDecoration(color: Colors.blue[50], shape: BoxShape.circle),
-                                                      child: const Icon(Icons.camera_alt, color: Colors.blue),
+                                                      decoration: BoxDecoration(
+                                                        color: isDark
+                                                            ? AppDarkColors.accent.withValues(alpha: 0.16)
+                                                            : Colors.blue[50],
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.camera_alt,
+                                                        color: isDark ? AppDarkColors.accent : Colors.blue,
+                                                      ),
                                                     ),
-                                                    title: const Text("Kamera"),
+                                                    title: Text(
+                                                      "Kamera",
+                                                      style: TextStyle(color: titleColor),
+                                                    ),
                                                     onTap: () {
                                                       Get.back();
                                                       controller.pickImage(ImageSource.camera);
@@ -293,10 +332,23 @@ class ReportPage extends StatelessWidget {
                                                   ListTile(
                                                     leading: Container(
                                                       padding: const EdgeInsets.all(10),
-                                                      decoration: BoxDecoration(color: Colors.purple[50], shape: BoxShape.circle),
-                                                      child: const Icon(Icons.photo_library, color: Colors.purple),
+                                                      decoration: BoxDecoration(
+                                                        color: isDark
+                                                            ? const Color(0xFF9B5CFF).withValues(alpha: 0.16)
+                                                            : Colors.purple[50],
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.photo_library,
+                                                        color: isDark
+                                                            ? const Color(0xFFB58CFF)
+                                                            : Colors.purple,
+                                                      ),
                                                     ),
-                                                    title: const Text("Galeri"),
+                                                    title: Text(
+                                                      "Galeri",
+                                                      style: TextStyle(color: titleColor),
+                                                    ),
                                                     onTap: () {
                                                       Get.back();
                                                       controller.pickImage(ImageSource.gallery);
@@ -311,24 +363,24 @@ class ReportPage extends StatelessWidget {
                                           width: double.infinity,
                                           height: 90,
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color: uploadBackground,
                                             borderRadius: BorderRadius.circular(15),
                                             border: Border.all(
-                                              color: Colors.blue.withOpacity(0.2), 
+                                              color: uploadBorder,
                                               width: 1.5
                                             ),
                                           ),
                                           child: Column(
                                             mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
-                                              Icon(Icons.camera_alt_outlined, color: Colors.grey[400], size: 30),
+                                              Icon(Icons.camera_alt_outlined, color: uploadIconColor, size: 30),
                                               const SizedBox(height: 8),
-                                              const Text(
+                                              Text(
                                                 "Ketuk untuk mengunggah foto",
                                                 style: TextStyle(
                                                   fontSize: 12, 
                                                   fontWeight: FontWeight.bold, 
-                                                  color: Colors.black54
+                                                  color: uploadTextColor,
                                                 ),
                                               ),
                                             ],
@@ -421,17 +473,25 @@ class ReportPage extends StatelessWidget {
                                                 Get.back();
                                               });
                                             },
-                                            icon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
-                                            label: const Text(
+                                            icon: Icon(
+                                              Icons.send_outlined,
+                                              color: isDark
+                                                  ? AppDarkColors.accent
+                                                  : Colors.white,
+                                              size: 18,
+                                            ),
+                                            label: Text(
                                               "Kirim Laporan",
                                               style: TextStyle(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.white,
+                                                color: isDark ? AppDarkColors.accent : Colors.white,
                                               ),
                                             ),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: navyColor,
+                                              backgroundColor: isDark
+                                                  ? const Color(0xFF052C58)
+                                                  : navyColor,
                                               shape: RoundedRectangleBorder(
                                                 borderRadius: BorderRadius.circular(25),
                                               ),
@@ -463,13 +523,14 @@ class ReportPage extends StatelessWidget {
             child: Container(
               height: 70,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: navBarColor,
                 borderRadius: BorderRadius.circular(20), // Sudut melengkung penuh (stadium)
+                border: Border.all(color: navBorderColor, width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4FA0FF).withOpacity(0.4), // Glow Biru
-                    blurRadius: 20,
-                    spreadRadius: 2,
+                    color: navShadowColor,
+                    blurRadius: isDark ? 10 : 20,
+                    spreadRadius: isDark ? 0 : 2,
                     offset: const Offset(0, 5),
                   ),
                 ],
@@ -532,24 +593,32 @@ class ReportPage extends StatelessWidget {
     required List<String> items,
     required Function(String?) onChanged,
   }) {
+    final isDark = Get.isDarkMode;
+    final fieldColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final borderColor = isDark ? AppDarkColors.border : Colors.transparent;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: fieldColor,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.2),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.18)
+                : const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Obx(() => DropdownButtonFormField<String>(
-        value: value.value,
-        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
-        dropdownColor: Colors.white,
+        initialValue: value.value,
+        icon: Icon(Icons.keyboard_arrow_down, color: textColor),
+        dropdownColor: fieldColor,
         borderRadius: BorderRadius.circular(14),
-        style: const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w500),
+        style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w500),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
@@ -574,13 +643,19 @@ class ReportPage extends StatelessWidget {
 
   // Widget TextField Modern
   Widget _buildTextField({required String hint, int maxLines = 1, required Function(String) onChanged}) {
+    final isDark = Get.isDarkMode;
+    final fieldColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final borderColor = isDark ? AppDarkColors.border : Colors.transparent;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: fieldColor,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05), 
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10, 
             offset: const Offset(0, 4)
           ),
@@ -589,7 +664,7 @@ class ReportPage extends StatelessWidget {
       child: TextField(
         maxLines: maxLines,
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 14, color: Colors.black87),
+        style: TextStyle(fontSize: 14, color: textColor),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
@@ -613,6 +688,11 @@ class ReportPage extends StatelessWidget {
     required Color activeTextColor,
     required VoidCallback onTap,
   }) {
+    final isDark = Get.isDarkMode;
+    final inactiveBorderColor = isDark ? AppDarkColors.border : Colors.white;
+    final activeShadowColor =
+        isDark ? Colors.black : const Color.fromARGB(255, 233, 233, 233);
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -621,9 +701,17 @@ class ReportPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? activeColor : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: isActive ? Colors.transparent : Colors.white),
+            border: Border.all(
+              color: isActive ? Colors.transparent : inactiveBorderColor,
+            ),
             boxShadow: isActive
-                ? [BoxShadow(color: const Color.fromARGB(255, 233, 233, 233).withOpacity(0.3), blurRadius: 5, offset: const Offset(0, 3))]
+                ? [
+                    BoxShadow(
+                      color: activeShadowColor.withValues(alpha: 0.3),
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
                 : [],
           ),
           alignment: Alignment.center,

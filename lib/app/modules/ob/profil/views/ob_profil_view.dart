@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 
 import '../../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../../shared/widgets/logout_confirmation_dialog.dart';
+import '../../../../shared/theme/theme_controller.dart';
+import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_profil_controller.dart';
 
 class ObProfilView extends GetView<ObProfilController> {
@@ -15,8 +17,13 @@ class ObProfilView extends GetView<ObProfilController> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pageBg = isDark ? AppDarkColors.background : _navy;
+    final surface = isDark ? AppDarkColors.surface : Colors.white;
+    final titleColor = isDark ? Colors.white : _navy;
+
     return Scaffold(
-      backgroundColor: _navy,
+      backgroundColor: pageBg,
       body: Stack(
         children: [
           // Scrollable Content
@@ -32,7 +39,7 @@ class ObProfilView extends GetView<ObProfilController> {
                     Container(
                       width: double.infinity,
                       height: 190,
-                      color: _navy,
+                      color: pageBg,
                       child: const SafeArea(
                         bottom: false,
                         child: Align(
@@ -55,9 +62,9 @@ class ObProfilView extends GetView<ObProfilController> {
                     // Body container
                     Container(
                       width: double.infinity,
-                      decoration: const BoxDecoration(
-                        color: _bg,
-                        borderRadius: BorderRadius.only(
+                      decoration: BoxDecoration(
+                        color: surface,
+                        borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(30),
                           topRight: Radius.circular(30),
                         ),
@@ -78,10 +85,10 @@ class ObProfilView extends GetView<ObProfilController> {
                                     controller.name.value,
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w700,
-                                      color: _navy,
+                                      color: titleColor,
                                     ),
                                   ),
                                 ),
@@ -97,12 +104,12 @@ class ObProfilView extends GetView<ObProfilController> {
                                     onAvatarChanged:
                                         controller.updateAvatar,
                                   ),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
                                     child: Icon(
                                       Icons.edit_outlined,
                                       size: 18,
-                                      color: _navy,
+                                      color: titleColor,
                                     ),
                                   ),
                                 ),
@@ -147,7 +154,7 @@ class ObProfilView extends GetView<ObProfilController> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: Colors.grey.shade300),
                             ),
@@ -189,7 +196,7 @@ class ObProfilView extends GetView<ObProfilController> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
                                     borderRadius: BorderRadius.circular(8),
                                     border:
                                         Border.all(color: Colors.grey.shade300),
@@ -276,7 +283,7 @@ class ObProfilView extends GetView<ObProfilController> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: _BottomBar(controller: controller),
+            child: const ObBottomNav(activeItem: ObBottomNavItem.profile),
           ),
         ],
       ),
@@ -403,6 +410,12 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
+    final bodyColor = isDark ? Colors.white70 : const Color(0xFF3F4653);
+    final borderColor = isDark ? AppDarkColors.accent : const Color(0xFFD6DCE8);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -410,9 +423,9 @@ class _ReportCard extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: const Color(0xFFD6DCE8), width: 1),
+            border: Border.all(color: borderColor, width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.035),
@@ -449,8 +462,8 @@ class _ReportCard extends StatelessWidget {
                             report.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF1E2A3A),
+                            style: TextStyle(
+                              color: titleColor,
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                               height: 1.05,
@@ -489,8 +502,8 @@ class _ReportCard extends StatelessWidget {
                             report.description,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF3F4653),
+                            style: TextStyle(
+                              color: bodyColor,
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                               height: 1.25,
@@ -627,104 +640,6 @@ class _ReportBadge extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.controller});
-  final ObProfilController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFC3C9FA), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2F6FE0).withValues(alpha: 1),
-              blurRadius: 1,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Home item
-            InkWell(
-              onTap: controller.goHome,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.home_outlined, color: ObProfilView._navy, size: 22),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Home',
-                      style: TextStyle(
-                        color: ObProfilView._navy,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Checklist item
-            InkWell(
-              onTap: controller.createReport,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.checklist_rounded, color: ObProfilView._navy, size: 22),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Checklist',
-                      style: TextStyle(
-                        color: ObProfilView._navy,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Active Profile item
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: ObProfilView._navy,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.person_outline_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 6),
-                  Text(
-                    'Profile',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

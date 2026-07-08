@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/theme_controller.dart';
+
 class LogoutConfirmationDialog extends StatelessWidget {
   const LogoutConfirmationDialog({super.key});
 
@@ -19,8 +21,8 @@ class LogoutConfirmationDialog extends StatelessWidget {
       barrierLabel: 'Batal',
       barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
-      transitionBuilder: (context, animation, _, __) {
+      pageBuilder: (_, _, _) => const SizedBox.shrink(),
+      transitionBuilder: (context, animation, _, _) {
         final curved = CurvedAnimation(
           parent: animation,
           curve: Curves.easeOutCubic,
@@ -54,58 +56,73 @@ class LogoutConfirmationDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFD8DCE3);
+    final titleColor = isDark ? Colors.white : LogoutConfirmationDialog._textPrimary;
+    final messageColor =
+        isDark ? Colors.white70 : LogoutConfirmationDialog._textSecondary;
+    final cancelBackground =
+        isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final cancelBorder =
+        isDark ? AppDarkColors.border : LogoutConfirmationDialog._outline;
+    final cancelText =
+        isDark ? Colors.white : LogoutConfirmationDialog._textPrimary;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 34, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
+        constraints: const BoxConstraints(maxWidth: 360),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(28, 50, 28, 46),
+          padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFD8DCE3), width: 1.4),
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: borderColor, width: 1.2),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 98,
-                height: 98,
-                decoration: const BoxDecoration(
-                  color: LogoutConfirmationDialog._dangerSoft,
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? LogoutConfirmationDialog._danger.withValues(alpha: 0.16)
+                      : LogoutConfirmationDialog._dangerSoft,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.logout_rounded,
                   color: LogoutConfirmationDialog._danger,
-                  size: 46,
+                  size: 32,
                 ),
               ),
-              const SizedBox(height: 36),
-              const Text(
+              const SizedBox(height: 20),
+              Text(
                 'Konfirmasi Keluar',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: LogoutConfirmationDialog._textPrimary,
-                  fontSize: 34,
+                  color: titleColor,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   height: 1.15,
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text(
+              const SizedBox(height: 10),
+              Text(
                 'Apakah Anda yakin ingin keluar?',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: LogoutConfirmationDialog._textSecondary,
-                  fontSize: 26,
+                  color: messageColor,
+                  fontSize: 15,
                   fontWeight: FontWeight.w400,
                   height: 1.25,
                 ),
               ),
-              const SizedBox(height: 52),
+              const SizedBox(height: 28),
               _DialogButton(
                 text: 'Ya, Keluar',
                 backgroundColor: LogoutConfirmationDialog._danger,
@@ -115,12 +132,12 @@ class LogoutConfirmationDialogContent extends StatelessWidget {
                   onConfirm?.call();
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               _DialogButton(
                 text: 'Batal',
-                backgroundColor: Colors.white,
-                foregroundColor: LogoutConfirmationDialog._textPrimary,
-                borderColor: LogoutConfirmationDialog._outline,
+                backgroundColor: cancelBackground,
+                foregroundColor: cancelText,
+                borderColor: cancelBorder,
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -150,7 +167,7 @@ class _DialogButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 86,
+      height: 48,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -159,17 +176,17 @@ class _DialogButton extends StatelessWidget {
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             side: BorderSide(
               color: borderColor ?? backgroundColor,
-              width: 1.6,
+              width: 1.3,
             ),
           ),
         ),
         child: Text(
           text,
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
             height: 1,
           ),

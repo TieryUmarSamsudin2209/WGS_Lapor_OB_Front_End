@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../controllers/ob_detail_controller.dart';
-import '../../../../routes/app_pages.dart';
+import '../../../../shared/theme/theme_controller.dart';
 
 class ObDetailView extends GetView<ObDetailController> {
   const ObDetailView({super.key});
@@ -15,8 +15,10 @@ class ObDetailView extends GetView<ObDetailController> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: navyColor,
+      backgroundColor: isDark ? AppDarkColors.background : navyColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -69,11 +71,16 @@ class ObDetailView extends GetView<ObDetailController> {
 
   // 1. CARD INFORMASI UTAMA
   Widget _buildMainDetailCard() {
+    final isDark = Get.isDarkMode;
+    final cardColor = isDark ? const Color(0xFF102235) : Colors.white;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final mutedColor = isDark ? Colors.white70 : Colors.grey;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -91,7 +98,7 @@ class ObDetailView extends GetView<ObDetailController> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: urgentRed.withOpacity(0.1),
+                      color: urgentRed.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -119,7 +126,7 @@ class ObDetailView extends GetView<ObDetailController> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF57C00).withOpacity(0.1),
+                            color: const Color(0xFFF57C00).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -147,9 +154,9 @@ class ObDetailView extends GetView<ObDetailController> {
                   }),
                 ],
               ),
-              const Text(
+              Text(
                 '10 menit yang lalu',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+                style: TextStyle(fontSize: 11, color: mutedColor),
               ),
             ],
           ),
@@ -158,10 +165,10 @@ class ObDetailView extends GetView<ObDetailController> {
           // Judul Laporan
           Obx(() => Text(
             controller.title.value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Colors.black87,
+              color: titleColor,
             ),
           )),
           const SizedBox(height: 8),
@@ -205,30 +212,30 @@ class ObDetailView extends GetView<ObDetailController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 25),
-                  const Text(
+                  Text(
                     'DESKRIPSI LAPORAN',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: mutedColor,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Obx(() => Text(
                     controller.description.value,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: Colors.black87,
+                      color: titleColor,
                       height: 1.5,
                     ),
                   )),
                   const SizedBox(height: 25),
-                  const Text(
+                  Text(
                     'BUKTI FOTO',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: mutedColor,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -254,7 +261,7 @@ class ObDetailView extends GetView<ObDetailController> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(5),
                           ),
                           child: const Row(
@@ -307,11 +314,16 @@ class ObDetailView extends GetView<ObDetailController> {
     required String hintText,
     required String photoLabel,
   }) {
+    final isDark = Get.isDarkMode;
+    final surface = isDark ? const Color(0xFF102235) : lightPurple;
+    final fieldColor = isDark ? const Color(0xFF172B40) : Colors.white;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: lightPurple,
+        color: surface,
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -319,18 +331,18 @@ class ObDetailView extends GetView<ObDetailController> {
         children: [
           Text(
             titleText,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: titleColor,
             ),
           ),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: fieldColor,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.blue.withOpacity(0.1)),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
             ),
             child: TextField(
               controller: controller.noteController,
@@ -346,10 +358,10 @@ class ObDetailView extends GetView<ObDetailController> {
           const SizedBox(height: 20),
           Text(
             photoLabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: titleColor,
             ),
           ),
           const SizedBox(height: 10),
@@ -430,15 +442,29 @@ class ObDetailView extends GetView<ObDetailController> {
   }
 
   Widget _buildBottomActionButtons() {
+    final isDark = Get.isDarkMode;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : Colors.transparent;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(26, 22, 26, 22),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
       child: Obx(() {
-        if (controller.pageState.value == 'initial') {
+        if (controller.pageState.value == 'initial' ||
+            controller.pageState.value == 'resolved') {
           return Column(
             children: [
               _buildSolidButton(
@@ -446,7 +472,7 @@ class ObDetailView extends GetView<ObDetailController> {
                 navyColor,
                 () => controller.setWorking(),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               _buildOutlineButton(
                 'Butuh Bantuan',
                 () => controller.toggleNeedHelp(),
@@ -465,13 +491,13 @@ class ObDetailView extends GetView<ObDetailController> {
                 navyColor,
                 () => controller.completeReport(),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _buildSolidButton(
                 'Tolak Laporan',
                 urgentRed,
                 () => controller.setRejecting(),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _buildOutlineButton(
                 'Butuh Bantuan',
                 () => controller.toggleNeedHelp(),
@@ -557,6 +583,10 @@ class ObDetailView extends GetView<ObDetailController> {
   // --- KUMPULAN WIDGET HELPER ---
 
   Widget _buildInfoRow(IconData icon, String title, String value) {
+    final isDark = Get.isDarkMode;
+    final titleColor = isDark ? Colors.white60 : Colors.grey;
+    final valueColor = isDark ? Colors.white : Colors.black87;
+
     return Row(
       children: [
         Container(
@@ -574,15 +604,15 @@ class ObDetailView extends GetView<ObDetailController> {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                style: TextStyle(fontSize: 10, color: titleColor),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: valueColor,
                 ),
               ),
             ],
@@ -598,31 +628,43 @@ class ObDetailView extends GetView<ObDetailController> {
     VoidCallback onTap, {
     IconData? icon,
   }) {
+    final isDark = Get.isDarkMode;
+    final buttonColor = isDark && color == navyColor
+        ? const Color(0xFF052C58)
+        : color;
+    final foregroundColor = isDark && color == navyColor
+        ? AppDarkColors.accent
+        : Colors.white;
+
     return SizedBox(
       width: double.infinity,
-      height: 45,
+      height: 54,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: color,
+          backgroundColor: buttonColor,
+          foregroundColor: foregroundColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(7),
           ),
-          elevation: 0,
+          elevation: isDark ? 0 : 4,
+          shadowColor: isDark
+              ? Colors.transparent
+              : navyColor.withValues(alpha: 0.28),
         ),
         onPressed: onTap,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 16, color: Colors.white),
-              const SizedBox(width: 6),
+              Icon(icon, size: 18, color: foregroundColor),
+              const SizedBox(width: 8),
             ],
             Text(
               text,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: foregroundColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 13,
+                fontSize: 15,
               ),
             ),
           ],
@@ -638,35 +680,39 @@ class ObDetailView extends GetView<ObDetailController> {
     bool isActive = false,
     Color activeColor = const Color(0xFFF57C00),
   }) {
-    final borderColor = isActive ? activeColor : Colors.grey.shade300;
+    final isDark = Get.isDarkMode;
+    final defaultColor = isDark ? AppDarkColors.accent : navyColor;
+    final borderColor = isActive ? activeColor : defaultColor;
     final bgColor = isActive
-        ? activeColor.withOpacity(0.1)
-        : Colors.transparent;
-    final fgColor = isActive ? activeColor : Colors.black87;
+        ? activeColor.withValues(alpha: 0.1)
+        : isDark
+            ? Colors.transparent
+            : Colors.white;
+    final fgColor = isActive ? activeColor : defaultColor;
     final usedIcon = icon ?? Icons.help_outline;
     return SizedBox(
       width: double.infinity,
-      height: 45,
+      height: 54,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: borderColor, width: 1.5),
+          side: BorderSide(color: borderColor, width: 1.4),
           backgroundColor: bgColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(7),
           ),
         ),
         onPressed: onTap,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(usedIcon, size: 16, color: fgColor),
-            const SizedBox(width: 6),
+            Icon(usedIcon, size: 22, color: fgColor),
+            const SizedBox(width: 8),
             Text(
               text,
               style: TextStyle(
                 color: fgColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 13,
+                fontSize: 15,
               ),
             ),
           ],

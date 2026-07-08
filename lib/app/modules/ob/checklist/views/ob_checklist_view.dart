@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../shared/widgets/custom_alert.dart';
+import '../../../../shared/theme/theme_controller.dart';
+import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_checklist_controller.dart';
 
 class ObChecklistView extends GetView<ObChecklistController> {
@@ -14,8 +16,10 @@ class ObChecklistView extends GetView<ObChecklistController> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: isDark ? AppDarkColors.background : _bg,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -34,7 +38,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: _BottomBar(controller: controller),
+            child: const ObBottomNav(activeItem: ObBottomNavItem.checklist),
           ),
         ],
       ),
@@ -43,14 +47,23 @@ class ObChecklistView extends GetView<ObChecklistController> {
 
   // ─── Header ───────────────────────────────────────────────────────────
   Widget _buildHeader() {
+    final isDark = Get.isDarkMode;
+
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F4C81),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.header : const Color(0xFF0F4C81),
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.12),
+            blurRadius: isDark ? 10 : 6,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: SafeArea(
         bottom: false,
@@ -91,11 +104,13 @@ class ObChecklistView extends GetView<ObChecklistController> {
   Widget _buildSectionCard(ChecklistSection section) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0F4C81),
+        color:
+            Get.isDarkMode ? AppDarkColors.surface : const Color(0xFF0F4C81),
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F4C81).withValues(alpha: 0.22),
+            color: (Get.isDarkMode ? Colors.black : const Color(0xFF0F4C81))
+                .withValues(alpha: 0.22),
             blurRadius: 14,
             offset: const Offset(0, 6),
           ),
@@ -135,9 +150,13 @@ class ObChecklistView extends GetView<ObChecklistController> {
     return Obx(() {
       final status = item.status.value;
       final style = _statusStyle(status);
+      final isDark = Get.isDarkMode;
+      final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+      final titleColor = isDark ? Colors.white : const Color(0xFF1B2559);
+      final descColor = isDark ? Colors.white70 : Colors.grey.shade500;
 
       return Material(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: () => _showItemDetailPopup(Get.context!, item),
@@ -168,7 +187,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
                           fontWeight: FontWeight.bold,
                           color: status == 'resolved'
                               ? Colors.grey.shade400
-                              : const Color(0xFF1B2559),
+                              : titleColor,
                           decoration: status == 'resolved'
                               ? TextDecoration.lineThrough
                               : TextDecoration.none,
@@ -185,7 +204,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
                           height: 1.4,
                           color: status == 'resolved'
                               ? Colors.grey.shade300
-                              : Colors.grey.shade500,
+                              : descColor,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -237,7 +256,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
       barrierLabel: 'Dismiss',
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 350),
-      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+      pageBuilder: (_, _, _) => const SizedBox.shrink(),
       transitionBuilder: (ctx, a1, a2, _) {
         final curve = Curves.easeOutBack.transform(a1.value);
         return Transform.scale(
@@ -277,11 +296,20 @@ class _ChecklistDetailPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppDarkColors.surface : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1B2559);
+    final bodyColor = isDark ? Colors.white60 : Colors.grey.shade600;
+    final fieldColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final fieldBorderColor = isDark ? AppDarkColors.border : Colors.grey.shade300;
+    final closeBg = isDark ? AppDarkColors.surfaceVariant : Colors.grey.shade100;
+    final closeColor = isDark ? Colors.white70 : Colors.grey.shade600;
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 400),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surface,
         borderRadius: BorderRadius.circular(24),
       ),
       child: SingleChildScrollView(
@@ -299,10 +327,10 @@ class _ChecklistDetailPopup extends StatelessWidget {
                     children: [
                       Text(
                         item.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF1B2559),
+                          color: titleColor,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -310,7 +338,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
                         item.description,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade600,
+                          color: bodyColor,
                           height: 1.4,
                         ),
                       ),
@@ -326,10 +354,10 @@ class _ChecklistDetailPopup extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: closeBg,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.close, size: 20, color: Colors.grey.shade600),
+                    child: Icon(Icons.close, size: 20, color: closeColor),
                   ),
                 ),
               ],
@@ -348,14 +376,14 @@ class _ChecklistDetailPopup extends StatelessWidget {
 
             // ── Catatan Label ────────────────────────────────────
             RichText(
-              text: const TextSpan(
+              text: TextSpan(
                 text: 'Catatan',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1B2559),
+                  color: titleColor,
                 ),
-                children: [
+                children: const [
                   TextSpan(
                     text: '*',
                     style: TextStyle(color: Colors.red),
@@ -368,17 +396,18 @@ class _ChecklistDetailPopup extends StatelessWidget {
             // ── Catatan TextField ────────────────────────────────
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: fieldColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: fieldBorderColor),
               ),
               child: TextField(
                 controller: controller.noteController,
                 maxLines: 3,
+                style: TextStyle(color: titleColor, fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'Tambahkan catatan',
                   hintStyle: TextStyle(
-                    color: Colors.grey.shade400,
+                    color: isDark ? Colors.white38 : Colors.grey.shade400,
                     fontSize: 13,
                   ),
                   contentPadding: const EdgeInsets.all(14),
@@ -391,12 +420,12 @@ class _ChecklistDetailPopup extends StatelessWidget {
             const SizedBox(height: 20),
 
             // ── Bukti Foto Label ─────────────────────────────────
-            const Text(
+            Text(
               'Bukti Foto',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1B2559),
+                color: titleColor,
               ),
             ),
             const SizedBox(height: 10),
@@ -715,104 +744,3 @@ _StatusStyle _statusStyle(String status) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── Bottom Navigation Bar ────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.controller});
-  final ObChecklistController controller;
-
-  static const _navy = Color(0xFF0F2A5E);
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFC3C9FA), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2F6FE0).withValues(alpha: 1),
-              blurRadius: 1,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            InkWell(
-              onTap: controller.goHome,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.home_outlined, color: _navy, size: 22),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Home',
-                      style: TextStyle(
-                        color: _navy,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: _navy,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.checklist_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 6),
-                  Text(
-                    'Checklist',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            InkWell(
-              onTap: controller.goProfile,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.person_outline_rounded, color: _navy, size: 22),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'Profile',
-                      style: TextStyle(
-                        color: _navy,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
