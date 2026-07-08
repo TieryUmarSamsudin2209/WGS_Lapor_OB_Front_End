@@ -434,21 +434,6 @@ class _ReportCard extends StatelessWidget {
                           Row(
                             children: [
                               _Badge(style: priority),
-                              Obx(
-                                () => report.hasCollaboration.value
-                                    ? const Padding(
-                                        padding: EdgeInsets.only(left: 5),
-                                        child: _Badge(
-                                          style: _BadgeStyle(
-                                            label: 'Kolaborasi',
-                                            icon: Icons.groups_2_outlined,
-                                            background: Color(0xFFE7F0FF),
-                                            foreground: Color(0xFF2D8EFF),
-                                          ),
-                                        ),
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
                               const Spacer(),
                               _Badge(style: status),
                             ],
@@ -512,8 +497,20 @@ class _ReportCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 5),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              Obx(
+                                () => report.hasCollaboration.value
+                                    ? const _Badge(
+                                        style: _BadgeStyle(
+                                          label: 'Kolaborasi',
+                                          icon: Icons.groups_2_outlined,
+                                          background: Color(0xFFFFF2C8),
+                                          foreground: Color(0xFFFF9B24),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                              const Spacer(),
                               Text(
                                 'Lihat Detail',
                                 style: TextStyle(

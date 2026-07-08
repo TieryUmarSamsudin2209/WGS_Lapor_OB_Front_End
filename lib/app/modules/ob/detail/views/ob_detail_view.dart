@@ -90,37 +90,39 @@ class ObDetailView extends GetView<ObDetailController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: urgentRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.circle, size: 8, color: urgentRed),
+                          const SizedBox(width: 4),
+                          Obx(() => Text(
+                            controller.priority.value,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: urgentRed,
+                            ),
+                          )),
+                        ],
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: urgentRed.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.circle, size: 8, color: urgentRed),
-                        const SizedBox(width: 4),
-                        Obx(() => Text(
-                          controller.priority.value,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: urgentRed,
-                          ),
-                        )),
-                      ],
-                    ),
-                  ),
-                  Obx(() {
-                    if (controller.isNeedHelp.value) {
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 6),
-                        child: Container(
+                    Obx(() {
+                      if (controller.isNeedHelp.value) {
+                        return Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 4,
@@ -129,15 +131,16 @@ class ObDetailView extends GetView<ObDetailController> {
                             color: const Color(0xFFF57C00).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Row(
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons.help,
                                 size: 8,
-                                color: const Color(0xFFF57C00),
+                                color: Color(0xFFF57C00),
                               ),
-                              const SizedBox(width: 4),
-                              const Text(
+                              SizedBox(width: 4),
+                              Text(
                                 'BUTUH BANTUAN',
                                 style: TextStyle(
                                   fontSize: 10,
@@ -147,13 +150,14 @@ class ObDetailView extends GetView<ObDetailController> {
                               ),
                             ],
                           ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }),
-                ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '10 menit yang lalu',
                 style: TextStyle(fontSize: 11, color: mutedColor),
@@ -178,12 +182,16 @@ class ObDetailView extends GetView<ObDetailController> {
             children: [
               Icon(Icons.location_on_outlined, size: 16, color: navyColor),
               const SizedBox(width: 4),
-              Text(
-                'HQ Tower A, Lantai 4 (Toilet Pria)',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: navyColor,
+              Expanded(
+                child: Text(
+                  'HQ Tower A, Lantai 4 (Toilet Pria)',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: navyColor,
+                  ),
                 ),
               ),
             ],
@@ -239,52 +247,98 @@ class ObDetailView extends GetView<ObDetailController> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  Obx(() {
+                    final hasPhoto = controller.reportPhotos.isNotEmpty;
+                    if (!hasPhoto) {
+                      return Container(
+                        width: double.infinity,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppDarkColors.surfaceVariant
+                              : const Color(0xFFF4F6FA),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark
+                                ? AppDarkColors.border
+                                : const Color(0xFFDDE4EE),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_not_supported_outlined,
+                              size: 34,
+                              color: mutedColor,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Foto belum ada',
+                              style: TextStyle(
+                                color: mutedColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
 
-                  // Bukti Foto dari User (Gambar dummy app)
-                  Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          'https://i.pinimg.com/736x/87/49/71/874971df30fa58b8f36a536ba95701a2.jpg', // Placeholder foto masalah
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 10,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.search,
-                                size: 14,
-                                color: Colors.black87,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Klik untuk Perbesar',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                    final photoPath = controller.reportPhotos.first;
+                    return Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: photoPath.startsWith('http')
+                              ? Image.network(
+                                  photoPath,
+                                  width: double.infinity,
+                                  height: 250,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.file(
+                                  File(photoPath),
+                                  width: double.infinity,
+                                  height: 250,
+                                  fit: BoxFit.cover,
                                 ),
-                              ),
-                            ],
+                        ),
+                        Positioned(
+                          bottom: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.search,
+                                  size: 14,
+                                  color: Colors.black87,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Klik untuk Perbesar',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  }),
                 ],
               );
             } else {
@@ -526,55 +580,79 @@ class ObDetailView extends GetView<ObDetailController> {
   }
 
   void _showPhotoSourceSheet() {
+    final isDark = Get.isDarkMode;
+    final sheetColor = isDark ? AppDarkColors.surface : Colors.white;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+
     Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
+      Material(
+        color: sheetColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Pilih Sumber Foto',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  shape: BoxShape.circle,
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: sheetColor,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Pilih Sumber Foto',
+                style: TextStyle(
+                  color: titleColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-                child: const Icon(Icons.camera_alt, color: Colors.blue),
               ),
-              title: const Text('Kamera'),
-              onTap: () {
-                Get.back();
-                controller.pickImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.purple[50],
-                  shape: BoxShape.circle,
+              const SizedBox(height: 10),
+              ListTile(
+                tileColor: sheetColor,
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppDarkColors.accent.withValues(alpha: 0.16)
+                        : Colors.blue[50],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: isDark ? AppDarkColors.accent : Colors.blue,
+                  ),
                 ),
-                child: const Icon(Icons.photo_library, color: Colors.purple),
+                title: Text('Kamera', style: TextStyle(color: titleColor)),
+                onTap: () {
+                  Get.back();
+                  controller.pickImage(ImageSource.camera);
+                },
               ),
-              title: const Text('Galeri'),
-              onTap: () {
-                Get.back();
-                controller.pickImage(ImageSource.gallery);
-              },
-            ),
-          ],
+              ListTile(
+                tileColor: sheetColor,
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF9B5CFF).withValues(alpha: 0.16)
+                        : Colors.purple[50],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.photo_library,
+                    color: isDark ? const Color(0xFFB58CFF) : Colors.purple,
+                  ),
+                ),
+                title: Text('Galeri', style: TextStyle(color: titleColor)),
+                onTap: () {
+                  Get.back();
+                  controller.pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../theme/theme_controller.dart';
+
 class EditProfileDialog extends StatefulWidget {
   EditProfileDialog({
     super.key,
@@ -79,9 +81,14 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
   }
 
   Future<void> _showImageSourceSheet() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetColor = isDark ? AppDarkColors.surface : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
+    final iconColor = isDark ? AppDarkColors.accent : EditProfileDialog._navy;
+
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: sheetColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
@@ -93,13 +100,21 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.photo_camera_outlined),
-                  title: const Text('Ambil dari kamera'),
+                  tileColor: sheetColor,
+                  leading: Icon(Icons.photo_camera_outlined, color: iconColor),
+                  title: Text(
+                    'Ambil dari kamera',
+                    style: TextStyle(color: textColor),
+                  ),
                   onTap: () => Navigator.of(context).pop(ImageSource.camera),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.photo_library_outlined),
-                  title: const Text('Pilih dari galeri'),
+                  tileColor: sheetColor,
+                  leading: Icon(Icons.photo_library_outlined, color: iconColor),
+                  title: Text(
+                    'Pilih dari galeri',
+                    style: TextStyle(color: textColor),
+                  ),
                   onTap: () => Navigator.of(context).pop(ImageSource.gallery),
                 ),
               ],
@@ -130,6 +145,11 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogColor = isDark ? AppDarkColors.surface : Colors.white;
+    final titleColor = isDark ? Colors.white : EditProfileDialog._navy;
+    final accentColor = isDark ? AppDarkColors.accent : EditProfileDialog._navy;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -139,8 +159,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(32, 26, 32, 34),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: dialogColor,
             borderRadius: BorderRadius.circular(10),
+            border: isDark ? Border.all(color: AppDarkColors.border) : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -148,12 +169,12 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               Row(
                 children: [
                   const SizedBox(width: 34),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Edit Profil',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: EditProfileDialog._navy,
+                        color: titleColor,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
@@ -162,7 +183,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
-                    color: EditProfileDialog._navy,
+                    color: accentColor,
                     iconSize: 32,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -208,7 +229,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 icon: const Icon(Icons.photo_camera_outlined, size: 18),
                 label: const Text('Ganti foto'),
                 style: TextButton.styleFrom(
-                  foregroundColor: EditProfileDialog._navy,
+                  foregroundColor: accentColor,
                   textStyle: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -220,11 +241,13 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 label: 'Nama depan',
                 isRequired: true,
                 controller: widget._firstNameController,
+                isDark: isDark,
               ),
               const SizedBox(height: 24),
               _EditField(
                 label: 'Nama belakang(opsional)',
                 controller: widget._lastNameController,
+                isDark: isDark,
               ),
               const SizedBox(height: 42),
               SizedBox(
@@ -243,8 +266,10 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: EditProfileDialog._navy,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isDark
+                        ? const Color(0xFF052C58)
+                        : EditProfileDialog._navy,
+                    foregroundColor: isDark ? AppDarkColors.accent : Colors.white,
                     elevation: 3,
                     shadowColor:
                         EditProfileDialog._navy.withValues(alpha: 0.35),
@@ -288,10 +313,16 @@ class _AvatarPreview extends StatelessWidget {
     final path = selectedAvatarPath ?? avatarUrl;
 
     if (path.isEmpty) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return CircleAvatar(
         radius: 68,
-        backgroundColor: Colors.grey.shade200,
-        child: const Icon(Icons.person, size: 64, color: Colors.grey),
+        backgroundColor:
+            isDark ? AppDarkColors.surfaceVariant : Colors.grey.shade200,
+        child: Icon(
+          Icons.person,
+          size: 64,
+          color: isDark ? Colors.white54 : Colors.grey,
+        ),
       );
     }
 
@@ -308,7 +339,9 @@ class _AvatarPreview extends StatelessWidget {
 
     return CircleAvatar(
       radius: 68,
-      backgroundColor: Colors.grey.shade200,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? AppDarkColors.surfaceVariant
+          : Colors.grey.shade200,
       backgroundImage: NetworkImage(path),
     );
   }
@@ -318,23 +351,31 @@ class _EditField extends StatelessWidget {
   const _EditField({
     required this.label,
     required this.controller,
+    required this.isDark,
     this.isRequired = false,
   });
 
   final String label;
   final TextEditingController controller;
+  final bool isDark;
   final bool isRequired;
 
   @override
   Widget build(BuildContext context) {
+    final labelColor = isDark ? Colors.white70 : const Color(0xFF164E7D);
+    final inputTextColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
+    final fieldColor =
+        isDark ? AppDarkColors.surfaceVariant : const Color(0xFFF8FAFD);
+    final borderColor = isDark ? AppDarkColors.border : EditProfileDialog._navy;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
           text: TextSpan(
             text: label,
-            style: const TextStyle(
-              color: Color(0xFF164E7D),
+            style: TextStyle(
+              color: labelColor,
               fontSize: 12,
               fontWeight: FontWeight.w800,
             ),
@@ -352,24 +393,22 @@ class _EditField extends StatelessWidget {
           height: 45,
           child: TextField(
             controller: controller,
-            style: const TextStyle(
-              color: Color(0xFF1E2A3A),
+            style: TextStyle(
+              color: inputTextColor,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFD),
+              fillColor: fieldColor,
               contentPadding: const EdgeInsets.symmetric(horizontal: 18),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide:
-                    const BorderSide(color: EditProfileDialog._navy, width: 1.4),
+                borderSide: BorderSide(color: borderColor, width: 1.4),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
-                borderSide:
-                    const BorderSide(color: EditProfileDialog._navy, width: 1.6),
+                borderSide: BorderSide(color: borderColor, width: 1.6),
               ),
             ),
           ),

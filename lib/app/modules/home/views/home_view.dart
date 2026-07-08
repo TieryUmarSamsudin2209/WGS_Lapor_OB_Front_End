@@ -140,31 +140,43 @@ class HomePage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Hero(
-                          tag: 'category-Plumbing',
-                          child: _buildCategoryItem(
-                            icon: Icons.home_outlined,
-                            label: 'Kebersihan',
-                            onTap: () => Get.toNamed(Routes.REPORT,
-                                arguments: 'Plumbing'),
+                        Expanded(
+                          child: Hero(
+                            tag: 'category-Plumbing',
+                            child: _buildCategoryItem(
+                              icon: Icons.home_outlined,
+                              label: 'Kebersihan',
+                              onTap: () => Get.toNamed(
+                                Routes.REPORT,
+                                arguments: 'Plumbing',
+                              ),
+                            ),
                           ),
                         ),
-                        Hero(
-                          tag: 'category-Furniture',
-                          child: _buildCategoryItem(
-                            icon: Icons.chair_outlined,
-                            label: 'Peralatan',
-                            onTap: () => Get.toNamed(Routes.REPORT,
-                                arguments: 'Furniture'),
+                        Expanded(
+                          child: Hero(
+                            tag: 'category-Furniture',
+                            child: _buildCategoryItem(
+                              icon: Icons.chair_outlined,
+                              label: 'Peralatan',
+                              onTap: () => Get.toNamed(
+                                Routes.REPORT,
+                                arguments: 'Furniture',
+                              ),
+                            ),
                           ),
                         ),
-                        Hero(
-                          tag: 'category-HVAC',
-                          child: _buildCategoryItem(
-                            icon: Icons.local_laundry_service_outlined,
-                            label: 'Maintenance',
-                            onTap: () =>
-                                Get.toNamed(Routes.REPORT, arguments: 'HVAC'),
+                        Expanded(
+                          child: Hero(
+                            tag: 'category-HVAC',
+                            child: _buildCategoryItem(
+                              icon: Icons.local_laundry_service_outlined,
+                              label: 'Maintenance',
+                              onTap: () => Get.toNamed(
+                                Routes.REPORT,
+                                arguments: 'HVAC',
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -173,24 +185,32 @@ class HomePage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Hero(
-                          tag: 'category-Miscellaneous',
-                          child: _buildCategoryItem(
-                            icon: Icons.home_outlined,
-                            label: 'Miscellaneous',
-                            onTap: () => Get.toNamed(Routes.REPORT,
-                                arguments: 'Miscellaneous'),
+                        Expanded(
+                          child: Hero(
+                            tag: 'category-Miscellaneous',
+                            child: _buildCategoryItem(
+                              icon: Icons.home_outlined,
+                              label: 'Miscellaneous',
+                              onTap: () => Get.toNamed(
+                                Routes.REPORT,
+                                arguments: 'Miscellaneous',
+                              ),
+                            ),
                           ),
                         ),
-                        _buildCategoryItem(
-                          icon: Icons.chair_outlined,
-                          label: 'Blum ada',
-                          onTap: () {},
+                        Expanded(
+                          child: _buildCategoryItem(
+                            icon: Icons.chair_outlined,
+                            label: 'Blum ada',
+                            onTap: () {},
+                          ),
                         ),
-                        _buildCategoryItem(
-                          icon: Icons.local_laundry_service_outlined,
-                          label: 'Blum ada',
-                          onTap: () {},
+                        Expanded(
+                          child: _buildCategoryItem(
+                            icon: Icons.local_laundry_service_outlined,
+                            label: 'Blum ada',
+                            onTap: () {},
+                          ),
                         ),
                       ],
                     ),
@@ -383,12 +403,13 @@ class HomePage extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 90, // Lebar kotak putih sesuai desain
+        width: double.infinity,
         child: Column(
           children: [
             Container(
               height: 55,
               width: 85,
+              constraints: const BoxConstraints(maxWidth: 85),
               decoration: BoxDecoration(
                 color: itemColor,
                 borderRadius: BorderRadius.circular(12),

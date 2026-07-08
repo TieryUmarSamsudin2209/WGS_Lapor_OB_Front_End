@@ -16,6 +16,7 @@ class ObDetailController extends GetxController {
   var title = 'Kebocoran Pipa Air'.obs;
   var description = 'Pipa di bawah wastafel bocor parah...'.obs;
   var priority = 'URGENT'.obs;
+  final reportPhotos = <String>[].obs;
 
   final noteController = TextEditingController();
   final actionPhotos = <String>[].obs;

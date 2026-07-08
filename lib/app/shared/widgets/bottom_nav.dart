@@ -42,26 +42,19 @@ class BottomNavItem extends StatelessWidget {
               color: isActive ? activeContentColor : inactiveColor,
               size: 24,
             ),
-            if (isActive) const SizedBox(width: 6),
-            if (isActive)
-              Text(
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: activeContentColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                  color: isActive ? activeContentColor : inactiveColor,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w700,
+                  fontSize: isActive ? 13 : 12,
                 ),
               ),
-            if (!isActive) const SizedBox(width: 6),
-            if (!isActive)
-              Text(
-                label,
-                style: TextStyle(
-                  color: inactiveColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
+            ),
           ],
         ),
       ),

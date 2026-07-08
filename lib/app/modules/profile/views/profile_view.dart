@@ -25,6 +25,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   final List<Map<String, dynamic>> reports = const [
     {
+      "id": "#REP-01",
+      "category": "Plumbing",
       "priority": "URGENT",
       "status": "Selesai",
       "title": "Kebocoran Pipa Air",
@@ -33,6 +35,8 @@ class _ProfilePageState extends State<ProfilePage> {
           "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
     },
     {
+      "id": "#REP-02",
+      "category": "Plumbing",
       "priority": "STANDARD",
       "status": "Pending",
       "title": "Kebocoran Pipa Air",
@@ -41,6 +45,8 @@ class _ProfilePageState extends State<ProfilePage> {
           "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
     },
     {
+      "id": "#REP-03",
+      "category": "Plumbing",
       "priority": "URGENT",
       "status": "Ditolak",
       "title": "Kebocoran Pipa Air",
@@ -49,6 +55,8 @@ class _ProfilePageState extends State<ProfilePage> {
           "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
     },
     {
+      "id": "#REP-04",
+      "category": "Plumbing",
       "priority": "STANDARD",
       "status": "Pending",
       "title": "Kebocoran Pipa Air",
@@ -58,6 +66,34 @@ class _ProfilePageState extends State<ProfilePage> {
     },
   ];
 
+  String _searchQuery = '';
+  String? _selectedStatus;
+
+  List<Map<String, dynamic>> get _filteredReports {
+    final query = _searchQuery.trim().toLowerCase();
+
+    return reports.where((report) {
+      final status = report["status"] as String;
+      final matchesStatus =
+          _selectedStatus == null || status == _selectedStatus;
+
+      if (!matchesStatus) return false;
+      if (query.isEmpty) return true;
+
+      return [
+        report["id"],
+        report["category"],
+        report["priority"],
+        report["status"],
+        report["title"],
+        report["location"],
+        report["description"],
+      ].whereType<String>().any((value) {
+        return value.toLowerCase().contains(query);
+      });
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final fullName = '$firstName $lastName'.trim();
@@ -65,7 +101,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final pageBg = isDark ? AppDarkColors.background : const Color(0xFF104A7F);
     final surface = isDark ? AppDarkColors.surface : Colors.white;
     final textColor = isDark ? Colors.white : navyTextColor;
-    final mutedColor = isDark ? Colors.white70 : navyTextColor.withValues(alpha: 0.7);
+    final mutedColor =
+        isDark ? Colors.white70 : navyTextColor.withValues(alpha: 0.7);
+    final filteredReports = _filteredReports;
 
     return Scaffold(
       backgroundColor: pageBg,
@@ -193,7 +231,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 28,
+                            vertical: 10,
+                          ),
                         ),
                         child: const Text(
                           "Laporan Saya",
@@ -208,20 +249,39 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Search Bar
                       Container(
                         decoration: BoxDecoration(
-                          color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+                          color: isDark
+                              ? AppDarkColors.surfaceVariant
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: isDark ? AppDarkColors.accent : const Color(0xFFE2EAF8),
+                            color: isDark
+                                ? AppDarkColors.accent
+                                : const Color(0xFFE2EAF8),
                             width: 1.5,
                           ),
                         ),
-                        child: const TextField(
+                        child: TextField(
+                          onChanged: (value) {
+                            setState(() => _searchQuery = value);
+                          },
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 13,
+                          ),
                           decoration: InputDecoration(
                             hintText: "Search reports by ID or category...",
-                            hintStyle: TextStyle(color: Colors.grey, fontSize: 13),
-                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            hintStyle: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                            ),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ),
@@ -231,25 +291,59 @@ class _ProfilePageState extends State<ProfilePage> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.tune, size: 16, color: Colors.black87),
-                          label: const Text(
-                            "Filter",
-                            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 13),
+                          onPressed: _showFilterSheet,
+                          icon: Icon(
+                            Icons.tune,
+                            size: 16,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                          label: Text(
+                            _selectedStatus ?? "Filter",
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFE2EAF8), width: 1.5),
+                            side: BorderSide(
+                              color: isDark
+                                  ? AppDarkColors.border
+                                  : const Color(0xFFE2EAF8),
+                              width: 1.5,
+                            ),
+                            backgroundColor: isDark
+                                ? AppDarkColors.surfaceVariant
+                                : Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 15),
                       
                       // List of Reports
-                      ...reports.map((report) => _buildReportCard(report)),
+                      if (filteredReports.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30),
+                          child: Text(
+                            "Tidak ada laporan yang cocok",
+                            style: TextStyle(
+                              color: mutedColor,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      else
+                        ...filteredReports.map(
+                          (report) => _buildReportCard(report),
+                        ),
 
                       const SizedBox(height: 12),
 
@@ -314,7 +408,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Container(
           height: 70,
           decoration: BoxDecoration(
-                            color: isDark ? AppDarkColors.surface : Colors.white,
+            color: isDark ? AppDarkColors.surface : Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -471,6 +565,72 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showFilterSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetColor = isDark ? AppDarkColors.surface : Colors.white;
+    final titleColor = isDark ? Colors.white : navyTextColor;
+    final itemColor = isDark ? Colors.white70 : const Color(0xFF1E2A3A);
+    const statuses = ['Selesai', 'Pending', 'Ditolak'];
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: sheetColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Filter berdasarkan status',
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  tileColor: sheetColor,
+                  leading: Icon(
+                    _selectedStatus == null
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    color: isDark ? AppDarkColors.accent : navyTextColor,
+                  ),
+                  title: Text('Semua', style: TextStyle(color: itemColor)),
+                  onTap: () {
+                    setState(() => _selectedStatus = null);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                for (final status in statuses)
+                  ListTile(
+                    tileColor: sheetColor,
+                    leading: Icon(
+                      _selectedStatus == status
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      color: isDark ? AppDarkColors.accent : navyTextColor,
+                    ),
+                    title: Text(status, style: TextStyle(color: itemColor)),
+                    onTap: () {
+                      setState(() => _selectedStatus = status);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

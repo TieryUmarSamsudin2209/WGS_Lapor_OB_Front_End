@@ -284,77 +284,83 @@ class ReportPage extends StatelessWidget {
                                       GestureDetector(
                                         onTap: () {
                                           Get.bottomSheet(
-                                            Container(
-                                              padding: const EdgeInsets.all(20),
-                                              decoration: BoxDecoration(
-                                                color: uploadBackground,
-                                                borderRadius: const BorderRadius.only(
-                                                  topLeft: Radius.circular(20),
-                                                  topRight: Radius.circular(20),
-                                                ),
+                                            Material(
+                                              color: uploadBackground,
+                                              borderRadius: const BorderRadius.only(
+                                                topLeft: Radius.circular(20),
+                                                topRight: Radius.circular(20),
                                               ),
-                                              child: Wrap(
-                                                children: [
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(bottom: 20),
-                                                    child: Text(
-                                                      "Pilih Sumber Foto",
-                                                      style: TextStyle(
-                                                        color: titleColor,
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.bold,
+                                              clipBehavior: Clip.antiAlias,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(20),
+                                                decoration: BoxDecoration(
+                                                  color: uploadBackground,
+                                                ),
+                                                child: Wrap(
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(bottom: 20),
+                                                      child: Text(
+                                                        "Pilih Sumber Foto",
+                                                        style: TextStyle(
+                                                          color: titleColor,
+                                                          fontSize: 16,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                  ListTile(
-                                                    leading: Container(
-                                                      padding: const EdgeInsets.all(10),
-                                                      decoration: BoxDecoration(
-                                                        color: isDark
-                                                            ? AppDarkColors.accent.withValues(alpha: 0.16)
-                                                            : Colors.blue[50],
-                                                        shape: BoxShape.circle,
+                                                    ListTile(
+                                                      tileColor: uploadBackground,
+                                                      leading: Container(
+                                                        padding: const EdgeInsets.all(10),
+                                                        decoration: BoxDecoration(
+                                                          color: isDark
+                                                              ? AppDarkColors.accent.withValues(alpha: 0.16)
+                                                              : Colors.blue[50],
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.camera_alt,
+                                                          color: isDark ? AppDarkColors.accent : Colors.blue,
+                                                        ),
                                                       ),
-                                                      child: Icon(
-                                                        Icons.camera_alt,
-                                                        color: isDark ? AppDarkColors.accent : Colors.blue,
+                                                      title: Text(
+                                                        "Kamera",
+                                                        style: TextStyle(color: titleColor),
                                                       ),
+                                                      onTap: () {
+                                                        Get.back();
+                                                        controller.pickImage(ImageSource.camera);
+                                                      },
                                                     ),
-                                                    title: Text(
-                                                      "Kamera",
-                                                      style: TextStyle(color: titleColor),
-                                                    ),
-                                                    onTap: () {
-                                                      Get.back();
-                                                      controller.pickImage(ImageSource.camera);
-                                                    },
-                                                  ),
-                                                  ListTile(
-                                                    leading: Container(
-                                                      padding: const EdgeInsets.all(10),
-                                                      decoration: BoxDecoration(
-                                                        color: isDark
-                                                            ? const Color(0xFF9B5CFF).withValues(alpha: 0.16)
-                                                            : Colors.purple[50],
-                                                        shape: BoxShape.circle,
+                                                    ListTile(
+                                                      tileColor: uploadBackground,
+                                                      leading: Container(
+                                                        padding: const EdgeInsets.all(10),
+                                                        decoration: BoxDecoration(
+                                                          color: isDark
+                                                              ? const Color(0xFF9B5CFF).withValues(alpha: 0.16)
+                                                              : Colors.purple[50],
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.photo_library,
+                                                          color: isDark
+                                                              ? const Color(0xFFB58CFF)
+                                                              : Colors.purple,
+                                                        ),
                                                       ),
-                                                      child: Icon(
-                                                        Icons.photo_library,
-                                                        color: isDark
-                                                            ? const Color(0xFFB58CFF)
-                                                            : Colors.purple,
+                                                      title: Text(
+                                                        "Galeri",
+                                                        style: TextStyle(color: titleColor),
                                                       ),
+                                                      onTap: () {
+                                                        Get.back();
+                                                        controller.pickImage(ImageSource.gallery);
+                                                      },
                                                     ),
-                                                    title: Text(
-                                                      "Galeri",
-                                                      style: TextStyle(color: titleColor),
-                                                    ),
-                                                    onTap: () {
-                                                      Get.back();
-                                                      controller.pickImage(ImageSource.gallery);
-                                                    },
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           );

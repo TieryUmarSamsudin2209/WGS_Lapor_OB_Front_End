@@ -21,6 +21,9 @@ class ObProfilView extends GetView<ObProfilController> {
     final pageBg = isDark ? AppDarkColors.background : _navy;
     final surface = isDark ? AppDarkColors.surface : Colors.white;
     final titleColor = isDark ? Colors.white : _navy;
+    final controlBg = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final controlBorder = isDark ? AppDarkColors.border : Colors.grey.shade300;
+    final controlText = isDark ? Colors.white70 : Colors.grey.shade700;
 
     return Scaffold(
       backgroundColor: pageBg,
@@ -154,9 +157,9 @@ class ObProfilView extends GetView<ObProfilController> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
-                              color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+                              color: controlBg,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey.shade300),
+                              border: Border.all(color: controlBorder),
                             ),
                             child: Row(
                               children: [
@@ -166,7 +169,11 @@ class ObProfilView extends GetView<ObProfilController> {
                                 Expanded(
                                   child: TextField(
                                     onChanged: controller.onSearchChanged,
-                                    style: const TextStyle(fontSize: 14),
+                                    style: TextStyle(
+                                      color:
+                                          isDark ? Colors.white : Colors.black87,
+                                      fontSize: 14,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText:
                                           'Search reports by ID or category...',
@@ -196,21 +203,24 @@ class ObProfilView extends GetView<ObProfilController> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+                                    color: controlBg,
                                     borderRadius: BorderRadius.circular(8),
-                                    border:
-                                        Border.all(color: Colors.grey.shade300),
+                                    border: Border.all(color: controlBorder),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.tune_rounded, size: 16, color: Colors.grey.shade700),
+                                      Icon(
+                                        Icons.tune_rounded,
+                                        size: 16,
+                                        color: controlText,
+                                      ),
                                       const SizedBox(width: 6),
                                       Text(
                                         'Filter',
                                         style: TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
-                                          color: Colors.grey.shade700,
+                                          color: controlText,
                                         ),
                                       ),
                                     ],
@@ -291,41 +301,55 @@ class ObProfilView extends GetView<ObProfilController> {
   }
 
   void _showFilterSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetColor = isDark ? AppDarkColors.surface : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
+    final itemColor = isDark ? Colors.white70 : const Color(0xFF1E2A3A);
+
     Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('Filter berdasarkan status',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-            ),
-            ListTile(
-              title: const Text('All'),
-              onTap: () {
-                controller.setStatusFilter(null);
-                Get.back();
-              },
-            ),
-            for (final status in const [
-              ReportStatus.resolved,
-              ReportStatus.pending,
-              ReportStatus.rejected,
-            ])
+      Material(
+        color: sheetColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Filter berdasarkan status',
+                  style: TextStyle(
+                    color: titleColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
               ListTile(
-                title: Text(status.label),
+                tileColor: sheetColor,
+                title: Text('All', style: TextStyle(color: itemColor)),
                 onTap: () {
-                  controller.setStatusFilter(status);
+                  controller.setStatusFilter(null);
                   Get.back();
                 },
               ),
-          ],
+              for (final status in const [
+                ReportStatus.resolved,
+                ReportStatus.pending,
+                ReportStatus.rejected,
+              ])
+                ListTile(
+                  tileColor: sheetColor,
+                  title: Text(status.label, style: TextStyle(color: itemColor)),
+                  onTap: () {
+                    controller.setStatusFilter(status);
+                    Get.back();
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
