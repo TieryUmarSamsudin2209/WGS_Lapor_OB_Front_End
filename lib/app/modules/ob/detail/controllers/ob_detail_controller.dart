@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/widgets/custom_alert.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
 class ObDetailController extends GetxController {
+  final AuthService _authService = Get.isRegistered<AuthService>()
+      ? Get.find<AuthService>()
+      : Get.put(AuthService(), permanent: true);
+
   HomeReport? activeReport;
 
   var pageState = 'initial'.obs;
   var isDetailExpanded = true.obs;
   var isNeedHelp = false.obs;
+  var isSubmitting = false.obs;
 
   // Rx variables to make view dynamically change according to report
   var title = 'Kebocoran Pipa Air'.obs;
@@ -44,7 +50,23 @@ class ObDetailController extends GetxController {
     }
   }
 
-  void setWorking() {
+  Future<void> setWorking() async {
+    if (isSubmitting.value) return;
+    final reportId = _activeReportId;
+    if (reportId == null) {
+      Get.snackbar('Error', 'ID laporan tidak ditemukan');
+      return;
+    }
+
+    isSubmitting.value = true;
+    final response = await _authService.takeObReport(reportId);
+    isSubmitting.value = false;
+
+    if (response == null) {
+      Get.snackbar('Error', 'Gagal mengambil laporan');
+      return;
+    }
+
     pageState.value = 'working';
     isDetailExpanded.value = false;
     activeReport?.status.value = 'Sedang Diproses';
@@ -63,7 +85,37 @@ class ObDetailController extends GetxController {
   }
 
   // ── Selesaikan → alert berhasil lalu kembali ke screen sebelumnya ────────
-  void completeReport() {
+  Future<void> completeReport() async {
+    if (isSubmitting.value) return;
+    final reportId = _activeReportId;
+    final note = noteController.text.trim();
+
+    if (reportId == null) {
+      Get.snackbar('Error', 'ID laporan tidak ditemukan');
+      return;
+    }
+    if (note.isEmpty) {
+      Get.snackbar('Catatan wajib diisi', 'Mohon isi catatan pekerjaan');
+      return;
+    }
+    if (actionPhotos.isEmpty) {
+      Get.snackbar('Foto wajib diisi', 'Mohon unggah bukti foto selesai');
+      return;
+    }
+
+    isSubmitting.value = true;
+    final response = await _authService.submitObReportHistory(
+      reportId: reportId,
+      note: note,
+      photoPaths: actionPhotos.toList(),
+    );
+    isSubmitting.value = false;
+
+    if (response == null) {
+      Get.snackbar('Error', 'Gagal menyelesaikan laporan');
+      return;
+    }
+
     activeReport?.status.value = 'Selesai';
     final ctx = Get.context;
     if (ctx != null) {
@@ -76,7 +128,32 @@ class ObDetailController extends GetxController {
   }
 
   // ── Tolak → alert gagal lalu kembali ke screen sebelumnya ─────────────────
-  void confirmReject() {
+  Future<void> confirmReject() async {
+    if (isSubmitting.value) return;
+    final reportId = _activeReportId;
+    final reason = noteController.text.trim();
+
+    if (reportId == null) {
+      Get.snackbar('Error', 'ID laporan tidak ditemukan');
+      return;
+    }
+    if (reason.isEmpty) {
+      Get.snackbar('Alasan wajib diisi', 'Mohon isi alasan menolak laporan');
+      return;
+    }
+
+    isSubmitting.value = true;
+    final response = await _authService.rejectObReport(
+      reportId: reportId,
+      reason: reason,
+    );
+    isSubmitting.value = false;
+
+    if (response == null) {
+      Get.snackbar('Error', 'Gagal menolak laporan');
+      return;
+    }
+
     activeReport?.status.value = 'Ditolak';
     final ctx = Get.context;
     if (ctx != null) {
@@ -113,6 +190,13 @@ class ObDetailController extends GetxController {
 
   void toggleDetailExpand() {
     isDetailExpanded.value = !isDetailExpanded.value;
+  }
+
+  String? get _activeReportId {
+    final rawId = activeReport?.id.trim();
+    if (rawId == null || rawId.isEmpty) return null;
+    final normalized = rawId.startsWith('#') ? rawId.substring(1) : rawId;
+    return normalized.trim().isEmpty ? null : normalized.trim();
   }
 
   @override

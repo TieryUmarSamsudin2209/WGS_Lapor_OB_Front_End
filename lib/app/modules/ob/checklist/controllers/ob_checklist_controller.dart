@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../routes/app_pages.dart';
+import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/widgets/custom_alert.dart';
 
 /// ==================== MODELS ====================
@@ -36,6 +37,10 @@ class ChecklistSection {
 /// ==================== CONTROLLER ====================
 
 class ObChecklistController extends GetxController {
+  final AuthService _authService = Get.isRegistered<AuthService>()
+      ? Get.find<AuthService>()
+      : Get.put(AuthService(), permanent: true);
+
   final sections = <ChecklistSection>[].obs;
   final isLoading = false.obs;
   final ImagePicker _picker = ImagePicker();
@@ -46,7 +51,7 @@ class ObChecklistController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadDummyData();
+    loadChecklist();
   }
 
   @override
@@ -55,9 +60,23 @@ class ObChecklistController extends GetxController {
     super.onClose();
   }
 
-  void _loadDummyData() {
+  Future<void> loadChecklist() async {
     isLoading.value = true;
 
+    final response = await _authService.getDailyChecklist();
+    final checklistItems = _extractChecklistItems(response);
+
+    if (checklistItems.isNotEmpty) {
+      sections.value = _sectionsFromApi(checklistItems);
+      isLoading.value = false;
+      return;
+    }
+
+    _loadDummyData();
+    isLoading.value = false;
+  }
+
+  void _loadDummyData() {
     sections.value = [
       ChecklistSection(
         title: 'Area kerja utama & Koridor',
@@ -127,8 +146,6 @@ class ObChecklistController extends GetxController {
         ],
       ),
     ];
-
-    isLoading.value = false;
   }
 
   /// Set status directly from popup
@@ -161,6 +178,99 @@ class ObChecklistController extends GetxController {
 
   void submitItemDetail(ChecklistItem item) {
     saveNote(item);
+  }
+
+  List<dynamic> _extractChecklistItems(Map<String, dynamic>? response) {
+    final data = _asMap(response?['data']);
+    return _asList(data?['data']) ??
+        _asList(data?['checklist']) ??
+        _asList(data?['checklists']) ??
+        _asList(data?['items']) ??
+        _asList(response?['data']) ??
+        _asList(response?['checklist']) ??
+        _asList(response?['checklists']) ??
+        _asList(response?['items']) ??
+        const [];
+  }
+
+  List<ChecklistSection> _sectionsFromApi(List<dynamic> items) {
+    final groupedItems = <String, List<ChecklistItem>>{};
+
+    for (final rawItem in items.whereType<Map>()) {
+      final item = _asMap(rawItem) ?? const {};
+      final sectionTitle = _firstValue(item, [
+            'section',
+            'kategori',
+            'area',
+            'ruangan',
+            'lokasi',
+          ]) ??
+          'Checklist Harian';
+
+      groupedItems.putIfAbsent(sectionTitle, () => []).add(
+            ChecklistItem(
+              id: _firstValue(item, ['id', 'checklist_id', 'uuid']) ?? '',
+              title: _firstValue(item, [
+                    'title',
+                    'judul',
+                    'nama',
+                    'nama_checklist',
+                    'kegiatan',
+                  ]) ??
+                  'Checklist',
+              description: _firstValue(item, [
+                    'description',
+                    'deskripsi',
+                    'keterangan',
+                    'catatan',
+                  ]) ??
+                  '-',
+              status: _statusFromApi(_firstValue(item, ['status']) ?? 'todo'),
+              note: _firstValue(item, ['catatan', 'note']) ?? '',
+            ),
+          );
+    }
+
+    return groupedItems.entries
+        .map((entry) => ChecklistSection(title: entry.key, items: entry.value))
+        .toList();
+  }
+
+  String _statusFromApi(String status) {
+    final normalized = status.trim().toLowerCase().replaceAll('_', ' ');
+    if (normalized.contains('selesai') ||
+        normalized.contains('resolved') ||
+        normalized.contains('done')) {
+      return 'resolved';
+    }
+    if (normalized.contains('pending') ||
+        normalized.contains('proses') ||
+        normalized.contains('progress')) {
+      return 'pending';
+    }
+    return 'todo';
+  }
+
+  String? _firstValue(Map<String, dynamic> source, List<String> keys) {
+    for (final key in keys) {
+      final value = source[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _asMap(Object? value) {
+    if (value is Map) {
+      return value.map((key, value) => MapEntry(key.toString(), value));
+    }
+    return null;
+  }
+
+  List<dynamic>? _asList(Object? value) {
+    if (value is List) return value;
+    return null;
   }
 
   /// Pick photo for a checklist item

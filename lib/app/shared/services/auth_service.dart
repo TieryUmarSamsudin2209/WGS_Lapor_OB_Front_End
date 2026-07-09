@@ -112,6 +112,119 @@ class AuthService extends GetxService {
     }
   }
 
+  Future<Map<String, dynamic>?> getDailyChecklist({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final response = await _client.get(
+        '/api/checklist-harian',
+        query: {
+          'page': page.toString(),
+          'limit': limit.toString(),
+        },
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _asMap(response.body);
+      }
+
+      debugPrint(
+        'Gagal ambil checklist harian: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error ambil checklist harian: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> takeObReport(String reportId) async {
+    try {
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId',
+        null,
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _asMap(response.body) ?? <String, dynamic>{'success': true};
+      }
+
+      debugPrint(
+        'Gagal ambil laporan OB: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error ambil laporan OB: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> submitObReportHistory({
+    required String reportId,
+    required String note,
+    required List<String> photoPaths,
+  }) async {
+    try {
+      final response = await _client.post(
+        '/api/ob/laporan/$reportId/histori',
+        FormData({
+          'catatan': note,
+          'foto_selesai': photoPaths
+              .map(
+                (path) => MultipartFile(
+                  path,
+                  filename: _filenameFromPath(path),
+                  contentType: _contentTypeFromPath(path),
+                ),
+              )
+              .toList(),
+        }),
+        contentType: 'multipart/form-data',
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _asMap(response.body) ?? <String, dynamic>{'success': true};
+      }
+
+      debugPrint(
+        'Gagal submit histori laporan OB: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error submit histori laporan OB: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> rejectObReport({
+    required String reportId,
+    required String reason,
+  }) async {
+    try {
+      final response = await _client.post(
+        '/api/ob/laporan/$reportId/tolak',
+        {'alasan_gagal': reason},
+        headers: authHeaders(extra: const {'Content-Type': 'application/json'}),
+      );
+
+      if (response.isOk) {
+        return _asMap(response.body) ?? <String, dynamic>{'success': true};
+      }
+
+      debugPrint(
+        'Gagal tolak laporan OB: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error tolak laporan OB: $e');
+      return null;
+    }
+  }
+
   Future<void> saveSession({
     required String? tokenValue,
     required Map<String, dynamic>? userData,
@@ -199,6 +312,19 @@ class AuthService extends GetxService {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
     return null;
+  }
+
+  String _filenameFromPath(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    final name = normalized.split('/').last.trim();
+    return name.isEmpty ? 'foto_selesai.jpg' : name;
+  }
+
+  String _contentTypeFromPath(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    return 'image/jpeg';
   }
 
   Map<String, dynamic>? _decodeJwtPayload(String? jwtToken) {
