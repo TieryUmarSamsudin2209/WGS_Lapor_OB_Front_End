@@ -32,6 +32,7 @@ class ObBottomNav extends StatelessWidget {
           builder: (context, constraints) {
             final compactWidth = (constraints.maxWidth - 12) / 3;
             final useCompact = constraints.maxWidth < 360;
+            final iconOnly = compactWidth < 58;
 
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -47,6 +48,7 @@ class ObBottomNav extends StatelessWidget {
                   isActive: activeItem == ObBottomNavItem.home,
                   isDark: isDark,
                   color: itemColor,
+                  iconOnly: iconOnly,
                   onTap: () => _goTo(ObBottomNavItem.home),
                 ),
                 _NavButton(
@@ -60,6 +62,7 @@ class ObBottomNav extends StatelessWidget {
                   isActive: activeItem == ObBottomNavItem.checklist,
                   isDark: isDark,
                   color: itemColor,
+                  iconOnly: iconOnly,
                   onTap: () => _goTo(ObBottomNavItem.checklist),
                 ),
                 _NavButton(
@@ -73,6 +76,7 @@ class ObBottomNav extends StatelessWidget {
                   isActive: activeItem == ObBottomNavItem.profile,
                   isDark: isDark,
                   color: itemColor,
+                  iconOnly: iconOnly,
                   onTap: () => _goTo(ObBottomNavItem.profile),
                 ),
               ],
@@ -146,6 +150,7 @@ class _NavButton extends StatelessWidget {
     required this.isActive,
     required this.isDark,
     required this.color,
+    required this.iconOnly,
     required this.onTap,
   });
 
@@ -155,6 +160,7 @@ class _NavButton extends StatelessWidget {
   final bool isActive;
   final bool isDark;
   final Color color;
+  final bool iconOnly;
   final VoidCallback onTap;
 
   static const _lightActiveBlue = Color(0xFF14558B);
@@ -193,22 +199,28 @@ class _NavButton extends StatelessWidget {
                 Icon(
                   icon,
                   color: isActive ? activeForeground : inactiveForeground,
-                  size: isActive ? 31 : 26,
+                  size: iconOnly
+                      ? 22
+                      : isActive
+                          ? 31
+                          : 26,
                 ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isActive ? activeForeground : inactiveForeground,
-                      fontSize: 13,
-                      height: 1,
-                      fontWeight: FontWeight.w800,
+                if (!iconOnly) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isActive ? activeForeground : inactiveForeground,
+                        fontSize: 13,
+                        height: 1,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

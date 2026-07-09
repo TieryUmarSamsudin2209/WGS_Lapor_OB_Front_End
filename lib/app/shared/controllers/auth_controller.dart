@@ -11,7 +11,7 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
 
   Future<bool> login(
-    String email,
+    String identifier,
     String password, {
     bool showError = true,
   }) async {
@@ -19,7 +19,7 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     final success = await authService.login(
-      email: email,
+      identifier: identifier,
       password: password,
     );
     isLoading.value = false;

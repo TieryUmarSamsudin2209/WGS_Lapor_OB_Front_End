@@ -103,15 +103,15 @@ class _LoginCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            const _InputLabel('Email'),
+            const _InputLabel('Email / Username'),
             _LoginInputField(
-              hint: 'Masukan Email',
+              hint: 'Masukan email atau username',
               controller: controller.identifierController,
-              keyboardType: TextInputType.emailAddress,
+              keyboardType: TextInputType.text,
               textInputAction: TextInputAction.next,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Email wajib diisi';
+                  return 'Email atau username wajib diisi';
                 }
                 return null;
               },

@@ -57,12 +57,16 @@ class LoginController extends GetxController {
         token.value = _authService.token.value;
         user.value = _authService.user.value;
         Get.offAllNamed(
-          _dashboardRouteFor(user.value, fallbackRole: _authService.role.value),
+          _dashboardRouteFor(
+            user.value,
+            fallbackRole: _authService.role.value,
+            fallbackIdentifier: identifierController.text.trim(),
+          ),
         );
         return;
       }
 
-      _showError('Login gagal. Periksa email dan password Anda.');
+      _showError('Login gagal. Periksa email/username dan password Anda.');
     } catch (_) {
       _showError('Tidak dapat terhubung ke server. Coba lagi sebentar.');
     } finally {
@@ -84,6 +88,7 @@ class LoginController extends GetxController {
   String _dashboardRouteFor(
     Map<String, dynamic>? userData, {
     Object? fallbackRole,
+    String? fallbackIdentifier,
   }) {
     final role = (userData?['role'] ?? fallbackRole)
             ?.toString()
@@ -91,10 +96,18 @@ class LoginController extends GetxController {
             .toLowerCase()
             .replaceAll(' ', '_') ??
         '';
+    final identifier = (userData?['username'] ??
+            userData?['email'] ??
+            fallbackIdentifier ??
+            '')
+        .toString()
+        .trim()
+        .toLowerCase();
 
     if (role == 'ob' ||
         role == 'office_boy' ||
-        role.contains('ob')) {
+        role.contains('ob') ||
+        identifier.split('@').first.startsWith('ob')) {
       return Routes.OB_HOME;
     }
 

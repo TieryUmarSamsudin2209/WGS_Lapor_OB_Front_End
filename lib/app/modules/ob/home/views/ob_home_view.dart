@@ -18,9 +18,16 @@ class OBHomeView extends GetView<ObHomeController> {
     return Scaffold(
       backgroundColor: isDark ? AppDarkColors.background : _pageBg,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          const ObHomePage(),
-          const _PinnedHeader(),
+          const Positioned.fill(
+            child: Column(
+              children: [
+                _PinnedHeader(),
+                Expanded(child: ObHomePage()),
+              ],
+            ),
+          ),
           Positioned(
             left: 0,
             right: 0,
@@ -39,43 +46,128 @@ class ObHomePage extends GetView<ObHomeController> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: false,
       bottom: false,
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 132, 16, 110),
-        child: Column(
-          children: [
-            _SectionCard(
-              title: 'Tugas Harian',
-              onSeeAll: () => Get.toNamed(Routes.OB_CHECKLIST),
-              child: Obx(
-                () => Column(
-                  children: controller.dailyTasks
-                      .map((task) => _TaskCard(task: task))
-                      .toList(),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return RefreshIndicator(
+            onRefresh: controller.loadHomeData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  children: [
+                    _SectionCard(
+                      title: 'Tugas Harian',
+                      onSeeAll: () => Get.toNamed(Routes.OB_CHECKLIST),
+                      child: Obx(
+                        () {
+                          if (controller.isLoadingTasks.value) {
+                            return const _SectionLoading();
+                          }
+                          if (controller.dailyTasks.isEmpty) {
+                            return const _SectionEmpty(
+                              message: 'Belum ada tugas harian',
+                            );
+                          }
+                          return Column(
+                            children: controller.dailyTasks
+                                .map((task) => _TaskCard(task: task))
+                                .toList(),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _SectionCard(
+                      title: 'Laporan',
+                      onSeeAll: () {
+                        if (controller.reports.isNotEmpty) {
+                          Get.toNamed(
+                            Routes.OB_DETAIL,
+                            arguments: controller.reports.first,
+                          );
+                        }
+                      },
+                      child: Obx(
+                        () {
+                          if (controller.isLoadingReports.value) {
+                            return const _SectionLoading();
+                          }
+                          if (controller.reports.isEmpty) {
+                            return const _SectionEmpty(
+                              message: 'Belum ada laporan',
+                            );
+                          }
+                          return Column(
+                            children: controller.reports
+                                .map((report) => _ReportCard(report: report))
+                                .toList(),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Laporan',
-              onSeeAll: () {
-                if (controller.reports.isNotEmpty) {
-                  Get.toNamed(
-                    Routes.OB_DETAIL,
-                    arguments: controller.reports.first,
-                  );
-                }
-              },
-              child: Obx(
-                () => Column(
-                  children: controller.reports
-                      .map((report) => _ReportCard(report: report))
-                      .toList(),
-                ),
-              ),
-            ),
-          ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SectionLoading extends StatelessWidget {
+  const _SectionLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 24),
+      child: Center(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.4,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionEmpty extends StatelessWidget {
+  const _SectionEmpty({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppDarkColors.card
+            : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white70
+              : const Color(0xFF676D75),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -91,97 +183,120 @@ class _PinnedHeader extends GetView<ObHomeController> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return SafeArea(
-      bottom: false,
-      child: Container(
-        width: double.infinity,
-        height: 121,
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 14),
-        decoration: BoxDecoration(
-          color: isDark ? AppDarkColors.header : _blue,
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(14),
-            bottomRight: Radius.circular(14),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 320;
+        final horizontalPadding = isCompact ? 12.0 : 16.0;
+        final titleSize = isCompact ? 22.0 : 27.0;
+        final iconBoxSize = isCompact ? 30.0 : 38.0;
+
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? AppDarkColors.header : _blue,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Beranda',
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                16,
+                horizontalPadding,
+                16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Beranda',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleSize,
+                            height: 1,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      _ThemeToggleButton(size: iconBoxSize),
+                      const SizedBox(width: 4),
+                      Tooltip(
+                        message: 'Notifikasi',
+                        child: InkWell(
+                          onTap: () => Get.snackbar(
+                            'Notifikasi',
+                            'Belum ada notifikasi baru',
+                            snackPosition: SnackPosition.TOP,
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                          child: SizedBox(
+                            width: iconBoxSize,
+                            height: iconBoxSize,
+                            child: Icon(
+                              Icons.notifications_none_rounded,
+                              color: Colors.white,
+                              size: isCompact ? 21 : 25,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Selamat Pagi,',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 27,
+                      fontSize: 11,
                       height: 1,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-                _ThemeToggleButton(),
-                const SizedBox(width: 4),
-                Tooltip(
-                  message: 'Notifikasi',
-                  child: InkWell(
-                    onTap: () => Get.snackbar(
-                      'Notifikasi',
-                      'Belum ada notifikasi baru',
-                      snackPosition: SnackPosition.TOP,
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    child: const SizedBox(
-                      width: 38,
-                      height: 34,
-                      child: Icon(
-                        Icons.notifications_none_rounded,
+                  const SizedBox(height: 4),
+                  Obx(
+                    () => Text(
+                      controller.name.value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
                         color: Colors.white,
-                        size: 25,
+                        fontSize: isCompact ? 18 : 21,
+                        height: 1.05,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Selamat Pagi,',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                height: 1,
-                fontWeight: FontWeight.w500,
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Obx(
-              () => Text(
-                controller.name.value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 21,
-                  height: 1.05,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _ThemeToggleButton extends StatelessWidget {
+  const _ThemeToggleButton({required this.size});
+
+  final double size;
+
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
@@ -193,14 +308,14 @@ class _ThemeToggleButton extends StatelessWidget {
           onTap: themeController.toggleTheme,
           borderRadius: BorderRadius.circular(18),
           child: SizedBox(
-            width: 34,
-            height: 34,
+            width: size,
+            height: size,
             child: Icon(
               themeController.isDarkMode
                   ? Icons.light_mode_outlined
                   : Icons.dark_mode_outlined,
               color: Colors.white,
-              size: 21,
+              size: size <= 30 ? 19 : 21,
             ),
           ),
         ),
@@ -247,6 +362,8 @@ class _SectionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15,
@@ -257,12 +374,12 @@ class _SectionCard extends StatelessWidget {
               ),
               TextButton(
                 onPressed: onSeeAll,
-                  style: TextButton.styleFrom(
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    minimumSize: Size.zero,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 4,
+                style: TextButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
                   ),
                 ),
                 child: const Text(
@@ -431,10 +548,11 @@ class _ReportCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
                             children: [
                               _Badge(style: priority),
-                              const Spacer(),
                               _Badge(style: status),
                             ],
                           ),
@@ -561,7 +679,9 @@ class _TinyIconBox extends StatelessWidget {
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surfaceVariant : color.withValues(alpha: 0.14),
+        color: isDark
+            ? AppDarkColors.surfaceVariant
+            : color.withValues(alpha: 0.14),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: color, size: 19),

@@ -21,24 +21,36 @@ class ObChecklistView extends GetView<ObChecklistController> {
     return Scaffold(
       backgroundColor: isDark ? AppDarkColors.background : _bg,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      _buildSectionsList(),
-                      const SizedBox(height: 110),
-                    ],
+          Positioned.fill(
+            child: Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 16),
+                              _buildSectionsList(),
+                              const SizedBox(height: 110),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Positioned(
             bottom: 0,
@@ -93,7 +105,16 @@ class ObChecklistView extends GetView<ObChecklistController> {
   Widget _buildSectionsList() {
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 36),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      if (controller.sections.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          child: const _ChecklistEmptyState(),
+        );
       }
       return Column(
         children: controller.sections
@@ -283,6 +304,33 @@ class ObChecklistView extends GetView<ObChecklistController> {
           ),
         );
       },
+    );
+  }
+}
+
+// Simple empty state widget
+class _ChecklistEmptyState extends StatelessWidget {
+  const _ChecklistEmptyState({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? AppDarkColors.border : Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('Belum ada checklist', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          SizedBox(height: 6),
+          Text('Tidak ada item untuk ditampilkan saat ini.', style: TextStyle(fontSize: 13)),
+        ],
+      ),
     );
   }
 }

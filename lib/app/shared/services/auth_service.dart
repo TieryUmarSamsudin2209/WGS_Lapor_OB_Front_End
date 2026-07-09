@@ -26,16 +26,17 @@ class AuthService extends GetxService {
   }
 
   Future<bool> login({
-    required String email,
+    required String identifier,
     required String password,
   }) async {
     try {
       final response = await _client.post(
         '/api/auth/login',
         {
-          'email': email,
+          'identifier': identifier,
           'password': password,
         },
+        contentType: 'application/json',
         headers: const {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -43,18 +44,21 @@ class AuthService extends GetxService {
         },
       );
 
-      final body = _asMap(response.body);
-      final data = _asMap(body?['data']);
-      final tokenValue = data?['token'] ?? data?['jwt_token'];
-      final tokenText = tokenValue?.toString();
+      final body = _responseBodyAsMap(response.body, response.bodyString);
+      final dataValue = body?['data'];
+      final data = _asMap(dataValue);
+      final tokenText = _loginTokenFrom(body, data, dataValue);
       final tokenClaims = _decodeJwtPayload(tokenText);
       final userData = _asMap(data?['user']) ??
           _userFromTokenClaims(
             tokenClaims,
-            fallbackEmail: email,
+            fallbackIdentifier: identifier,
           );
 
-      if (response.isOk && body?['success'] == true && tokenText != null) {
+      if (response.isOk &&
+          _isSuccessValue(body?['success']) &&
+          tokenText != null &&
+          tokenText.isNotEmpty) {
         await saveSession(
           tokenValue: tokenText,
           userData: userData,
@@ -150,6 +154,34 @@ class AuthService extends GetxService {
 
       if (response.isOk) {
         return _asMap(response.body) ?? <String, dynamic>{'success': true};
+      }
+
+      debugPrint(
+        'Gagal ambil laporan OB: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error ambil laporan OB: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getObReports({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final response = await _client.get(
+        '/api/ob/laporan',
+        query: {
+          'page': page.toString(),
+          'limit': limit.toString(),
+        },
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _asMap(response.body);
       }
 
       debugPrint(
@@ -314,6 +346,60 @@ class AuthService extends GetxService {
     return null;
   }
 
+  Map<String, dynamic>? _responseBodyAsMap(Object? body, String? bodyString) {
+    final bodyMap = _asMap(body);
+    if (bodyMap != null) return bodyMap;
+
+    for (final value in [body, bodyString]) {
+      if (value is! String || value.trim().isEmpty) continue;
+      try {
+        final decoded = jsonDecode(value);
+        final decodedMap = _asMap(decoded);
+        if (decodedMap != null) return decodedMap;
+      } catch (_) {
+        // Keep login tolerant of non-JSON error bodies.
+      }
+    }
+
+    return null;
+  }
+
+  String? _loginTokenFrom(
+    Map<String, dynamic>? body,
+    Map<String, dynamic>? data,
+    Object? dataValue,
+  ) {
+    for (final source in [data, body]) {
+      if (source == null) continue;
+      for (final key in [
+        'jwt_token',
+        'jwtToken',
+        'token',
+        'access_token',
+        'accessToken',
+      ]) {
+        final value = source[key];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString().trim();
+        }
+      }
+    }
+
+    if (dataValue is String && dataValue.trim().isNotEmpty) {
+      return dataValue.trim();
+    }
+    return null;
+  }
+
+  bool _isSuccessValue(Object? value) {
+    if (value == null) return true;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    final text = value.toString().trim().toLowerCase();
+    return ['true', '1', 'success', 'sukses', 'berhasil', 'ok'].contains(text);
+  }
+
   String _filenameFromPath(String path) {
     final normalized = path.replaceAll('\\', '/');
     final name = normalized.split('/').last.trim();
@@ -345,7 +431,7 @@ class AuthService extends GetxService {
 
   Map<String, dynamic>? _userFromTokenClaims(
     Map<String, dynamic>? claims, {
-    required String fallbackEmail,
+    required String fallbackIdentifier,
   }) {
     final userData = <String, dynamic>{};
     final nestedUser = _asMap(claims?['user']);
@@ -359,13 +445,17 @@ class AuthService extends GetxService {
       }
     }
 
-    userData.putIfAbsent('email', () => fallbackEmail);
-    userData.putIfAbsent('role', () => _roleFromEmail(fallbackEmail));
+    if (fallbackIdentifier.contains('@')) {
+      userData.putIfAbsent('email', () => fallbackIdentifier);
+    } else {
+      userData.putIfAbsent('username', () => fallbackIdentifier);
+    }
+    userData.putIfAbsent('role', () => _roleFromIdentifier(fallbackIdentifier));
     return userData.isEmpty ? null : userData;
   }
 
-  String? _roleFromEmail(String email) {
-    final username = email.split('@').first.toLowerCase();
+  String? _roleFromIdentifier(String identifier) {
+    final username = identifier.split('@').first.toLowerCase();
     if (username.startsWith('ob')) return 'OB';
     if (username.startsWith('admin')) return 'ADMIN';
     if (username.startsWith('hr')) return 'HR';

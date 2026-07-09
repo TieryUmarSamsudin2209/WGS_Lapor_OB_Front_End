@@ -36,6 +36,7 @@ class ObDetailController extends GetxController {
       title.value = activeReport!.title;
       description.value = activeReport!.description;
       priority.value = activeReport!.priority;
+      reportPhotos.assignAll(activeReport!.photos);
       isNeedHelp.value = activeReport!.hasCollaboration.value;
 
       // Map status values to appropriate page state
