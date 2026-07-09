@@ -339,14 +339,16 @@ class HomePage extends StatelessWidget {
                 style: TextStyle(fontSize: 13, color: Colors.white70),
               ),
               const SizedBox(height: 2),
-              const Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Text(
-                  'Alex Karyawan',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Obx(
+                  () => Text(
+                    Get.find<HomeController>().name.value,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../routes/app_pages.dart';
 
-class LoginPage extends StatelessWidget {
+import '../../../routes/app_pages.dart';
+import '../controllers/login_controller.dart';
+
+class LoginPage extends GetView<LoginController> {
   const LoginPage({super.key});
 
-  final Color navyTextColor = const Color(0xFF003366);
-  final Color primaryBlue = const Color(0xFF5B9FFF);
+  static const _navyTextColor = Color(0xFF003366);
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +27,9 @@ class LoginPage extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 60),
-
-                // --- LOGO WGS ---
                 Image.asset(
                   'assets/images/logo_wgs.png',
-                  height: 180, 
+                  height: 180,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(
@@ -40,145 +39,13 @@ class LoginPage extends StatelessWidget {
                     );
                   },
                 ),
-
                 const SizedBox(height: 40),
-
-                // --- LOGIN CARD ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                      left: 30,
-                      right: 30,
-                      top: 40,
-                      bottom: 40,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF003366).withValues(alpha: 0.06),
-                          blurRadius: 25,
-                          offset: const Offset(0, 10),
-                        )
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Center(
-                          child: Text(
-                            "Halo,Usn!",
-                            style: TextStyle(
-                              fontSize: 42,
-                              fontWeight: FontWeight.w900,
-                              color: navyTextColor,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Center(
-                          child: Text(
-                            "Selamat datang di Lapor OB!",
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: navyTextColor,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        _buildLabel("Username"),
-                        _buildInputField(hint: "Masukan Username"),
-
-                        const SizedBox(height: 20),
-
-                        _buildLabel("Password"),
-                        _buildInputField(hint: "Masukan Password", isPassword: true),
-
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8, right: 8),
-                            child: GestureDetector(
-                              onTap: () {},
-                              child: Text(
-                                "Lupa Password?",
-                                style: TextStyle(
-                                  color: navyTextColor,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 30),
-
-                        Center(
-                          child: SizedBox(
-                            width: 130,
-                            height: 38,
-                            child: ElevatedButton(
-                              onPressed: () => Get.offAllNamed(Routes.HOME),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4FA0FF),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shadowColor: const Color(
-                                  0xFF4FA0FF,
-                                ).withValues(alpha: 0.5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                padding: EdgeInsets.zero,
-                              ),
-                              child: const Text(
-                                "Masuk",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        Center(
-                          child: RichText(
-                            text: TextSpan(
-                              text: "Belum punya akun? ",
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: "Hubungi admin",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: navyTextColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _LoginCard(controller: controller),
                 ),
                 const SizedBox(height: 28),
-                _buildPolicyLinks(),
+                _PolicyLinks(),
                 const SizedBox(height: 32),
               ],
             ),
@@ -187,22 +54,229 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildLabel(String label) {
+class _LoginCard extends StatelessWidget {
+  const _LoginCard({required this.controller});
+
+  final LoginController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(30, 40, 30, 40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: LoginPage._navyTextColor.withValues(alpha: 0.06),
+            blurRadius: 25,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Form(
+        key: controller.formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Center(
+              child: Text(
+                'Halo,Usn!',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w900,
+                  color: LoginPage._navyTextColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Center(
+              child: Text(
+                'Selamat datang di Lapor OB!',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: LoginPage._navyTextColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            const _InputLabel('Email'),
+            _LoginInputField(
+              hint: 'Masukan Email',
+              controller: controller.identifierController,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Email wajib diisi';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            const _InputLabel('Password'),
+            Obx(
+              () => _LoginInputField(
+                hint: 'Masukan Password',
+                controller: controller.passwordController,
+                isPassword: controller.obscurePassword.value,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => controller.login(),
+                suffixIcon: IconButton(
+                  onPressed: controller.togglePasswordVisibility,
+                  icon: Icon(
+                    controller.obscurePassword.value
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: Colors.grey[500],
+                    size: 20,
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password wajib diisi';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, right: 8),
+                child: GestureDetector(
+                  onTap: () {},
+                  child: const Text(
+                    'Lupa Password?',
+                    style: TextStyle(
+                      color: LoginPage._navyTextColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            Center(
+              child: SizedBox(
+                width: 130,
+                height: 38,
+                child: Obx(
+                  () => ElevatedButton(
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : controller.login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4FA0FF),
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: const Color(0xFF9CCBFF),
+                      elevation: 0,
+                      shadowColor:
+                          const Color(0xFF4FA0FF).withValues(alpha: 0.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: controller.isLoading.value
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Masuk',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            Center(
+              child: RichText(
+                text: const TextSpan(
+                  text: 'Belum punya akun? ',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Hubungi admin',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: LoginPage._navyTextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InputLabel extends StatelessWidget {
+  const _InputLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 10, bottom: 6),
       child: Text(
         label,
-        style: TextStyle(
-          color: navyTextColor,
+        style: const TextStyle(
+          color: LoginPage._navyTextColor,
           fontWeight: FontWeight.w900,
           fontSize: 11,
         ),
       ),
     );
   }
+}
 
-  Widget _buildInputField({required String hint, bool isPassword = false}) {
+class _LoginInputField extends StatelessWidget {
+  const _LoginInputField({
+    required this.hint,
+    this.controller,
+    this.isPassword = false,
+    this.keyboardType,
+    this.textInputAction,
+    this.suffixIcon,
+    this.validator,
+    this.onSubmitted,
+  });
+
+  final String hint;
+  final TextEditingController? controller;
+  final bool isPassword;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final Widget? suffixIcon;
+  final String? Function(String?)? validator;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -211,15 +285,19 @@ class LoginPage extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFCBE7F5).withValues(alpha: 0.8),
-            spreadRadius: 0,
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: TextField(
+      child: TextFormField(
+        controller: controller,
         obscureText: isPassword,
-        style: TextStyle(color: navyTextColor, fontSize: 14),
+        keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        onFieldSubmitted: onSubmitted,
+        validator: validator,
+        style: const TextStyle(color: LoginPage._navyTextColor, fontSize: 14),
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
@@ -229,23 +307,27 @@ class LoginPage extends StatelessWidget {
           isDense: true,
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          suffixIcon: suffixIcon,
         ),
       ),
     );
   }
+}
 
-  Widget _buildPolicyLinks() {
+class _PolicyLinks extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildPolicyText(
-          "Kebijakan Privasi",
+        _PolicyText(
+          'Kebijakan Privasi',
           onTap: () => Get.toNamed(Routes.PRIVACY),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 5),
           child: Text(
-            "•",
+            '*',
             style: TextStyle(
               color: Color(0xFF7B879D),
               fontSize: 12,
@@ -253,15 +335,23 @@ class LoginPage extends StatelessWidget {
             ),
           ),
         ),
-        _buildPolicyText(
-          "Syarat & Ketentuan",
+        _PolicyText(
+          'Syarat & Ketentuan',
           onTap: () => Get.toNamed(Routes.TERMS),
         ),
       ],
     );
   }
+}
 
-  Widget _buildPolicyText(String label, {VoidCallback? onTap}) {
+class _PolicyText extends StatelessWidget {
+  const _PolicyText(this.label, {this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Text(

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../../../routes/app_pages.dart';
+import '../../../../shared/services/auth_service.dart';
 
 class DailyTask {
   final String title;
@@ -35,7 +36,7 @@ class HomeReport {
 }
 
 class ObHomeController extends GetxController {
-  final name = 'Rahman OB'.obs;
+  final name = 'OB'.obs;
 
   // List of Daily Tasks
   final dailyTasks = <DailyTask>[].obs;
@@ -46,7 +47,18 @@ class ObHomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _loadUser();
     _loadDummyData();
+  }
+
+  void _loadUser() {
+    if (!Get.isRegistered<AuthService>()) return;
+
+    final user = Get.find<AuthService>().user.value;
+    final displayName = user?['username'] ?? user?['name'] ?? user?['email'];
+    if (displayName != null && displayName.toString().trim().isNotEmpty) {
+      name.value = displayName.toString();
+    }
   }
 
   void _loadDummyData() {

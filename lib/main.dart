@@ -3,9 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'app/routes/app_pages.dart';
+import 'app/shared/controllers/auth_controller.dart';
+import 'app/shared/services/auth_service.dart';
 import 'app/shared/theme/theme_controller.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final authService = Get.put(AuthService(), permanent: true);
+  await authService.loadSession();
+  Get.put(AuthController(), permanent: true);
+
   final themeController = Get.put(ThemeController());
 
   runApp(
