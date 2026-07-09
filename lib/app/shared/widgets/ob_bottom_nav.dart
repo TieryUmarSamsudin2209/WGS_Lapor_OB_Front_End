@@ -10,11 +10,15 @@ class ObBottomNav extends StatelessWidget {
   const ObBottomNav({
     super.key,
     required this.activeItem,
+    this.middleLabel = 'Checklist',
+    this.compact = false,
   });
 
   final ObBottomNavItem activeItem;
+  final String middleLabel;
+  final bool compact;
 
-  static const _blue = Color(0xFF14558B);
+  static const _blue = Color(0xFF15598D);
 
   @override
   Widget build(BuildContext context) {
@@ -24,15 +28,19 @@ class ObBottomNav extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        height: 80,
-        margin: const EdgeInsets.fromLTRB(13, 0, 13, 14),
-        padding: const EdgeInsets.all(7),
-        decoration: isDark ? _darkDecoration() : _lightDecoration(),
+        height: compact ? 50 : 80,
+        margin: compact
+            ? const EdgeInsets.fromLTRB(13, 0, 13, 7)
+            : const EdgeInsets.fromLTRB(13, 0, 13, 14),
+        padding: EdgeInsets.all(compact ? 4 : 7),
+        decoration: isDark
+            ? _darkDecoration(compact)
+            : _lightDecoration(compact),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compactWidth = (constraints.maxWidth - 12) / 3;
-            final useCompact = constraints.maxWidth < 360;
-            final iconOnly = compactWidth < 58;
+            final useCompact = compact || constraints.maxWidth < 360;
+            final iconOnly = compact ? compactWidth < 42 : compactWidth < 58;
 
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -41,42 +49,45 @@ class ObBottomNav extends StatelessWidget {
                   width: useCompact
                       ? compactWidth
                       : activeItem == ObBottomNavItem.home
-                          ? 126
-                          : 112,
+                      ? 126
+                      : 112,
                   icon: Icons.home_outlined,
                   label: 'Home',
                   isActive: activeItem == ObBottomNavItem.home,
                   isDark: isDark,
                   color: itemColor,
                   iconOnly: iconOnly,
+                  compact: compact,
                   onTap: () => _goTo(ObBottomNavItem.home),
                 ),
                 _NavButton(
                   width: useCompact
                       ? compactWidth
                       : activeItem == ObBottomNavItem.checklist
-                          ? 126
-                          : 112,
+                      ? 126
+                      : 112,
                   icon: Icons.add_circle,
-                  label: 'Checklist',
+                  label: middleLabel,
                   isActive: activeItem == ObBottomNavItem.checklist,
                   isDark: isDark,
                   color: itemColor,
                   iconOnly: iconOnly,
+                  compact: compact,
                   onTap: () => _goTo(ObBottomNavItem.checklist),
                 ),
                 _NavButton(
                   width: useCompact
                       ? compactWidth
                       : activeItem == ObBottomNavItem.profile
-                          ? 126
-                          : 112,
+                      ? 126
+                      : 112,
                   icon: Icons.person_outline_rounded,
                   label: 'Profile',
                   isActive: activeItem == ObBottomNavItem.profile,
                   isDark: isDark,
                   color: itemColor,
                   iconOnly: iconOnly,
+                  compact: compact,
                   onTap: () => _goTo(ObBottomNavItem.profile),
                 ),
               ],
@@ -87,10 +98,10 @@ class ObBottomNav extends StatelessWidget {
     );
   }
 
-  BoxDecoration _darkDecoration() {
+  BoxDecoration _darkDecoration(bool compact) {
     return BoxDecoration(
       color: const Color(0xFF101418),
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(compact ? 15 : 24),
       border: Border.all(
         color: AppDarkColors.border.withValues(alpha: 0.75),
         width: 1.5,
@@ -106,20 +117,17 @@ class ObBottomNav extends StatelessWidget {
     );
   }
 
-  BoxDecoration _lightDecoration() {
+  BoxDecoration _lightDecoration(bool compact) {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(
-        color: const Color(0xFFCFE2FF),
-        width: 1.5,
-      ),
+      borderRadius: BorderRadius.circular(compact ? 15 : 24),
+      border: Border.all(color: const Color(0xFFCFE2FF), width: 1.5),
       boxShadow: [
         BoxShadow(
           color: const Color(0xFF7195FF).withValues(alpha: 0.9),
-          blurRadius: 4,
+          blurRadius: compact ? 5 : 4,
           spreadRadius: 0,
-          offset: const Offset(0, 4),
+          offset: Offset(0, compact ? 2 : 4),
         ),
       ],
     );
@@ -151,6 +159,7 @@ class _NavButton extends StatelessWidget {
     required this.isDark,
     required this.color,
     required this.iconOnly,
+    required this.compact,
     required this.onTap,
   });
 
@@ -161,16 +170,17 @@ class _NavButton extends StatelessWidget {
   final bool isDark;
   final Color color;
   final bool iconOnly;
+  final bool compact;
   final VoidCallback onTap;
 
-  static const _lightActiveBlue = Color(0xFF14558B);
+  static const _lightActiveBlue = Color(0xFF15598D);
   static const _darkActiveBlue = Color(0xFF052C58);
   static const _darkActiveText = Color(0xFF1D8CFF);
   static const darkInactiveText = Color(0xFF8B929C);
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(12);
+    final borderRadius = BorderRadius.circular(compact ? 8 : 12);
     final activeForeground = isDark ? _darkActiveText : Colors.white;
     final inactiveForeground = isDark ? darkInactiveText : color;
 
@@ -188,8 +198,8 @@ class _NavButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: isActive
                   ? isDark
-                      ? _darkActiveBlue
-                      : _lightActiveBlue
+                        ? _darkActiveBlue
+                        : _lightActiveBlue
                   : Colors.transparent,
               borderRadius: borderRadius,
             ),
@@ -200,13 +210,19 @@ class _NavButton extends StatelessWidget {
                   icon,
                   color: isActive ? activeForeground : inactiveForeground,
                   size: iconOnly
-                      ? 22
+                      ? compact
+                            ? 16
+                            : 22
                       : isActive
-                          ? 31
-                          : 26,
+                      ? compact
+                            ? 16
+                            : 31
+                      : compact
+                      ? 14
+                      : 26,
                 ),
                 if (!iconOnly) ...[
-                  const SizedBox(width: 6),
+                  SizedBox(width: compact ? 4 : 6),
                   Flexible(
                     child: Text(
                       label,
@@ -214,7 +230,7 @@ class _NavButton extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: isActive ? activeForeground : inactiveForeground,
-                        fontSize: 13,
+                        fontSize: compact ? 8 : 13,
                         height: 1,
                         fontWeight: FontWeight.w800,
                       ),

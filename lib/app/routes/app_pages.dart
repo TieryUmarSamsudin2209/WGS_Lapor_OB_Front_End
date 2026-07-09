@@ -24,6 +24,10 @@ import '../modules/ob/profil/bindings/ob_profil_binding.dart';
 import '../modules/ob/profil/views/ob_profil_view.dart';
 import '../modules/ob/checklist/bindings/ob_checklist_binding.dart';
 import '../modules/ob/checklist/views/ob_checklist_view.dart';
+import '../modules/ob/notifications/bindings/ob_notifications_binding.dart';
+import '../modules/ob/notifications/views/ob_notifications_view.dart';
+import '../modules/ob/reports/bindings/ob_reports_binding.dart';
+import '../modules/ob/reports/views/ob_reports_view.dart';
 
 part 'app_routes.dart';
 
@@ -90,6 +94,16 @@ class AppPages {
       name: Routes.OB_CHECKLIST,
       page: () => const ObChecklistView(),
       binding: ObChecklistBinding(),
+    ),
+    GetPage(
+      name: Routes.OB_NOTIFICATIONS,
+      page: () => const ObNotificationsView(),
+      binding: ObNotificationsBinding(),
+    ),
+    GetPage(
+      name: Routes.OB_REPORTS,
+      page: () => const ObReportsView(),
+      binding: ObReportsBinding(),
     ),
     GetPage(name: Routes.TERMS, page: () => _lightOnly(const TermsView())),
     GetPage(name: Routes.PRIVACY, page: () => _lightOnly(const PrivacyView())),

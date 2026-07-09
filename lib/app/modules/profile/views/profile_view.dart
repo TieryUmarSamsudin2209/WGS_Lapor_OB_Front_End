@@ -133,8 +133,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                         firstName: nameParts.first,
                                         lastName: nameParts.skip(1).join(' '),
                                         onSave: controller.updateProfile,
-                                        onAvatarChanged:
-                                            controller.updateAvatar,
                                       );
                                     },
                                     child: Padding(

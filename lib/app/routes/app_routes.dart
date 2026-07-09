@@ -14,6 +14,8 @@ abstract class Routes {
   static const OB_PROFIL = _Paths.OB_PROFIL;
   static const OB_DETAIL = _Paths.OB_DETAIL;
   static const OB_CHECKLIST = _Paths.OB_CHECKLIST;
+  static const OB_NOTIFICATIONS = _Paths.OB_NOTIFICATIONS;
+  static const OB_REPORTS = _Paths.OB_REPORTS;
   static const TERMS = _Paths.TERMS;
   static const PRIVACY = _Paths.PRIVACY;
 }
@@ -31,6 +33,8 @@ abstract class _Paths {
   static const OB_PROFIL = '/ob-profil';
   static const OB_DETAIL = '/ob-detail';
   static const OB_CHECKLIST = '/ob-checklist';
+  static const OB_NOTIFICATIONS = '/ob-notifications';
+  static const OB_REPORTS = '/ob-reports';
   static const TERMS = '/terms';
   static const PRIVACY = '/privacy';
 }

@@ -52,6 +52,30 @@ class ObHomeController extends GetxController {
   // List of Reports
   final reports = <HomeReport>[].obs;
 
+  int get completedTaskCount =>
+      dailyTasks.where((task) => task.status.value == 'resolved').length;
+
+  int get totalTaskCount => dailyTasks.length;
+
+  int get taskProgressPercent {
+    if (totalTaskCount == 0) return 0;
+    return ((completedTaskCount / totalTaskCount) * 100).round();
+  }
+
+  String get assignmentLabel {
+    final user = _authService.user.value ?? const <String, dynamic>{};
+    final value =
+        user['penugasan'] ??
+        user['assignment'] ??
+        user['lokasi'] ??
+        user['location'];
+    final text = value?.toString().trim();
+    if (text != null && text.isNotEmpty) return 'Penugasan: $text';
+    return 'Penugasan: Gedung A - Lantai 1 & 2';
+  }
+
+  List<HomeReport> get latestReports => reports.take(2).toList();
+
   @override
   void onInit() {
     super.onInit();

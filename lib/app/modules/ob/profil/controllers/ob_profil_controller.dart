@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/controllers/auth_controller.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../home/controllers/ob_home_controller.dart';
 
 /// ================= MODEL =================
 class ReportModel {
@@ -31,7 +32,7 @@ extension ReportStatusExt on ReportStatus {
   String get label {
     switch (this) {
       case ReportStatus.inProgress:
-        return 'Selesai';
+        return 'Diproses';
       case ReportStatus.pending:
         return 'Pending';
       case ReportStatus.rejected:
@@ -71,9 +72,15 @@ class ObProfilController extends GetxController {
   /// ---- Data ----
   var reports = <ReportModel>[].obs;
   var filteredReports = <ReportModel>[].obs;
+  final completedTaskTotal = 0.obs;
 
   ReportStatus? currentFilter;
   String searchQuery = '';
+
+  List<ReportModel> get recentReports => reports.take(2).toList();
+  int get handledReportTotal =>
+      reports.where((report) => report.status != ReportStatus.pending).length;
+  String get averageResponseLabel => reports.isEmpty ? '-' : '15m';
 
   @override
   void onInit() {
@@ -84,7 +91,15 @@ class ObProfilController extends GetxController {
   Future<void> loadProfile() async {
     isLoading.value = true;
 
-    final response = await _authService.getUserProfile();
+    final results = await Future.wait([
+      _authService.getUserProfile(),
+      _authService.getObReports(limit: 50),
+      _authService.getDailyChecklist(limit: 50),
+    ]);
+
+    final response = results[0];
+    final reportsResponse = results[1];
+    final checklistResponse = results[2];
     final data = _asMap(response?['data']) ?? response;
     final profile = _asMap(data?['user']) ??
         _asMap(data?['profile']) ??
@@ -93,17 +108,17 @@ class ObProfilController extends GetxController {
 
     _setProfile(profile);
 
-    final reportItems = _asList(data?['laporan']) ??
-        _asList(data?['reports']) ??
-        _asList(data?['riwayat_laporan']) ??
-        _asList(data?['history']) ??
-        _asList(response?['laporan']);
+    var reportItems = _extractReportItems(reportsResponse);
+    if (reportItems.isEmpty) {
+      reportItems = _extractReportItems(response);
+    }
 
-    reports.value = (reportItems ?? const [])
+    reports.value = reportItems
         .whereType<Map>()
         .map((item) => _reportFromApi(_asMap(item) ?? const {}))
         .toList();
 
+    completedTaskTotal.value = _completedTaskCount(checklistResponse);
     filteredReports.value = reports;
     isLoading.value = false;
   }
@@ -111,7 +126,7 @@ class ObProfilController extends GetxController {
   /// ================= ACTION =================
 
   void goToReportHistory() {
-    Get.snackbar('Info', 'Go to report history');
+    Get.toNamed(Routes.OB_REPORTS);
   }
 
   void goHome() {
@@ -122,14 +137,42 @@ class ObProfilController extends GetxController {
     Get.toNamed(Routes.OB_CHECKLIST);
   }
 
-  void updateProfile(String firstName, String lastName) {
+  Future<bool> updateProfile(
+    String firstName,
+    String lastName,
+    String? avatarPath,
+  ) async {
     final sanitizedFirstName = firstName.trim();
     final sanitizedLastName = lastName.trim();
-    if (sanitizedFirstName.isEmpty) return;
+    if (sanitizedFirstName.isEmpty) return false;
 
-    name.value = [sanitizedFirstName, sanitizedLastName]
+    final fullName = [sanitizedFirstName, sanitizedLastName]
         .where((part) => part.isNotEmpty)
         .join(' ');
+
+    final response = await _authService.updateUserProfile(
+      firstName: sanitizedFirstName,
+      lastName: sanitizedLastName,
+      avatarPath: avatarPath,
+    );
+
+    if (response == null) {
+      Get.snackbar('Gagal', 'Profil belum berhasil disimpan');
+      return false;
+    }
+
+    final profile = _profileFromResponse(response);
+    if (profile != null) {
+      _setProfile(profile);
+    } else {
+      name.value = fullName;
+      if (avatarPath != null && avatarPath.trim().isNotEmpty) {
+        avatarUrl.value = avatarPath.trim();
+      }
+    }
+
+    Get.snackbar('Berhasil', 'Profil berhasil disimpan');
+    return true;
   }
 
   void updateAvatar(String avatarPath) {
@@ -148,12 +191,17 @@ class ObProfilController extends GetxController {
 
   Future<void> openReport(ReportModel report) async {
     final reportId = report.id.startsWith('#') ? report.id.substring(1) : report.id;
-    final detail = await _authService.getUserReportDetail(reportId);
-    final data = _asMap(detail?['data']);
-    final message = data?['description']?.toString() ??
-        data?['deskripsi']?.toString() ??
-        'Detail laporan berhasil dimuat';
-    Get.snackbar('Detail laporan', message);
+    Get.toNamed(
+      Routes.OB_DETAIL,
+      arguments: HomeReport(
+        id: reportId,
+        title: report.title,
+        location: report.location,
+        description: report.description,
+        priority: report.priority,
+        status: _homeStatusFromProfileStatus(report.status),
+      ),
+    );
   }
 
   /// ================= FILTER =================
@@ -215,26 +263,103 @@ class ObProfilController extends GetxController {
       username.value = userName.startsWith('@') ? userName : '@$userName';
     }
     if (photo != null && photo.isNotEmpty) {
-      avatarUrl.value = photo;
+      avatarUrl.value = _profilePhotoUrl(photo);
     }
   }
 
+  Map<String, dynamic>? _profileFromResponse(Map<String, dynamic> response) {
+    final data = _asMap(response['data']) ?? response;
+    final profile = _asMap(data['user']) ??
+        _asMap(data['profile']) ??
+        _asMap(data['data']) ??
+        data;
+    return _looksLikeProfile(profile) ? profile : null;
+  }
+
+  bool _looksLikeProfile(Map<String, dynamic> value) {
+    return [
+      'id',
+      'username',
+      'email',
+      'nama',
+      'nama_lengkap',
+      'name',
+      'role',
+      'profile_picture',
+      'profilePicture',
+      'avatar',
+      'foto',
+    ].any(value.containsKey);
+  }
+
+  String _profilePhotoUrl(String photo) {
+    if (photo.startsWith('http')) return photo;
+    if (photo.startsWith('/uploads')) {
+      return '${AuthService.baseUrl}$photo';
+    }
+    if (photo.startsWith('uploads/')) {
+      return '${AuthService.baseUrl}/$photo';
+    }
+    if (photo.startsWith('/') || photo.contains('\\') || photo.contains(':')) {
+      return photo;
+    }
+    return '${AuthService.baseUrl}/$photo';
+  }
+
   ReportModel _reportFromApi(Map<String, dynamic> item) {
-    final rawId = _firstValue(item, ['id', 'laporan_id', 'report_id']) ?? '';
+    final detail = _asMap(item['laporan']) ?? _asMap(item['report']) ?? item;
+    final sources = [item, detail];
+    final rawId = _firstValueFromSources(
+      sources,
+      ['id', 'laporan_id', 'report_id', 'uuid'],
+    ) ?? '';
     final displayId = rawId.startsWith('#') ? rawId : '#$rawId';
 
     return ReportModel(
       id: displayId,
-      priority:
-          (_firstValue(item, ['priority', 'prioritas']) ?? 'STANDARD')
-              .toUpperCase(),
-      title:
-          _firstValue(item, ['title', 'judul', 'nama_laporan']) ?? 'Laporan',
-      location: _firstValue(item, ['location', 'lokasi', 'ruangan']) ?? '-',
-      description:
-          _firstValue(item, ['description', 'deskripsi', 'catatan']) ?? '-',
-      date: _dateFromApi(_firstValue(item, ['created_at', 'tanggal', 'date'])),
-      status: _statusFromApi(_firstValue(item, ['status']) ?? 'Pending'),
+      priority: (_firstValueFromSources(sources, [
+                'priority',
+                'prioritas',
+                'urgency',
+                'urgensi',
+              ]) ??
+              'STANDARD')
+          .toUpperCase(),
+      title: _firstValueFromSources(sources, [
+            'title',
+            'judul',
+            'nama_laporan',
+            'kategori',
+            'category',
+            'nama_kategori',
+          ]) ??
+          'Laporan',
+      location: _firstValueFromSources(sources, [
+            'location',
+            'lokasi',
+            'ruangan',
+            'area',
+            'detail_lokasi',
+            'alamat',
+            'lantai',
+          ]) ??
+          '-',
+      description: _firstValueFromSources(sources, [
+            'description',
+            'deskripsi',
+            'deskripsi_kendala',
+            'catatan',
+            'keluhan',
+            'keterangan',
+          ]) ??
+          '-',
+      date: _dateFromApi(
+        _firstValueFromSources(sources, ['created_at', 'tanggal', 'date']),
+      ),
+      status: _statusFromApi(
+        _firstValueFromSources(sources, ['status', 'status_laporan']) ??
+            'Pending',
+      ),
     );
   }
 
@@ -248,10 +373,109 @@ class ObProfilController extends GetxController {
         normalized.contains('done')) {
       return ReportStatus.resolved;
     }
-    if (normalized.contains('proses') || normalized.contains('progress')) {
+    if (normalized.contains('proses') ||
+        normalized.contains('progress') ||
+        normalized.contains('diproses')) {
       return ReportStatus.inProgress;
     }
     return ReportStatus.pending;
+  }
+
+  String _homeStatusFromProfileStatus(ReportStatus status) {
+    switch (status) {
+      case ReportStatus.inProgress:
+        return 'Sedang Diproses';
+      case ReportStatus.pending:
+        return 'Belum Diproses';
+      case ReportStatus.rejected:
+        return 'Ditolak';
+      case ReportStatus.resolved:
+        return 'Selesai';
+    }
+  }
+
+  List<dynamic> _extractReportItems(Map<String, dynamic>? response) {
+    final data = _asMap(response?['data']);
+    final nestedData = _asMap(data?['data']);
+    const keys = [
+      'laporan',
+      'reports',
+      'items',
+      'data',
+      'rows',
+      'results',
+      'riwayat_laporan',
+      'riwayatLaporan',
+      'laporan_masuk',
+      'laporanMasuk',
+      'incoming_reports',
+      'incomingReports',
+      'report_history',
+      'reportHistory',
+      'history',
+      'histori',
+    ];
+
+    for (final source in [nestedData, data, response]) {
+      if (source == null) continue;
+      for (final key in keys) {
+        final value = source[key];
+        if (value is List) return value;
+
+        final nested = _asMap(value);
+        if (nested == null) continue;
+        for (final nestedKey in keys) {
+          final nestedValue = nested[nestedKey];
+          if (nestedValue is List) return nestedValue;
+        }
+      }
+    }
+
+    return const [];
+  }
+
+  int _completedTaskCount(Map<String, dynamic>? response) {
+    final items = _extractChecklistItems(response);
+    return items.whereType<Map>().where((rawItem) {
+      final item = _asMap(rawItem) ?? const {};
+      final status = _firstValue(item, [
+            'status',
+            'status_checklist',
+            'status_tugas',
+          ]) ??
+          '';
+      final normalized = status.trim().toLowerCase().replaceAll('_', ' ');
+      return normalized.contains('selesai') ||
+          normalized.contains('resolved') ||
+          normalized.contains('done');
+    }).length;
+  }
+
+  List<dynamic> _extractChecklistItems(Map<String, dynamic>? response) {
+    final data = _asMap(response?['data']);
+    final nestedData = _asMap(data?['data']);
+    const keys = [
+      'data',
+      'checklist',
+      'checklists',
+      'checklist_harian',
+      'daily_checklists',
+      'items',
+      'tasks',
+      'tugas',
+      'rows',
+      'results',
+    ];
+
+    for (final source in [nestedData, data, response]) {
+      if (source == null) continue;
+      for (final key in keys) {
+        final value = source[key];
+        if (value is List) return value;
+      }
+    }
+
+    return const [];
   }
 
   DateTime _dateFromApi(String? value) {
@@ -262,9 +486,36 @@ class ObProfilController extends GetxController {
   String? _firstValue(Map<String, dynamic> source, List<String> keys) {
     for (final key in keys) {
       final value = source[key];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString().trim();
+      if (value == null) continue;
+      if (value is Map) {
+        final nested = _asMap(value);
+        final nestedValue = _firstValue(nested ?? const {}, [
+          'nama_lokasi',
+          'nama_kategori',
+          'nomor_lantai',
+          'nama',
+          'name',
+          'title',
+          'judul',
+          'alamat',
+        ]);
+        if (nestedValue != null) return nestedValue;
+        continue;
       }
+
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+    return null;
+  }
+
+  String? _firstValueFromSources(
+    List<Map<String, dynamic>> sources,
+    List<String> keys,
+  ) {
+    for (final source in sources) {
+      final value = _firstValue(source, keys);
+      if (value != null) return value;
     }
     return null;
   }
@@ -273,11 +524,6 @@ class ObProfilController extends GetxController {
     if (value is Map) {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
-    return null;
-  }
-
-  List<dynamic>? _asList(Object? value) {
-    if (value is List) return value;
     return null;
   }
 }

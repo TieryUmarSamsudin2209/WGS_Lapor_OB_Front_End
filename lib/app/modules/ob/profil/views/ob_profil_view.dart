@@ -3,588 +3,628 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../routes/app_pages.dart';
+import '../../../../shared/theme/theme_controller.dart';
 import '../../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../../shared/widgets/logout_confirmation_dialog.dart';
-import '../../../../shared/theme/theme_controller.dart';
 import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_profil_controller.dart';
 
 class ObProfilView extends GetView<ObProfilController> {
   const ObProfilView({super.key});
 
-  static const _navy = Color(0xFF0F2A5E);
-  static const _bg = Colors.white;
+  static const _blue = Color(0xFF14558B);
+  static const _text = Color(0xFF172033);
+  static const _pageBg = Color(0xFFF4F4F8);
+  static const _panelTop = 154.0;
+  static const _bottomScrollSpace = 116.0;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pageBg = isDark ? AppDarkColors.background : _navy;
-    final surface = isDark ? AppDarkColors.surface : Colors.white;
-    final titleColor = isDark ? Colors.white : _navy;
-    final controlBg = isDark ? AppDarkColors.surfaceVariant : Colors.white;
-    final controlBorder = isDark ? AppDarkColors.border : Colors.grey.shade300;
-    final controlText = isDark ? Colors.white70 : Colors.grey.shade700;
 
     return Scaffold(
-      backgroundColor: pageBg,
+      backgroundColor: isDark ? AppDarkColors.background : _pageBg,
       body: Stack(
         children: [
-          // Scrollable Content
           Positioned.fill(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                const headerHeight = 190.0;
-                final bodyMinHeight = (constraints.maxHeight - headerHeight)
-                    .clamp(0.0, double.infinity);
+                final minPanelHeight =
+                    constraints.maxHeight - _panelTop - _bottomScrollSpace;
 
-                return SingleChildScrollView(
-                  clipBehavior: Clip.none,
-                  child: Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                // Background & Content Column
-                Column(
-                  children: [
-                    // Blue header background with title
-                    Container(
-                      width: double.infinity,
-                      height: 190,
-                      color: pageBg,
-                      child: const SafeArea(
-                        bottom: false,
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 25),
-                            child: Text(
-                              'Profil Saya',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                return RefreshIndicator(
+                  onRefresh: controller.loadProfile,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
                     ),
-
-                    // Body container
-                    Container(
-                      width: double.infinity,
-                      constraints: BoxConstraints(
-                        minHeight: bodyMinHeight,
-                      ),
-                      decoration: BoxDecoration(
-                        color: surface,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(30),
-                          topRight: Radius.circular(30),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          children: [
-                          const SizedBox(height: 75), // Spacing for the overlapping avatar
-
-                          // Name
-                          Obx(
-                            () => Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    controller.name.value,
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                      color: titleColor,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () => EditProfileDialog.show(
-                                    context,
-                                    avatarUrl: controller.avatarUrl.value,
-                                    firstName: controller.firstName,
-                                    lastName: controller.lastName,
-                                    onSave: controller.updateProfile,
-                                    onAvatarChanged:
-                                        controller.updateAvatar,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                      color: titleColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          // Username
-                          Obx(() => Text(
-                                controller.username.value,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1F57C3),
-                                ),
-                              )),
-                          const SizedBox(height: 16),
-                          // Button Reports History
-                          ElevatedButton(
-                            onPressed: controller.goToReportHistory,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _navy,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Text(
-                              'Reports History',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // ---- Search bar -----------------------------
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: BoxDecoration(
-                              color: controlBg,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: controlBorder),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.search,
-                                    size: 22, color: Colors.grey.shade400),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextField(
-                                    onChanged: controller.onSearchChanged,
-                                    style: TextStyle(
-                                      color:
-                                          isDark ? Colors.white : Colors.black87,
-                                      fontSize: 14,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText:
-                                          'Search reports by ID or category...',
-                                      hintStyle: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade400),
-                                      border: InputBorder.none,
-                                      isDense: true,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 14),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // ---- Filter button ---------------------------
-                          Row(
-                            children: [
-                              InkWell(
-                                borderRadius: BorderRadius.circular(8),
-                                onTap: () => _showFilterSheet(context),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: controlBg,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: controlBorder),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.tune_rounded,
-                                        size: 16,
-                                        color: controlText,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'Filter',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: controlText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // ---- Reports list -----------------------------
-                          Obx(() {
-                            if (controller.isLoading.value) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 40),
-                                child: Center(child: CircularProgressIndicator()),
-                              );
-                            }
-                            final reports = controller.filteredReports;
-                            if (reports.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 40),
-                                child: Center(
-                                  child: Text(
-                                    'No reports found',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ),
-                              );
-                            }
-                            return Column(
-                              children: reports.map((report) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: _ReportCard(
-                                    report: report,
-                                    onTap: () => controller.openReport(report),
-                                  ),
-                                );
-                              }).toList(),
-                            );
-                          }),
-
-                          const Spacer(),
-                          const SizedBox(height: 4),
-                          _LogoutButton(
-                            onPressed: () => LogoutConfirmationDialog.show(
-                              context,
-                              onConfirm: controller.logout,
-                            ),
-                          ),
-
-                            const SizedBox(height: 110), // Bottom spacer for floating bar
-                          ],
-                        ),
-                      ),
+                    padding: const EdgeInsets.only(bottom: _bottomScrollSpace),
+                    child: _ProfileScrollContent(
+                      controller: controller,
+                      minHeight: minPanelHeight > 0 ? minPanelHeight : 0.0,
                     ),
-                  ],
-                ),
-
-                // Positioned Avatar
-                Positioned(
-                  top: 130, // 190 (header height) - 60 (avatar radius) = 130
-                  child: _Avatar(controller: controller),
-                ),
-                ],
                   ),
                 );
               },
             ),
           ),
-
-          // Floating Navigation Bar
-          Positioned(
-            bottom: 0,
+          const Positioned(
             left: 0,
             right: 0,
-            child: const ObBottomNav(activeItem: ObBottomNavItem.profile),
+            bottom: 0,
+            child: ObBottomNav(activeItem: ObBottomNavItem.profile),
           ),
         ],
       ),
     );
   }
+}
 
-  void _showFilterSheet(BuildContext context) {
+class _ProfileScrollContent extends StatelessWidget {
+  const _ProfileScrollContent({
+    required this.controller,
+    required this.minHeight,
+  });
+
+  final ObProfilController controller;
+  final double minHeight;
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sheetColor = isDark ? AppDarkColors.surface : Colors.white;
-    final titleColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
-    final itemColor = isDark ? Colors.white70 : const Color(0xFF1E2A3A);
 
-    Get.bottomSheet(
-      Padding(
-        padding: const EdgeInsets.only(bottom: 104),
-        child: Material(
-          color: sheetColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          clipBehavior: Clip.antiAlias,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: 238,
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'Filter berdasarkan status',
-                    style: TextStyle(
-                      color: titleColor,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+            color: isDark ? AppDarkColors.header : ObProfilView._blue,
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 28),
+              child: Text(
+                'Profil Saya',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 3,
                     ),
-                  ),
+                  ],
                 ),
-                ListTile(
-                  tileColor: sheetColor,
-                  title: Text('All', style: TextStyle(color: itemColor)),
-                  onTap: () {
-                    controller.setStatusFilter(null);
-                    Get.back();
-                  },
-                ),
-                for (final status in const [
-                  ReportStatus.resolved,
-                  ReportStatus.pending,
-                  ReportStatus.rejected,
-                ])
-                  ListTile(
-                    tileColor: sheetColor,
-                    title:
-                        Text(status.label, style: TextStyle(color: itemColor)),
-                    onTap: () {
-                      controller.setStatusFilter(status);
-                      Get.back();
-                    },
-                  ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-      backgroundColor: Colors.transparent,
+        Padding(
+          padding: const EdgeInsets.only(top: ObProfilView._panelTop),
+          child: _ProfilePanel(controller: controller, minHeight: minHeight),
+        ),
+      ],
     );
   }
 }
 
-class _LogoutButton extends StatelessWidget {
-  const _LogoutButton({required this.onPressed});
-  final VoidCallback onPressed;
+class _ProfilePanel extends StatelessWidget {
+  const _ProfilePanel({required this.controller, required this.minHeight});
+
+  final ObProfilController controller;
+  final double minHeight;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
       width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: const Icon(Icons.logout_rounded, size: 28),
-        label: const Text(
-          'Log Out',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFA11E1E),
-          side: const BorderSide(color: Color(0xFFA11E1E), width: 1.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+      constraints: BoxConstraints(minHeight: minHeight),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.background : Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
       ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 56, 22, 26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ProfileSummaryCard(controller: controller),
+                const SizedBox(height: 24),
+                _HistorySection(controller: controller),
+                const SizedBox(height: 24),
+                _SettingsSection(controller: controller),
+              ],
+            ),
+          ),
+          Positioned(top: -48, child: _Avatar(controller: controller)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileSummaryCard extends StatelessWidget {
+  const _ProfileSummaryCard({required this.controller});
+
+  final ObProfilController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      children: [
+        const SizedBox(height: 6),
+        Obx(
+          () => Text(
+            _firstName(controller.name.value),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isDark ? Colors.white : ObProfilView._text,
+              fontSize: 23,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(height: 3),
+        Obx(
+          () => Text(
+            'Staff OB | ${controller.username.value}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isDark ? Colors.white60 : const Color(0xFF8A94A4),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        SizedBox(
+          width: double.infinity,
+          height: 46,
+          child: ElevatedButton.icon(
+            onPressed: () => EditProfileDialog.show(
+              context,
+              avatarUrl: controller.avatarUrl.value,
+              firstName: controller.firstName,
+              lastName: controller.lastName,
+              onSave: controller.updateProfile,
+            ),
+            icon: const Icon(Icons.edit_rounded, size: 17),
+            label: const Text('Edit Profil'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ObProfilView._blue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        Obx(
+          () => Row(
+            children: [
+              Expanded(
+                child: _StatCard(
+                  value: controller.completedTaskTotal.value.toString(),
+                  label: 'Total Tugas\nSelesai',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatCard(
+                  value: controller.handledReportTotal.toString(),
+                  label: 'Komplain\nDitangani',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _StatCard(
+                  value: controller.averageResponseLabel,
+                  label: 'Rata-rata\nRespon',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _Avatar extends StatelessWidget {
   const _Avatar({required this.controller});
+
   final ObProfilController controller;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        border: Border.all(color: Colors.white, width: 4),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+            border: Border.all(color: Colors.white, width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipOval(
-        child: Obx(() {
-          final url = controller.avatarUrl.value;
-          if (url.isEmpty) {
-            return Container(
-              color: Colors.grey.shade200,
-              child: const Icon(Icons.person, size: 60, color: Colors.grey),
-            );
-          }
-          if (!url.startsWith('http')) {
-            return Image.file(File(url), fit: BoxFit.cover);
-          }
-          return Image.network(url, fit: BoxFit.cover);
-        }),
+          child: ClipOval(
+            child: Obx(() {
+              final url = controller.avatarUrl.value.trim();
+              if (url.isEmpty) {
+                return const _AvatarFallback();
+              }
+              if (url.startsWith('http')) {
+                return Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const _AvatarFallback(),
+                );
+              }
+              return Image.file(
+                File(url),
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const _AvatarFallback(),
+              );
+            }),
+          ),
+        ),
+        Positioned(
+          right: 2,
+          bottom: 6,
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: ObProfilView._blue,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+            ),
+            child: const Icon(
+              Icons.camera_alt_rounded,
+              color: Colors.white,
+              size: 15,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFE5EAF1),
+      child: const Icon(
+        Icons.person_rounded,
+        size: 48,
+        color: Color(0xFF8A94A4),
       ),
     );
   }
 }
 
-class _ReportCard extends StatelessWidget {
-  const _ReportCard({required this.report, required this.onTap});
-  final ReportModel report;
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      height: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF0071B9),
+              fontSize: 17,
+              height: 1,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isDark ? Colors.white70 : const Color(0xFF5D6878),
+              fontSize: 10,
+              height: 1.1,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistorySection extends StatelessWidget {
+  const _HistorySection({required this.controller});
+
+  final ObProfilController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Riwayat Laporan',
+                style: TextStyle(
+                  color: isDark ? Colors.white : ObProfilView._text,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: controller.goToReportHistory,
+              style: TextButton.styleFrom(
+                minimumSize: const Size(0, 28),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'Lihat Semua',
+                style: TextStyle(
+                  color: ObProfilView._blue,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Obx(() {
+          if (controller.isLoading.value) {
+            return const _LoadingBox();
+          }
+
+          final reports = controller.recentReports;
+          if (reports.isEmpty) {
+            return const _EmptyBox(message: 'Belum ada riwayat laporan');
+          }
+
+          return Column(
+            children: reports
+                .map(
+                  (report) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ProfileReportCard(
+                      report: report,
+                      onTap: () => controller.openReport(report),
+                    ),
+                  ),
+                )
+                .toList(),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({required this.controller});
+
+  final ObProfilController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : ObProfilView._text;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pengaturan & Akun',
+          style: TextStyle(
+            color: titleColor,
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _SettingsCard(
+          children: [
+            _SettingsTile(
+              icon: Icons.description_outlined,
+              label: 'Syarat & Ketentuan',
+              onTap: () => Get.toNamed(Routes.TERMS),
+            ),
+            const Divider(height: 1),
+            _SettingsTile(
+              icon: Icons.privacy_tip_outlined,
+              label: 'Kebijakan Privasi',
+              onTap: () => Get.toNamed(Routes.PRIVACY),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: () => LogoutConfirmationDialog.show(
+              context,
+              onConfirm: controller.logout,
+            ),
+            icon: const Icon(Icons.logout_rounded, size: 17),
+            label: const Text('Keluar Sesi'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFE53935),
+              side: const BorderSide(color: Color(0xFFE1E8F0)),
+              backgroundColor: isDark ? AppDarkColors.surface : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
-    final titleColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
-    final bodyColor = isDark ? Colors.white70 : const Color(0xFF3F4653);
-    final borderColor = isDark ? AppDarkColors.accent : const Color(0xFFD6DCE8);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(7),
         onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: borderColor, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.035),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(7),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    width: 4,
-                    color: const Color(0xFF00518E),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 10, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              _PriorityBadge(priority: report.priority),
-                              const Spacer(),
-                              _StatusBadge(status: report.status),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            report.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: titleColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              height: 1.05,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 1),
-                                child: Icon(
-                                  Icons.location_on_outlined,
-                                  size: 15,
-                                  color: Color(0xFF0057D9),
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: Text(
-                                  report.location,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0xFF0057D9),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.15,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            report.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: bodyColor,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              height: 1.25,
-                            ),
-                          ),
-                          const SizedBox(height: 7),
-                          Container(
-                            height: 1,
-                            color: const Color(0xFFE3E8F0),
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              const Text(
-                                'Lihat Detail',
-                                style: TextStyle(
-                                  color: Color(0xFF1F2937),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 16,
-                                color: Colors.grey.shade500,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+        child: SizedBox(
+          height: 54,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isDark ? Colors.white70 : const Color(0xFF4A5568),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF4A5568),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ],
-              ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                  size: 21,
+                ),
+              ],
             ),
           ),
         ),
@@ -593,99 +633,279 @@ class _ReportCard extends StatelessWidget {
   }
 }
 
-class _PriorityBadge extends StatelessWidget {
-  const _PriorityBadge({required this.priority});
-  final String priority;
+class _ProfileReportCard extends StatelessWidget {
+  const _ProfileReportCard({required this.report, required this.onTap});
+
+  final ReportModel report;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isUrgent = priority == 'URGENT';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFD1D9E5);
 
-    return _ReportBadge(
-      text: priority,
-      icon: Icons.error_outline,
-      color: isUrgent ? const Color(0xFFD11C25) : const Color(0xFFFFB020),
-      bgColor: isUrgent ? const Color(0xFFFFE4E7) : const Color(0xFFFFF2C8),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-  final ReportStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    Color color;
-    Color bgColor;
-    IconData icon;
-
-    switch (status) {
-      case ReportStatus.inProgress:
-      case ReportStatus.resolved:
-        color = const Color(0xFF2B9A57);
-        bgColor = const Color(0xFFDDF8E9);
-        icon = Icons.check_circle_outline;
-        break;
-      case ReportStatus.pending:
-        color = const Color(0xFFFFA000);
-        bgColor = const Color(0xFFFFF2C8);
-        icon = Icons.schedule_outlined;
-        break;
-      case ReportStatus.rejected:
-        color = const Color(0xFFD11C25);
-        bgColor = const Color(0xFFFFE4E7);
-        icon = Icons.cancel_outlined;
-        break;
-    }
-
-    return _ReportBadge(
-      text: status.label,
-      icon: icon,
-      color: color,
-      bgColor: bgColor,
-    );
-  }
-}
-
-class _ReportBadge extends StatelessWidget {
-  const _ReportBadge({
-    required this.text,
-    required this.icon,
-    required this.color,
-    required this.bgColor,
-  });
-
-  final String text;
-  final IconData icon;
-  final Color color;
-  final Color bgColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 23,
-      padding: const EdgeInsets.symmetric(horizontal: 9),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(999),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderColor),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  width: 5,
+                  decoration: const BoxDecoration(
+                    color: ObProfilView._blue,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _ReportPill(style: _priorityStyle(report.priority)),
+                            const Spacer(),
+                            _ReportPill(style: _statusStyle(report.status)),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          report.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              color: Color(0xFF064BFF),
+                              size: 15,
+                            ),
+                            Expanded(
+                              child: Text(
+                                report.location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF064BFF),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          report.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF465160),
+                            fontSize: 11,
+                            height: 1.25,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    );
+  }
+}
+
+class _LoadingBox extends StatelessWidget {
+  const _LoadingBox();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 112,
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyBox extends StatelessWidget {
+  const _EmptyBox({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 116),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 11, color: color),
-          const SizedBox(width: 4),
+          Icon(
+            Icons.assignment_outlined,
+            color: isDark ? Colors.white60 : const Color(0xFF8A94A4),
+            size: 28,
+          ),
+          const SizedBox(height: 10),
           Text(
-            text,
+            message,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: color,
-              fontSize: 10,
+              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+              fontSize: 13,
               fontWeight: FontWeight.w800,
-              height: 1,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _PillStyle {
+  const _PillStyle({
+    required this.label,
+    required this.icon,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color background;
+  final Color foreground;
+}
+
+class _ReportPill extends StatelessWidget {
+  const _ReportPill({required this.style});
+
+  final _PillStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 9),
+      decoration: BoxDecoration(
+        color: style.background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(style.icon, size: 10, color: style.foreground),
+          const SizedBox(width: 4),
+          Text(
+            style.label,
+            style: TextStyle(
+              color: style.foreground,
+              fontSize: 10,
+              height: 1,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+_PillStyle _priorityStyle(String priority) {
+  if (priority == 'URGENT') {
+    return const _PillStyle(
+      label: 'URGENT',
+      icon: Icons.error_outline,
+      background: Color(0xFFFFE2E5),
+      foreground: Color(0xFFC72535),
+    );
+  }
+
+  return const _PillStyle(
+    label: 'STANDARD',
+    icon: Icons.error_outline,
+    background: Color(0xFFFFF2C8),
+    foreground: Color(0xFFFFA000),
+  );
+}
+
+_PillStyle _statusStyle(ReportStatus status) {
+  switch (status) {
+    case ReportStatus.resolved:
+      return const _PillStyle(
+        label: 'Selesai',
+        icon: Icons.check_circle_outline,
+        background: Color(0xFFDDF8E9),
+        foreground: Color(0xFF2BAE66),
+      );
+    case ReportStatus.rejected:
+      return const _PillStyle(
+        label: 'Ditolak',
+        icon: Icons.cancel_outlined,
+        background: Color(0xFFFFE2E5),
+        foreground: Color(0xFFC72535),
+      );
+    case ReportStatus.inProgress:
+      return const _PillStyle(
+        label: 'Proses',
+        icon: Icons.sync_rounded,
+        background: Color(0xFFE3F0FF),
+        foreground: Color(0xFF1976D2),
+      );
+    case ReportStatus.pending:
+      return const _PillStyle(
+        label: 'Pending',
+        icon: Icons.schedule_outlined,
+        background: Color(0xFFFFF2C8),
+        foreground: Color(0xFFFFA000),
+      );
+  }
+}
+
+String _firstName(String value) {
+  final text = value.trim();
+  if (text.isEmpty) return 'OB';
+  return text.split(RegExp(r'\s+')).first;
 }

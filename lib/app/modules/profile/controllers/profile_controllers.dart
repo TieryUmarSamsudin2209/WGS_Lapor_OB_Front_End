@@ -38,13 +38,23 @@ class ProfileController extends GetxController {
 
     _setProfile(profile);
 
-    final reportItems = _asList(data?['laporan']) ??
-        _asList(data?['reports']) ??
-        _asList(data?['riwayat_laporan']) ??
-        _asList(data?['history']) ??
-        _asList(response?['laporan']);
+    var reportItems = _extractReportItems(
+      response: response,
+      data: data,
+      profile: profile,
+    );
 
-    reports.value = (reportItems ?? const [])
+    if (reportItems.isEmpty) {
+      final reportsResponse = await _authService.getEmployeeReports();
+      final reportsData = _asMap(reportsResponse?['data']) ?? reportsResponse;
+      reportItems = _extractReportItems(
+        response: reportsResponse,
+        data: reportsData,
+        profile: null,
+      );
+    }
+
+    reports.value = reportItems
         .whereType<Map>()
         .map((item) => _reportFromApi(_asMap(item) ?? const {}))
         .toList();
@@ -53,14 +63,42 @@ class ProfileController extends GetxController {
     isLoading.value = false;
   }
 
-  void updateProfile(String firstName, String lastName) {
+  Future<bool> updateProfile(
+    String firstName,
+    String lastName,
+    String? avatarPath,
+  ) async {
     final sanitizedFirstName = firstName.trim();
     final sanitizedLastName = lastName.trim();
-    if (sanitizedFirstName.isEmpty) return;
+    if (sanitizedFirstName.isEmpty) return false;
 
-    name.value = [sanitizedFirstName, sanitizedLastName]
+    final fullName = [sanitizedFirstName, sanitizedLastName]
         .where((part) => part.isNotEmpty)
         .join(' ');
+
+    final response = await _authService.updateUserProfile(
+      firstName: sanitizedFirstName,
+      lastName: sanitizedLastName,
+      avatarPath: avatarPath,
+    );
+
+    if (response == null) {
+      Get.snackbar('Gagal', 'Profil belum berhasil disimpan');
+      return false;
+    }
+
+    final profile = _profileFromResponse(response);
+    if (profile != null) {
+      _setProfile(profile);
+    } else {
+      name.value = fullName;
+      if (avatarPath != null && avatarPath.trim().isNotEmpty) {
+        avatarUrl.value = avatarPath.trim();
+      }
+    }
+
+    Get.snackbar('Berhasil', 'Profil berhasil disimpan');
+    return true;
   }
 
   void updateAvatar(String avatarPath) {
@@ -124,28 +162,155 @@ class ProfileController extends GetxController {
       username.value = userName.startsWith('@') ? userName : '@$userName';
     }
     if (photo != null && photo.isNotEmpty) {
-      avatarUrl.value = photo;
+      avatarUrl.value = _profilePhotoUrl(photo);
     }
   }
 
+  Map<String, dynamic>? _profileFromResponse(Map<String, dynamic> response) {
+    final data = _asMap(response['data']) ?? response;
+    final profile = _asMap(data['user']) ??
+        _asMap(data['profile']) ??
+        _asMap(data['data']) ??
+        data;
+    return _looksLikeProfile(profile) ? profile : null;
+  }
+
+  bool _looksLikeProfile(Map<String, dynamic> value) {
+    return [
+      'id',
+      'username',
+      'email',
+      'nama',
+      'nama_lengkap',
+      'name',
+      'role',
+      'profile_picture',
+      'profilePicture',
+      'avatar',
+      'foto',
+    ].any(value.containsKey);
+  }
+
+  String _profilePhotoUrl(String photo) {
+    if (photo.startsWith('http')) return photo;
+    if (photo.startsWith('/uploads')) {
+      return '${AuthService.baseUrl}$photo';
+    }
+    if (photo.startsWith('uploads/')) {
+      return '${AuthService.baseUrl}/$photo';
+    }
+    return photo;
+  }
+
   Map<String, dynamic> _reportFromApi(Map<String, dynamic> item) {
-    final rawId = _firstValue(item, ['id', 'laporan_id', 'report_id']) ?? '';
+    final detail = _asMap(item['laporan']) ?? _asMap(item['report']) ?? item;
+    final sources = [item, detail];
+    final rawId =
+        _firstValueFromSources(sources, ['id', 'laporan_id', 'report_id']) ??
+            '';
     final displayId = rawId.startsWith('#') ? rawId : '#$rawId';
 
     return {
       'raw_id': rawId,
       'id': displayId,
-      'category': _firstValue(item, ['category', 'kategori']) ?? '-',
-      'priority':
-          (_firstValue(item, ['priority', 'prioritas']) ?? 'STANDARD')
-              .toUpperCase(),
-      'status': _statusLabel(_firstValue(item, ['status']) ?? 'Pending'),
-      'title': _firstValue(item, ['title', 'judul', 'nama_laporan']) ??
+      'category': _firstValueFromSources(sources, [
+            'category',
+            'kategori',
+            'nama_kategori',
+          ]) ??
+          '-',
+      'priority': (_firstValueFromSources(sources, [
+                'priority',
+                'prioritas',
+                'urgency',
+                'urgensi',
+              ]) ??
+              'STANDARD')
+          .toUpperCase(),
+      'status': _statusLabel(
+        _firstValueFromSources(sources, ['status', 'status_laporan']) ??
+            'Pending',
+      ),
+      'title': _firstValueFromSources(sources, [
+            'title',
+            'judul',
+            'nama_laporan',
+            'nama_kategori',
+            'kategori',
+            'category',
+          ]) ??
           'Laporan',
-      'location': _firstValue(item, ['location', 'lokasi', 'ruangan']) ?? '-',
-      'description':
-          _firstValue(item, ['description', 'deskripsi', 'catatan']) ?? '-',
+      'location': _firstValueFromSources(sources, [
+            'location',
+            'lokasi',
+            'ruangan',
+            'area',
+            'detail_lokasi',
+            'alamat',
+            'lantai',
+          ]) ??
+          '-',
+      'description': _firstValueFromSources(sources, [
+            'description',
+            'deskripsi',
+            'deskripsi_kendala',
+            'catatan',
+            'keluhan',
+            'keterangan',
+          ]) ??
+          '-',
     };
+  }
+
+  List<dynamic> _extractReportItems({
+    required Map<String, dynamic>? response,
+    required Map<String, dynamic>? data,
+    required Map<String, dynamic>? profile,
+  }) {
+    const keys = [
+      'laporan',
+      'laporan_karyawan',
+      'laporanKaryawan',
+      'reports',
+      'riwayat_laporan',
+      'history',
+      'employee_reports',
+      'employeeReports',
+      'data',
+      'items',
+      'rows',
+      'results',
+    ];
+
+    final nestedData = _asMap(data?['data']);
+    for (final source in [nestedData, data, profile, response]) {
+      final list = _listFromSource(source, keys);
+      if (list != null) return list;
+    }
+
+    return const [];
+  }
+
+  List<dynamic>? _listFromSource(
+    Map<String, dynamic>? source,
+    List<String> keys,
+  ) {
+    if (source == null) return null;
+
+    for (final key in keys) {
+      final list = _asList(source[key]);
+      if (list != null) return list;
+
+      final nested = _asMap(source[key]);
+      if (nested == null) continue;
+
+      for (final nestedKey in keys) {
+        final nestedList = _asList(nested[nestedKey]);
+        if (nestedList != null) return nestedList;
+      }
+    }
+
+    return null;
   }
 
   void _applyFilter() {
@@ -178,7 +343,9 @@ class ProfileController extends GetxController {
     if (normalized.contains('tolak') || normalized.contains('reject')) {
       return 'Ditolak';
     }
-    if (normalized.contains('proses') || normalized.contains('progress')) {
+    if (normalized.contains('proses') ||
+        normalized.contains('progress') ||
+        normalized.contains('diproses')) {
       return 'Diproses';
     }
     return 'Pending';
@@ -187,9 +354,35 @@ class ProfileController extends GetxController {
   String? _firstValue(Map<String, dynamic> source, List<String> keys) {
     for (final key in keys) {
       final value = source[key];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString().trim();
+      if (value == null) continue;
+      if (value is Map) {
+        final nestedValue = _firstValue(_asMap(value) ?? const {}, [
+          'nama_lokasi',
+          'nama_kategori',
+          'nomor_lantai',
+          'nama',
+          'name',
+          'title',
+          'label',
+          'alamat',
+        ]);
+        if (nestedValue != null) return nestedValue;
+        continue;
       }
+
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+    return null;
+  }
+
+  String? _firstValueFromSources(
+    List<Map<String, dynamic>> sources,
+    List<String> keys,
+  ) {
+    for (final source in sources) {
+      final value = _firstValue(source, keys);
+      if (value != null) return value;
     }
     return null;
   }

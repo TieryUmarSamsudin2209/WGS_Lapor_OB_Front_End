@@ -9,30 +9,48 @@ import '../controllers/ob_home_controller.dart';
 class OBHomeView extends GetView<ObHomeController> {
   const OBHomeView({super.key});
 
-  static const _pageBg = Color(0xFFEEF4FC);
+  static const _blue = Color(0xFF14558B);
+  static const _pageBg = Color(0xFFF4F4F8);
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headerHeight = MediaQuery.viewPaddingOf(context).top + 170;
 
     return Scaffold(
       backgroundColor: isDark ? AppDarkColors.background : _pageBg,
       body: Stack(
-        fit: StackFit.expand,
         children: [
-          const Positioned.fill(
-            child: Column(
-              children: [
-                _PinnedHeader(),
-                Expanded(child: ObHomePage()),
-              ],
+          Positioned.fill(
+            top: headerHeight,
+            child: RefreshIndicator(
+              onRefresh: controller.loadHomeData,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.fromLTRB(22, 16, 22, 116),
+                children: [
+                  _ProgressCard(controller: controller),
+                  const SizedBox(height: 24),
+                  _TaskPreview(controller: controller),
+                  const SizedBox(height: 20),
+                  _LatestReports(controller: controller),
+                ],
+              ),
             ),
           ),
           Positioned(
             left: 0,
             right: 0,
+            top: 0,
+            child: _HomeHeader(controller: controller),
+          ),
+          const Positioned(
+            left: 0,
+            right: 0,
             bottom: 0,
-            child: const ObBottomNav(activeItem: ObBottomNavItem.home),
+            child: ObBottomNav(activeItem: ObBottomNavItem.home),
           ),
         ],
       ),
@@ -40,452 +58,255 @@ class OBHomeView extends GetView<ObHomeController> {
   }
 }
 
-class ObHomePage extends GetView<ObHomeController> {
-  const ObHomePage({super.key});
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({required this.controller});
+
+  final ObHomeController controller;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return RefreshIndicator(
-            onRefresh: controller.loadHomeData,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  children: [
-                    _SectionCard(
-                      title: 'Tugas Harian',
-                      onSeeAll: () => Get.toNamed(Routes.OB_CHECKLIST),
-                      child: Obx(
-                        () {
-                          if (controller.isLoadingTasks.value) {
-                            return const _SectionLoading();
-                          }
-                          if (controller.dailyTasks.isEmpty) {
-                            return const _SectionEmpty(
-                              message: 'Belum ada tugas harian',
-                            );
-                          }
-                          return Column(
-                            children: controller.dailyTasks
-                                .map((task) => _TaskCard(task: task))
-                                .toList(),
-                          );
-                        },
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headerColor = isDark ? AppDarkColors.header : OBHomeView._blue;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+      decoration: BoxDecoration(
+        color: headerColor,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Obx(
+                    () => Text(
+                      'Halo, ${_firstName(controller.name.value)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        height: 1.1,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _SectionCard(
-                      title: 'Laporan',
-                      onSeeAll: () {
-                        if (controller.reports.isNotEmpty) {
-                          Get.toNamed(
-                            Routes.OB_DETAIL,
-                            arguments: controller.reports.first,
-                          );
-                        }
-                      },
-                      child: Obx(
-                        () {
-                          if (controller.isLoadingReports.value) {
-                            return const _SectionLoading();
-                          }
-                          if (controller.reports.isEmpty) {
-                            return const _SectionEmpty(
-                              message: 'Belum ada laporan',
-                            );
-                          }
-                          return Column(
-                            children: controller.reports
-                                .map((report) => _ReportCard(report: report))
-                                .toList(),
-                          );
-                        },
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Ubah tema',
+                  onPressed: Get.find<ThemeController>().toggleTheme,
+                  icon: Icon(
+                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Notifikasi',
+                  onPressed: () => Get.toNamed(Routes.OB_NOTIFICATIONS),
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.white,
+                    size: 27,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tetap semangat menjaga kebersihan hari ini!',
+              style: TextStyle(
+                color: Color(0xFFD8E9F6),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Obx(
+              () => Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 13,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        controller.assignmentLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _SectionLoading extends StatelessWidget {
-  const _SectionLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
-      child: Center(
-        child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(
-            strokeWidth: 2.4,
-            color: Colors.white,
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _SectionEmpty extends StatelessWidget {
-  const _SectionEmpty({required this.message});
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({required this.controller});
 
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? AppDarkColors.card
-            : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white70
-              : const Color(0xFF676D75),
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _PinnedHeader extends GetView<ObHomeController> {
-  const _PinnedHeader();
-
-  static const _blue = Color(0xFF14558B);
+  final ObHomeController controller;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFE2E8F0);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 320;
-        final horizontalPadding = isCompact ? 12.0 : 16.0;
-        final titleSize = isCompact ? 22.0 : 27.0;
-        final iconBoxSize = isCompact ? 30.0 : 38.0;
-
-        return Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? AppDarkColors.header : _blue,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                16,
-                horizontalPadding,
-                16,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Beranda',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: titleSize,
-                            height: 1,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      _ThemeToggleButton(size: iconBoxSize),
-                      const SizedBox(width: 4),
-                      Tooltip(
-                        message: 'Notifikasi',
-                        child: InkWell(
-                          onTap: () => Get.snackbar(
-                            'Notifikasi',
-                            'Belum ada notifikasi baru',
-                            snackPosition: SnackPosition.TOP,
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                          child: SizedBox(
-                            width: iconBoxSize,
-                            height: iconBoxSize,
-                            child: Icon(
-                              Icons.notifications_none_rounded,
-                              color: Colors.white,
-                              size: isCompact ? 21 : 25,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Selamat Pagi,',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      height: 1,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Obx(
-                    () => Text(
-                      controller.name.value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isCompact ? 18 : 21,
-                        height: 1.05,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ThemeToggleButton extends StatelessWidget {
-  const _ThemeToggleButton({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final themeController = Get.find<ThemeController>();
-
-    return Obx(
-      () => Tooltip(
-        message: themeController.isDarkMode ? 'Mode terang' : 'Mode gelap',
-        child: InkWell(
-          onTap: themeController.toggleTheme,
-          borderRadius: BorderRadius.circular(18),
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: Icon(
-              themeController.isDarkMode
-                  ? Icons.light_mode_outlined
-                  : Icons.dark_mode_outlined,
-              color: Colors.white,
-              size: size <= 30 ? 19 : 21,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.title,
-    required this.onSeeAll,
-    required this.child,
-  });
-
-  final String title;
-  final VoidCallback onSeeAll;
-  final Widget child;
-
-  static const _blue = Color(0xFF14558B);
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
-      decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surface : _blue,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.black : _blue).withValues(alpha: 0.22),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    height: 1.3,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: onSeeAll,
-                style: TextButton.styleFrom(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  minimumSize: Size.zero,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
-                  ),
-                ),
-                child: const Text(
-                  'Lihat semua',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _TaskCard extends StatelessWidget {
-  const _TaskCard({required this.task});
-
-  final DailyTask task;
-
-  static const _blue = Color(0xFF14558B);
-  static const _muted = Color(0xFF676D75);
-
-  @override
-  Widget build(BuildContext context) {
     return Obx(() {
-      final isResolved = task.status.value == 'resolved';
-      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final total = controller.totalTaskCount;
+      final done = controller.completedTaskCount;
+      final percent = controller.taskProgressPercent;
+      final progress = total == 0 ? 0.0 : done / total;
 
       return Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
         decoration: BoxDecoration(
-          color: isDark ? AppDarkColors.card : Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: cardColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor),
           boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: 0.35)
-                  : const Color(0x7A78B7FF),
-              blurRadius: isDark ? 8 : 3,
-              spreadRadius: isDark ? 0 : 1,
-              offset: const Offset(0, 5),
-            ),
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.09),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
           ],
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _TinyIconBox(
-              icon: isResolved
-                  ? Icons.check_circle_outline_rounded
-                  : Icons.error_outline_rounded,
-              color: isResolved
-                  ? const Color(0xFF16A05C)
-                  : const Color(0xFFFF9B24),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    task.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    'Progress Kerja Hari Ini',
                     style: TextStyle(
-                      color: isDark ? Colors.white : _blue,
-                      fontSize: 14.5,
-                      height: 1.2,
-                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF1D2A3A),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    task.location,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : _muted,
-                      fontSize: 11.5,
-                      height: 1.4,
-                      fontWeight: FontWeight.w500,
+                  const SizedBox(height: 6),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '$done/$total',
+                          style: const TextStyle(
+                            color: Color(0xFF0071B9),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' Tugas Selesai',
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0071B9),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: _StatusPill(
-                      label: isResolved ? 'Selesai' : 'Pending',
-                      icon: isResolved
-                          ? Icons.check_circle_outline_rounded
-                          : Icons.error_outline_rounded,
-                      background: isResolved
-                          ? const Color(0xFFDDF8E9)
-                          : const Color(0xFFFFF5BF),
-                      foreground: isResolved
-                          ? const Color(0xFF16A05C)
-                          : const Color(0xFFFF9B24),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 6,
+                            backgroundColor: isDark
+                                ? AppDarkColors.surfaceVariant
+                                : const Color(0xFFE8E6FA),
+                            valueColor: const AlwaysStoppedAnimation(
+                              Color(0xFF0071B9),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '$percent%',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 18),
+            SizedBox(
+              width: 58,
+              height: 58,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 6,
+                    backgroundColor: isDark
+                        ? AppDarkColors.surfaceVariant
+                        : const Color(0xFFE6ECF5),
+                    valueColor: const AlwaysStoppedAnimation(
+                      Color(0xFF0071B9),
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      '$percent%',
+                      style: const TextStyle(
+                        color: Color(0xFF0071B9),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 ],
@@ -498,17 +319,212 @@ class _TaskCard extends StatelessWidget {
   }
 }
 
-class _ReportCard extends StatelessWidget {
-  const _ReportCard({required this.report});
+class _TaskPreview extends StatelessWidget {
+  const _TaskPreview({required this.controller});
 
-  final HomeReport report;
-
-  static const _blue = Color(0xFF14558B);
+  final ObHomeController controller;
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _SectionHeader(
+          title: 'Daftar Tugas',
+          trailing: Icons.sort_rounded,
+          onTap: () => Get.toNamed(Routes.OB_CHECKLIST),
+        ),
+        const SizedBox(height: 12),
+        Obx(() {
+          if (controller.isLoadingTasks.value) {
+            return const _LoadingCard();
+          }
+          if (controller.dailyTasks.isEmpty) {
+            return const _EmptyCard(message: 'Belum ada tugas harian');
+          }
+          return Column(
+            children: controller.dailyTasks
+                .take(3)
+                .map(
+                  (task) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _TaskCard(task: task),
+                  ),
+                )
+                .toList(),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _LatestReports extends StatelessWidget {
+  const _LatestReports({required this.controller});
+
+  final ObHomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _SectionHeader(
+          title: 'Laporan Terbaru',
+          onTap: () => Get.toNamed(Routes.OB_REPORTS),
+        ),
+        const SizedBox(height: 12),
+        Obx(() {
+          if (controller.isLoadingReports.value) {
+            return const _LoadingCard();
+          }
+          if (controller.latestReports.isEmpty) {
+            return const _EmptyCard(message: 'Belum ada laporan masuk');
+          }
+
+          return Column(
+            children: controller.latestReports
+                .map(
+                  (report) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _HomeReportCard(report: report),
+                  ),
+                )
+                .toList(),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    this.trailing,
+    this.onTap,
+  });
+
+  final String title;
+  final IconData? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF253044),
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        if (trailing != null)
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: onTap,
+            icon: Icon(
+              trailing,
+              color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _TaskCard extends StatelessWidget {
+  const _TaskCard({required this.task});
+
+  final DailyTask task;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFE6EDF5);
+
     return Obx(() {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final done = task.status.value == 'resolved';
+      final status = done ? _donePill : _pendingPill;
+
+      return Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 14, 12),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: const Color(0xFF8FC5FF).withValues(alpha: 0.48),
+                blurRadius: 4,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SmallStatusIcon(style: status),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : OBHomeView._blue,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    task.location,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      fontSize: 12,
+                      height: 1.25,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _Pill(style: status),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _HomeReportCard extends StatelessWidget {
+  const _HomeReportCard({required this.report});
+
+  final HomeReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFD0D8E4);
+
+    return Obx(() {
       final priority = _priorityStyle(report.priority);
       final status = _statusStyle(report.status.value);
 
@@ -516,17 +532,12 @@ class _ReportCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => Get.toNamed(Routes.OB_DETAIL, arguments: report),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(8),
           child: Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: isDark ? AppDarkColors.card : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isDark ? AppDarkColors.border : Colors.white,
-                width: 1,
-              ),
+              color: cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: borderColor),
             ),
             child: IntrinsicHeight(
               child: Row(
@@ -535,25 +546,24 @@ class _ReportCard extends StatelessWidget {
                   Container(
                     width: 5,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF094976),
+                      color: OBHomeView._blue,
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(14),
-                        bottomLeft: Radius.circular(14),
+                        topLeft: Radius.circular(8),
+                        bottomLeft: Radius.circular(8),
                       ),
                     ),
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                      padding: const EdgeInsets.fromLTRB(14, 12, 12, 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
+                          Row(
                             children: [
-                              _Badge(style: priority),
-                              _Badge(style: status),
+                              _Pill(style: priority),
+                              const Spacer(),
+                              _Pill(style: status),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -563,17 +573,16 @@ class _ReportCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 14.5,
-                              height: 1.2,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           Row(
                             children: [
                               const Icon(
                                 Icons.location_on_outlined,
-                                color: Color(0xFF1E32F5),
+                                color: Color(0xFF064BFF),
                                 size: 15,
                               ),
                               Expanded(
@@ -582,16 +591,15 @@ class _ReportCard extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: Color(0xFF1E32F5),
+                                    color: Color(0xFF064BFF),
                                     fontSize: 11,
-                                    height: 1.2,
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w900,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Text(
                             report.description,
                             maxLines: 2,
@@ -599,52 +607,39 @@ class _ReportCard extends StatelessWidget {
                             style: TextStyle(
                               color: isDark
                                   ? Colors.white70
-                                  : const Color(0xFF42474F),
-                              fontSize: 11.5,
-                              height: 1.4,
+                                  : const Color(0xFF465160),
+                              fontSize: 11,
+                              height: 1.25,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 7),
                           Divider(
                             height: 1,
-                            thickness: 1,
                             color: isDark
-                                ? Colors.white12
-                                : const Color(0xFFE3E7ED),
+                                ? AppDarkColors.border
+                                : const Color(0xFFE7ECF3),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 5),
                           Row(
                             children: [
-                              Obx(
-                                () => report.hasCollaboration.value
-                                    ? const _Badge(
-                                        style: _BadgeStyle(
-                                          label: 'Kolaborasi',
-                                          icon: Icons.groups_2_outlined,
-                                          background: Color(0xFFFFF2C8),
-                                          foreground: Color(0xFFFF9B24),
-                                        ),
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
+                              if (report.hasCollaboration.value)
+                                const _TinyLabel(text: 'Kolaborasi'),
                               const Spacer(),
                               Text(
                                 'Lihat Detail',
                                 style: TextStyle(
                                   color: isDark
                                       ? Colors.white70
-                                      : const Color(0xFF42474F),
-                                  fontSize: 11,
+                                      : const Color(0xFF1F2937),
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                               Icon(
                                 Icons.chevron_right_rounded,
+                                color: isDark ? Colors.white60 : Colors.grey,
                                 size: 16,
-                                color: isDark
-                                    ? Colors.white70
-                                    : const Color(0xFF42474F),
                               ),
                             ],
                           ),
@@ -662,113 +657,146 @@ class _ReportCard extends StatelessWidget {
   }
 }
 
-class _TinyIconBox extends StatelessWidget {
-  const _TinyIconBox({
-    required this.icon,
-    required this.color,
-  });
-
-  final IconData icon;
-  final Color color;
+class _LoadingCard extends StatelessWidget {
+  const _LoadingCard();
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      width: 36,
-      height: 36,
+      height: 96,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: isDark
-            ? AppDarkColors.surfaceVariant
-            : color.withValues(alpha: 0.14),
-        shape: BoxShape.circle,
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(icon, color: color, size: 19),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({
-    required this.label,
-    required this.icon,
-    required this.background,
-    required this.foreground,
-  });
-
-  final String label;
-  final IconData icon;
-  final Color background;
-  final Color foreground;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: foreground, size: 11),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: foreground,
-              fontSize: 11,
-              height: 1,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+      child: const SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(strokeWidth: 2.5),
       ),
     );
   }
 }
 
-class _BadgeStyle {
-  const _BadgeStyle({
-    required this.label,
-    required this.icon,
-    required this.background,
-    required this.foreground,
-  });
+class _EmptyCard extends StatelessWidget {
+  const _EmptyCard({required this.message});
 
-  final String label;
-  final IconData icon;
-  final Color background;
-  final Color foreground;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFE6EDF5),
+        ),
+      ),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.style});
+class _TinyLabel extends StatelessWidget {
+  const _TinyLabel({required this.text});
 
-  final _BadgeStyle style;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFA000),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          height: 1,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _SmallStatusIcon extends StatelessWidget {
+  const _SmallStatusIcon({required this.style});
+
+  final _PillStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
       decoration: BoxDecoration(
         color: style.background,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Icon(style.icon, color: style.foreground, size: 13),
+    );
+  }
+}
+
+class _PillStyle {
+  const _PillStyle({
+    required this.label,
+    required this.icon,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color background;
+  final Color foreground;
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.style});
+
+  final _PillStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 9),
+      decoration: BoxDecoration(
+        color: style.background,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(style.icon, color: style.foreground, size: 11),
+          Icon(style.icon, size: 10, color: style.foreground),
           const SizedBox(width: 4),
           Text(
             style.label,
             style: TextStyle(
               color: style.foreground,
-              fontSize: 11,
+              fontSize: 10,
               height: 1,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],
@@ -777,54 +805,64 @@ class _Badge extends StatelessWidget {
   }
 }
 
-_BadgeStyle _priorityStyle(String priority) {
+const _donePill = _PillStyle(
+  label: 'Selesai',
+  icon: Icons.check_circle_outline,
+  background: Color(0xFFDDF8E9),
+  foreground: Color(0xFF2BAE66),
+);
+
+const _pendingPill = _PillStyle(
+  label: 'Pending',
+  icon: Icons.error_outline,
+  background: Color(0xFFFFF2C8),
+  foreground: Color(0xFFFFA000),
+);
+
+_PillStyle _priorityStyle(String priority) {
   if (priority == 'URGENT') {
-    return const _BadgeStyle(
+    return const _PillStyle(
       label: 'URGENT',
-      icon: Icons.error_rounded,
-      background: Color(0xFFFFD8D8),
-      foreground: Color(0xFFBF1D2D),
+      icon: Icons.error_outline,
+      background: Color(0xFFFFE2E5),
+      foreground: Color(0xFFC72535),
     );
   }
 
-  return const _BadgeStyle(
+  return const _PillStyle(
     label: 'STANDARD',
-    icon: Icons.error_rounded,
-    background: Color(0xFFFFF0B9),
-    foreground: Color(0xFFFFA01A),
+    icon: Icons.error_outline,
+    background: Color(0xFFFFF2C8),
+    foreground: Color(0xFFFFA000),
   );
 }
 
-_BadgeStyle _statusStyle(String status) {
-  if (status == 'Sedang Diproses') {
-    return const _BadgeStyle(
-      label: 'Diproses',
-      icon: Icons.sync_rounded,
-      background: Color(0xFFE7F0FF),
-      foreground: Color(0xFF2D8EFF),
-    );
-  }
-  if (status == 'Selesai' || status == 'Resolved') {
-    return const _BadgeStyle(
-      label: 'Selesai',
-      icon: Icons.check_circle_outline_rounded,
-      background: Color(0xFFDDF8E9),
-      foreground: Color(0xFF16A05C),
-    );
+_PillStyle _statusStyle(String status) {
+  if (status == 'Selesai') {
+    return _donePill;
   }
   if (status == 'Ditolak') {
-    return const _BadgeStyle(
+    return const _PillStyle(
       label: 'Ditolak',
-      icon: Icons.error_outline_rounded,
-      background: Color(0xFFFFD8D8),
-      foreground: Color(0xFFBF1D2D),
+      icon: Icons.cancel_outlined,
+      background: Color(0xFFFFE2E5),
+      foreground: Color(0xFFC72535),
+    );
+  }
+  if (status == 'Sedang Diproses') {
+    return const _PillStyle(
+      label: 'Proses',
+      icon: Icons.sync_rounded,
+      background: Color(0xFFE3F0FF),
+      foreground: Color(0xFF1976D2),
     );
   }
 
-  return const _BadgeStyle(
-    label: 'Pending',
-    icon: Icons.error_outline_rounded,
-    background: Color(0xFFFFF0B9),
-    foreground: Color(0xFFFFA01A),
-  );
+  return _pendingPill;
+}
+
+String _firstName(String value) {
+  final text = value.trim();
+  if (text.isEmpty) return 'OB';
+  return text.split(RegExp(r'\s+')).first;
 }

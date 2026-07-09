@@ -310,7 +310,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
 
 // Simple empty state widget
 class _ChecklistEmptyState extends StatelessWidget {
-  const _ChecklistEmptyState({Key? key}) : super(key: key);
+  const _ChecklistEmptyState();
 
   @override
   Widget build(BuildContext context) {

@@ -5,6 +5,12 @@ import 'package:image_picker/image_picker.dart';
 
 import '../theme/theme_controller.dart';
 
+typedef EditProfileSaveCallback = Future<bool> Function(
+  String firstName,
+  String lastName,
+  String? avatarPath,
+);
+
 class EditProfileDialog extends StatefulWidget {
   EditProfileDialog({
     super.key,
@@ -12,7 +18,6 @@ class EditProfileDialog extends StatefulWidget {
     required this.firstName,
     required this.lastName,
     required this.onSave,
-    this.onAvatarChanged,
   })  : _firstNameController = TextEditingController(text: firstName),
         _lastNameController = TextEditingController(text: lastName);
 
@@ -21,8 +26,7 @@ class EditProfileDialog extends StatefulWidget {
   final String avatarUrl;
   final String firstName;
   final String lastName;
-  final void Function(String firstName, String lastName) onSave;
-  final ValueChanged<String>? onAvatarChanged;
+  final EditProfileSaveCallback onSave;
   final TextEditingController _firstNameController;
   final TextEditingController _lastNameController;
 
@@ -31,8 +35,7 @@ class EditProfileDialog extends StatefulWidget {
     required String avatarUrl,
     required String firstName,
     required String lastName,
-    required void Function(String firstName, String lastName) onSave,
-    ValueChanged<String>? onAvatarChanged,
+    required EditProfileSaveCallback onSave,
   }) {
     return showGeneralDialog<void>(
       context: context,
@@ -57,7 +60,6 @@ class EditProfileDialog extends StatefulWidget {
               firstName: firstName,
               lastName: lastName,
               onSave: onSave,
-              onAvatarChanged: onAvatarChanged,
             ),
           ),
         );
@@ -72,6 +74,7 @@ class EditProfileDialog extends StatefulWidget {
 class _EditProfileDialogState extends State<EditProfileDialog> {
   final ImagePicker _picker = ImagePicker();
   String? _selectedAvatarPath;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -143,6 +146,28 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     }
   }
 
+  Future<void> _saveProfile() async {
+    if (_isSaving) return;
+
+    final firstName = widget._firstNameController.text.trim();
+    final lastName = widget._lastNameController.text.trim();
+    if (firstName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama depan wajib diisi.')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    final saved = await widget.onSave(firstName, lastName, _selectedAvatarPath);
+    if (!mounted) return;
+
+    setState(() => _isSaving = false);
+    if (saved) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -181,7 +206,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _isSaving
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
                     color: accentColor,
                     iconSize: 32,
@@ -198,7 +225,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 color: Colors.transparent,
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: _showImageSourceSheet,
+                  onTap: _isSaving ? null : _showImageSourceSheet,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -225,7 +252,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               ),
               const SizedBox(height: 10),
               TextButton.icon(
-                onPressed: _showImageSourceSheet,
+                onPressed: _isSaving ? null : _showImageSourceSheet,
                 icon: const Icon(Icons.photo_camera_outlined, size: 18),
                 label: const Text('Ganti foto'),
                 style: TextButton.styleFrom(
@@ -254,22 +281,13 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 width: double.infinity,
                 height: 44,
                 child: ElevatedButton(
-                  onPressed: () {
-                    widget.onSave(
-                      widget._firstNameController.text.trim(),
-                      widget._lastNameController.text.trim(),
-                    );
-                    final selectedAvatarPath = _selectedAvatarPath;
-                    if (selectedAvatarPath != null) {
-                      widget.onAvatarChanged?.call(selectedAvatarPath);
-                    }
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: _isSaving ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isDark
                         ? const Color(0xFF052C58)
                         : EditProfileDialog._navy,
-                    foregroundColor: isDark ? AppDarkColors.accent : Colors.white,
+                    foregroundColor:
+                        isDark ? AppDarkColors.accent : Colors.white,
                     elevation: 3,
                     shadowColor:
                         EditProfileDialog._navy.withValues(alpha: 0.35),
@@ -277,13 +295,22 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  child: const Text(
-                    'Simpan',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Simpan',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                 ),
               ),
             ],
