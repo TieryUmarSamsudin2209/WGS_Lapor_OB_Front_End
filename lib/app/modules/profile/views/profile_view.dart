@@ -7,6 +7,7 @@ import '../../../shared/widgets/bottom_nav.dart';
 import '../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../shared/widgets/logout_confirmation_dialog.dart';
 import '../../../shared/theme/theme_controller.dart';
+import '../controllers/profile_controllers.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,94 +17,27 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String avatarUrl =
-      'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256';
+  late final ProfileController controller;
 
   final Color navyTextColor = const Color(0xFF003366);
-  String firstName = 'Alex';
-  String lastName = 'Karyawan';
-
-  final List<Map<String, dynamic>> reports = const [
-    {
-      "id": "#REP-01",
-      "category": "Plumbing",
-      "priority": "URGENT",
-      "status": "Selesai",
-      "title": "Kebocoran Pipa Air",
-      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
-      "description":
-          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
-    },
-    {
-      "id": "#REP-02",
-      "category": "Plumbing",
-      "priority": "STANDARD",
-      "status": "Pending",
-      "title": "Kebocoran Pipa Air",
-      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
-      "description":
-          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
-    },
-    {
-      "id": "#REP-03",
-      "category": "Plumbing",
-      "priority": "URGENT",
-      "status": "Ditolak",
-      "title": "Kebocoran Pipa Air",
-      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
-      "description":
-          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
-    },
-    {
-      "id": "#REP-04",
-      "category": "Plumbing",
-      "priority": "STANDARD",
-      "status": "Pending",
-      "title": "Kebocoran Pipa Air",
-      "location": "HQ Tower A, Lantai 4 (Toilet Pria)",
-      "description":
-          "Water pooling near the main vent in hallway B. Requires immediate attention before floor damage",
-    },
-  ];
 
   String _searchQuery = '';
   String? _selectedStatus;
 
-  List<Map<String, dynamic>> get _filteredReports {
-    final query = _searchQuery.trim().toLowerCase();
-
-    return reports.where((report) {
-      final status = report["status"] as String;
-      final matchesStatus =
-          _selectedStatus == null || status == _selectedStatus;
-
-      if (!matchesStatus) return false;
-      if (query.isEmpty) return true;
-
-      return [
-        report["id"],
-        report["category"],
-        report["priority"],
-        report["status"],
-        report["title"],
-        report["location"],
-        report["description"],
-      ].whereType<String>().any((value) {
-        return value.toLowerCase().contains(query);
-      });
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<ProfileController>();
   }
 
   @override
   Widget build(BuildContext context) {
-    final fullName = '$firstName $lastName'.trim();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final pageBg = isDark ? AppDarkColors.background : const Color(0xFF104A7F);
     final surface = isDark ? AppDarkColors.surface : Colors.white;
     final textColor = isDark ? Colors.white : navyTextColor;
     final mutedColor =
         isDark ? Colors.white70 : navyTextColor.withValues(alpha: 0.7);
-    final filteredReports = _filteredReports;
 
     return Scaffold(
       backgroundColor: pageBg,
@@ -169,52 +103,51 @@ class _ProfilePageState extends State<ProfilePage> {
                             ), // Spacing for the overlapping avatar
 
                             // Name and Username
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    fullName,
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
+                            Obx(
+                              () => Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      controller.name.value,
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: textColor,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () => EditProfileDialog.show(
-                                    context,
-                                    avatarUrl: avatarUrl,
-                                    firstName: firstName,
-                                    lastName: lastName,
-                                    onSave: (newFirstName, newLastName) {
-                                      setState(() {
-                                        firstName = newFirstName.isEmpty
-                                            ? firstName
-                                            : newFirstName;
-                                        lastName = newLastName;
-                                      });
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(20),
+                                    onTap: () {
+                                      final nameParts = controller.name.value
+                                          .trim()
+                                          .split(RegExp(r'\s+'));
+                                      EditProfileDialog.show(
+                                        context,
+                                        avatarUrl: controller.avatarUrl.value,
+                                        firstName: nameParts.first,
+                                        lastName: nameParts.skip(1).join(' '),
+                                        onSave: controller.updateProfile,
+                                        onAvatarChanged:
+                                            controller.updateAvatar,
+                                      );
                                     },
-                                    onAvatarChanged: (newAvatarPath) {
-                                      setState(() => avatarUrl = newAvatarPath);
-                                    },
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                      color: textColor,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4),
+                                      child: Icon(
+                                        Icons.edit_outlined,
+                                        size: 18,
+                                        color: textColor,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 6),
                             Row(
@@ -226,12 +159,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: mutedColor,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  "@username",
-                                  style: TextStyle(
-                                    color: mutedColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                Obx(
+                                  () => Text(
+                                    controller.username.value,
+                                    style: TextStyle(
+                                      color: mutedColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -280,6 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               child: TextField(
                                 onChanged: (value) {
                                   setState(() => _searchQuery = value);
+                                  controller.onSearchChanged(value);
                                 },
                                 style: TextStyle(
                                   color:
@@ -317,7 +253,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       isDark ? Colors.white70 : Colors.black87,
                                 ),
                                 label: Text(
-                                  _selectedStatus ?? "Filter",
+                                    _selectedStatus ?? "Filter",
                                   style: TextStyle(
                                     color: isDark
                                         ? Colors.white70
@@ -349,23 +285,37 @@ class _ProfilePageState extends State<ProfilePage> {
                             const SizedBox(height: 15),
 
                             // List of Reports
-                            if (filteredReports.isEmpty)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 30),
-                                child: Text(
-                                  "Tidak ada laporan yang cocok",
-                                  style: TextStyle(
-                                    color: mutedColor,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                            Obx(() {
+                              if (controller.isLoading.value) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 30),
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+
+                              final filteredReports =
+                                  controller.filteredReports;
+                              if (filteredReports.isEmpty) {
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 30),
+                                  child: Text(
+                                    "Tidak ada laporan yang cocok",
+                                    style: TextStyle(
+                                      color: mutedColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              )
-                            else
-                              ...filteredReports.map(
-                                (report) => _buildReportCard(report),
-                              ),
+                                );
+                              }
+
+                              return Column(
+                                children: filteredReports
+                                    .map((report) => _buildReportCard(report))
+                                    .toList(),
+                              );
+                            }),
 
                             const Spacer(),
                             const SizedBox(height: 12),
@@ -373,7 +323,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             _LogoutButton(
                               onPressed: () => LogoutConfirmationDialog.show(
                                 context,
-                                onConfirm: () => Get.offAllNamed(Routes.LOGIN),
+                                onConfirm: controller.logout,
                               ),
                             ),
 
@@ -403,19 +353,23 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Hero(
                         tag: 'profile-avatar',
                         child: ClipOval(
-                          child: avatarUrl.startsWith('http')
-                              ? Image.network(
-                                  avatarUrl,
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.file(
-                                  File(avatarUrl),
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
+                          child: Obx(() {
+                            final avatarUrl = controller.avatarUrl.value;
+                            if (avatarUrl.startsWith('http')) {
+                              return Image.network(
+                                avatarUrl,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              );
+                            }
+                            return Image.file(
+                              File(avatarUrl),
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            );
+                          }),
                         ),
                       ),
                     ),
@@ -497,23 +451,28 @@ class _ProfilePageState extends State<ProfilePage> {
     final bodyColor = isDark ? Colors.white70 : const Color(0xFF3F4653);
     final borderColor = isDark ? AppDarkColors.accent : const Color(0xFFD6DCE8);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: cardColor,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => controller.openReport(report),
         borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: borderColor, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(color: borderColor, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.035),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(7),
-        child: IntrinsicHeight(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(7),
+            child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -590,6 +549,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ],
           ),
+            ),
+          ),
         ),
       ),
     );
@@ -639,6 +600,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   title: Text('Semua', style: TextStyle(color: itemColor)),
                   onTap: () {
                     setState(() => _selectedStatus = null);
+                    controller.setStatusFilter(null);
                     Navigator.of(context).pop();
                   },
                 ),
@@ -654,6 +616,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     title: Text(status, style: TextStyle(color: itemColor)),
                     onTap: () {
                       setState(() => _selectedStatus = status);
+                      controller.setStatusFilter(status);
                       Navigator.of(context).pop();
                     },
                   ),

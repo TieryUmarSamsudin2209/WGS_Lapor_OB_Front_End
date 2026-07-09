@@ -70,6 +70,48 @@ class AuthService extends GetxService {
     }
   }
 
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    try {
+      final response = await _client.get(
+        '/api/user/profile',
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _asMap(response.body);
+      }
+
+      debugPrint(
+        'Gagal ambil profile: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error ambil profile: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getUserReportDetail(String reportId) async {
+    try {
+      final response = await _client.get(
+        '/api/user/profile/laporan/$reportId',
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _asMap(response.body);
+      }
+
+      debugPrint(
+        'Gagal ambil detail laporan: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error ambil detail laporan: $e');
+      return null;
+    }
+  }
+
   Future<void> saveSession({
     required String? tokenValue,
     required Map<String, dynamic>? userData,
