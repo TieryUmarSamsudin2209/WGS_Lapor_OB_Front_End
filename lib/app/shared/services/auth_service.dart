@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -13,10 +14,187 @@ class AuthService extends GetxService {
   final user = Rxn<Map<String, dynamic>>();
   final role = RxnString();
   final _client = GetConnect(timeout: const Duration(seconds: 20));
+  String? _lastRequestError;
+
+  // In-memory dummy database for offline fallback
+  final List<Map<String, dynamic>> _dummyReports = [
+    {
+      'id': '1',
+      'laporan_id': '1',
+      'title': 'Kebocoran Pipa Air',
+      'location': 'HQ Tower A, Lantai 4 (Toilet Pria)',
+      'description': 'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage.',
+      'priority': 'URGENT',
+      'status': 'selesai',
+      'kolaborasi': true,
+      'category': 'Air & Galon',
+      'created_at': '2026-07-11T10:00:00.000Z',
+      'photos': <String>[],
+      'reporter': 'Rahman'
+    },
+    {
+      'id': '2',
+      'laporan_id': '2',
+      'title': 'Kebocoran Pipa Air',
+      'location': 'HQ Tower A, Lantai 4 (Toilet Pria)',
+      'description': 'Water pooling near the main vent in hallway B. Requires immediate attention before floor damage.',
+      'priority': 'STANDARD',
+      'status': 'pending',
+      'kolaborasi': false,
+      'category': 'Air & Galon',
+      'created_at': '2026-07-11T09:00:00.000Z',
+      'photos': <String>[],
+      'reporter': 'Rahman'
+    }
+  ];
+
+  final List<Map<String, dynamic>> _dummyChecklist = [
+    {
+      'id': 'c1',
+      'title': 'Mengepel & Menyapu',
+      'description': 'Membersihkan seluruh lantai area kerja dan koridor',
+      'section': 'Area kerja utama & Koridor',
+      'status': 'selesai'
+    },
+    {
+      'id': 'c2',
+      'title': 'Dusting (Mengelap Debu)',
+      'description': 'Mengelap meja kerja, meja meeting, kursi, rak buku, dan ambang jendela.',
+      'section': 'Area kerja utama & Koridor',
+      'status': 'pending'
+    },
+    {
+      'id': 'c3',
+      'title': 'Restocking (Isi Ulang)',
+      'description': 'Memastikan sabun cuci tangan, tisu toilet, dan tisu wastafel selalu terisi penuh.',
+      'section': 'Area kerja utama & Koridor',
+      'status': 'pending'
+    },
+    {
+      'id': 'c4',
+      'title': 'Pembersihan Area Basah',
+      'description': 'Lantai, kloset/urinal, dan wastafel.',
+      'section': 'Area Toilet (Krusial & Harus Dicek Berkala)',
+      'status': 'selesai'
+    },
+    {
+      'id': 'c5',
+      'title': 'Cek Drainase',
+      'description': 'Memastikan tidak ada sumbatan pada saluran air dan air mengalir dengan lancar.',
+      'section': 'Area Toilet (Krusial & Harus Dicek Berkala)',
+      'status': 'selesai'
+    },
+    {
+      'id': 'c6',
+      'title': 'Pengosongan Tempat Sampah',
+      'description': 'Mengosongkan seluruh tempat sampah',
+      'section': 'Manajemen Sampah & Utilitas (Fasilitas)',
+      'status': 'selesai'
+    },
+    {
+      'id': 'c7',
+      'title': 'Pengecekan Lampu & AC',
+      'description': 'Matikan saat pulang / nyalakan saat pagi.',
+      'section': 'Manajemen Sampah & Utilitas (Fasilitas)',
+      'status': 'selesai'
+    },
+    {
+      'id': 'c8',
+      'title': 'Menyiram Tanaman',
+      'description': 'Menyiram tanaman hias yang ada di dalam maupun di area depan kantor.',
+      'section': 'Manajemen Sampah & Utilitas (Fasilitas)',
+      'status': 'selesai'
+    }
+  ];
+
+  final List<Map<String, dynamic>> _dummyCategories = [
+    {'id': 'cat_1', 'nama': 'Kebersihan', 'name': 'Kebersihan'},
+    {'id': 'cat_2', 'nama': 'AC & Udara', 'name': 'AC & Udara'},
+    {'id': 'cat_3', 'nama': 'Air & Galon', 'name': 'Air & Galon'},
+    {'id': 'cat_4', 'nama': 'Kelistrikan', 'name': 'Kelistrikan'},
+    {'id': 'cat_5', 'nama': 'Meja & Kursi', 'name': 'Meja & Kursi'},
+    {'id': 'cat_6', 'nama': 'Lainnya', 'name': 'Lainnya'}
+  ];
+
+  final List<Map<String, dynamic>> _dummyFloors = [
+    {'id': 'floor_1', 'nama': 'Lantai 1', 'name': 'Lantai 1'},
+    {'id': 'floor_2', 'nama': 'Lantai 2', 'name': 'Lantai 2'},
+    {'id': 'floor_3', 'nama': 'Lantai 3', 'name': 'Lantai 3'},
+    {'id': 'floor_4', 'nama': 'Lantai 4', 'name': 'Lantai 4'}
+  ];
+
+  bool _isOfflineResponse(Response response) {
+    if (response.statusCode == null || response.statusCode == 0) return true;
+    if (response.statusCode == 502 || response.statusCode == 503 || response.statusCode == 504) return true;
+    try {
+      final status = response.status;
+      if (status.connectionError) return true;
+    } catch (_) {}
+    final bodyStr = (response.bodyString ?? response.body ?? '').toString();
+    if (bodyStr.contains('ERR_NGROK_') || bodyStr.contains('ngrok') || bodyStr.contains('Tunnel not found')) {
+      return true;
+    }
+    return false;
+  }
+
+  bool _hasTriggeredOfflineNotification = false;
+
+  void _triggerOfflineNotificationTimer() {
+    if (_hasTriggeredOfflineNotification) return;
+    _hasTriggeredOfflineNotification = true;
+
+    Timer(const Duration(seconds: 5), () {
+      final newReport = {
+        'id': '3',
+        'laporan_id': '3',
+        'title': 'AC Bocor',
+        'location': 'Ruang Meeting 4',
+        'description': 'AC Bocor di Ruang Meeting 4, air menetes deras.',
+        'priority': 'URGENT',
+        'status': 'pending',
+        'kolaborasi': false,
+        'category': 'AC & Udara',
+        'created_at': DateTime.now().toIso8601String(),
+        'photos': <String>[],
+        'reporter': 'Asep'
+      };
+      if (!_dummyReports.any((r) => r['id'] == '3')) {
+        _dummyReports.insert(0, newReport);
+        debugPrint('Offline: Injected dummy report ID 3 for notification alert.');
+      }
+    });
+  }
 
   bool get isLoggedIn => token.value != null && token.value!.isNotEmpty;
+  bool get isOfflineMode => token.value == 'dummy_token';
+  String? get lastRequestError => _lastRequestError;
   String get normalizedRole =>
       _normalizeRole(role.value ?? user.value?['role']);
+
+  static String resolveMediaUrl(String value) {
+    final text = value.trim();
+    if (text.isEmpty) return text;
+
+    final uri = Uri.tryParse(text);
+    if (uri != null && uri.hasScheme) {
+      final host = uri.host.toLowerCase();
+      if (host == 'localhost' || host == '127.0.0.1' || host == '0.0.0.0') {
+        final apiUri = Uri.parse(baseUrl);
+        return apiUri
+            .replace(
+              path: uri.path,
+              query: uri.hasQuery ? uri.query : null,
+              fragment: uri.hasFragment ? uri.fragment : null,
+            )
+            .toString();
+      }
+      return text;
+    }
+
+    if (text.startsWith('/')) return '$baseUrl$text';
+    if (text.startsWith('uploads/')) return '$baseUrl/$text';
+    return text;
+  }
 
   @override
   void onInit() {
@@ -42,6 +220,10 @@ class AuthService extends GetxService {
         },
       );
 
+      if (_isOfflineResponse(response)) {
+        return _loginOffline(identifier, password);
+      }
+
       final body = _responseBodyAsMap(response.body, response.bodyString);
       final dataValue = body?['data'];
       final data = _asMap(dataValue);
@@ -63,7 +245,67 @@ class AuthService extends GetxService {
       return false;
     } catch (e) {
       debugPrint('Error login: $e');
-      return false;
+      return _loginOffline(identifier, password);
+    }
+  }
+
+  Future<bool> _loginOffline(String identifier, String password) async {
+    debugPrint('Server offline detected on login. Using dummy login...');
+    final dummyRole = identifier.toLowerCase().contains('ob') ? 'OB' : 'KARYAWAN';
+    final dummyUser = {
+      'id': 'dummy_id',
+      'username': identifier,
+      'name': 'Rahman',
+      'email': '$identifier@wgs.co.id',
+      'role': dummyRole,
+      'penugasan': dummyRole == 'OB' ? 'Gedung A - Lantai 1 & 2' : null,
+    };
+    await saveSession(tokenValue: 'dummy_token', userData: dummyUser);
+    return true;
+  }
+
+  Future<Map<String, dynamic>?> activateAccount({
+    required String activationToken,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    _lastRequestError = null;
+
+    try {
+      final response = await _client.post(
+        '/api/auth/activate-account',
+        {
+          'password': password,
+          'confirmPassword': confirmPassword,
+        },
+        query: {'token': activationToken},
+        contentType: 'application/json',
+        headers: const {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+      );
+
+      final body = _responseBodyAsMap(response.body, response.bodyString);
+      final success = _isSuccessValue(body?['success']);
+
+      if ((response.isOk || response.statusCode == 201) && success) {
+        return body ?? <String, dynamic>{'success': true};
+      }
+
+      _lastRequestError =
+          _activationErrorMessage(response) ??
+          'Aktivasi gagal. Token tidak valid atau password tidak sesuai.';
+      debugPrint(
+        'Gagal aktivasi akun: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      _lastRequestError =
+          'Tidak dapat terhubung ke server. Periksa koneksi internet dan alamat API.';
+      debugPrint('Error aktivasi akun: $e');
+      return null;
     }
   }
 
@@ -78,14 +320,35 @@ class AuthService extends GetxService {
         return _responseBodyAsMap(response.body, response.bodyString);
       }
 
+      if (_isOfflineResponse(response)) {
+        return _getUserProfileOffline();
+      }
+
       debugPrint(
         'Gagal ambil profile: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error ambil profile: $e');
-      return null;
+      return _getUserProfileOffline();
     }
+  }
+
+  Map<String, dynamic> _getUserProfileOffline() {
+    final currentUser = user.value ?? {
+      'id': 'dummy_id',
+      'username': 'rahman',
+      'name': 'Rahman',
+      'email': 'rahman@wgs.co.id',
+      'role': role.value ?? 'KARYAWAN',
+      'penugasan': (role.value == 'OB') ? 'Gedung A - Lantai 1 & 2' : null,
+    };
+    return {
+      'success': true,
+      'data': {
+        'user': currentUser,
+      }
+    };
   }
 
   Future<Map<String, dynamic>?> updateUserProfile({
@@ -143,14 +406,30 @@ class AuthService extends GetxService {
         return _asMap(response.body);
       }
 
+      if (_isOfflineResponse(response)) {
+        return _getUserReportDetailOffline(reportId);
+      }
+
       debugPrint(
         'Gagal ambil detail laporan: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error ambil detail laporan: $e');
-      return null;
+      return _getUserReportDetailOffline(reportId);
     }
+  }
+
+  Map<String, dynamic>? _getUserReportDetailOffline(String reportId) {
+    final report = _dummyReports.firstWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+      orElse: () => <String, dynamic>{},
+    );
+    if (report.isEmpty) return null;
+    return {
+      'success': true,
+      'data': report,
+    };
   }
 
   Future<Map<String, dynamic>?> getDailyChecklist({
@@ -168,18 +447,29 @@ class AuthService extends GetxService {
         return _asMap(response.body);
       }
 
+      if (_isOfflineResponse(response)) {
+        return _getDailyChecklistOffline();
+      }
+
       debugPrint(
         'Gagal ambil checklist harian: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error ambil checklist harian: $e');
-      return null;
+      return _getDailyChecklistOffline();
     }
   }
 
-  Future<List<Map<String, dynamic>>> getReportCategories() {
-    return _fetchOptionList(
+  Map<String, dynamic> _getDailyChecklistOffline() {
+    return {
+      'success': true,
+      'data': _dummyChecklist,
+    };
+  }
+
+  Future<List<Map<String, dynamic>>> getReportCategories() async {
+    final liveOptions = await _fetchOptionList(
       endpoints: const [
         '/api/karyawan/kategori-laporan',
         '/api/kategori-laporan',
@@ -187,10 +477,15 @@ class AuthService extends GetxService {
       ],
       listKeys: const ['kategori', 'kategori_laporan', 'categories', 'items'],
     );
+
+    if (liveOptions.isNotEmpty) {
+      return liveOptions;
+    }
+    return _dummyCategories;
   }
 
-  Future<List<Map<String, dynamic>>> getReportFloors() {
-    return _fetchOptionList(
+  Future<List<Map<String, dynamic>>> getReportFloors() async {
+    final liveOptions = await _fetchOptionList(
       endpoints: const [
         '/api/karyawan/lantai',
         '/api/lantai',
@@ -198,6 +493,11 @@ class AuthService extends GetxService {
       ],
       listKeys: const ['lantai', 'floors', 'items'],
     );
+
+    if (liveOptions.isNotEmpty) {
+      return liveOptions;
+    }
+    return _dummyFloors;
   }
 
   Future<Map<String, dynamic>?> getEmployeeReports({
@@ -216,14 +516,25 @@ class AuthService extends GetxService {
             _asMap(response.body);
       }
 
+      if (_isOfflineResponse(response)) {
+        return _getReportsOffline();
+      }
+
       debugPrint(
         'Gagal ambil laporan karyawan: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error ambil laporan karyawan: $e');
-      return null;
+      return _getReportsOffline();
     }
+  }
+
+  Map<String, dynamic> _getReportsOffline() {
+    return {
+      'success': true,
+      'data': _dummyReports,
+    };
   }
 
   Future<Map<String, dynamic>?> createEmployeeReport({
@@ -233,6 +544,8 @@ class AuthService extends GetxService {
     required String priority,
     required List<String> photoPaths,
   }) async {
+    _lastRequestError = null;
+
     try {
       final cleanPhotoPaths = photoPaths
           .map(_localUploadPath)
@@ -248,12 +561,16 @@ class AuthService extends GetxService {
       };
 
       if (cleanPhotoPaths.isNotEmpty) {
-        final photoPath = cleanPhotoPaths.first;
-        payload['foto_masalah'] = MultipartFile(
-          photoPath,
-          filename: _filenameFromPath(photoPath),
-          contentType: _contentTypeFromPath(photoPath),
-        );
+        final photos = cleanPhotoPaths
+            .map(
+              (photoPath) => MultipartFile(
+                photoPath,
+                filename: _filenameFromPath(photoPath),
+                contentType: _contentTypeFromPath(photoPath),
+              ),
+            )
+            .toList();
+        payload['foto_masalah'] = photos.length == 1 ? photos.first : photos;
       }
 
       final response = await _client.post(
@@ -263,21 +580,81 @@ class AuthService extends GetxService {
         headers: authHeaders(),
       );
 
+      if (_isOfflineResponse(response)) {
+        return _createEmployeeReportOffline(
+          floorId: floorId,
+          categoryId: categoryId,
+          description: description,
+          priority: priority,
+          photoPaths: photoPaths,
+        );
+      }
+
       if (response.isOk || response.statusCode == 201) {
         return _asMap(response.body) ?? <String, dynamic>{'success': true};
       }
 
+      _lastRequestError =
+          _errorMessageFromResponse(response) ??
+          'Laporan belum terkirim. Server menolak data laporan.';
       debugPrint(
         'Gagal kirim laporan: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error kirim laporan: $e');
-      return null;
+      return _createEmployeeReportOffline(
+        floorId: floorId,
+        categoryId: categoryId,
+        description: description,
+        priority: priority,
+        photoPaths: photoPaths,
+      );
     }
   }
 
+  Map<String, dynamic> _createEmployeeReportOffline({
+    required String floorId,
+    required String categoryId,
+    required String description,
+    required String priority,
+    required List<String> photoPaths,
+  }) {
+    debugPrint('Offline: Simulating creating report...');
+    final categoryName = _dummyCategories.firstWhere(
+      (c) => c['id'] == categoryId,
+      orElse: () => {'nama': categoryId},
+    )['nama'];
+    final floorName = _dummyFloors.firstWhere(
+      (f) => f['id'] == floorId,
+      orElse: () => {'nama': 'Lantai $floorId'},
+    )['nama'];
+
+    final nextId = (DateTime.now().millisecondsSinceEpoch).toString();
+    final newReport = {
+      'id': nextId,
+      'laporan_id': nextId,
+      'title': categoryName,
+      'location': 'HQ Tower A, $floorName',
+      'description': description,
+      'priority': priority.toUpperCase(),
+      'status': 'pending',
+      'kolaborasi': false,
+      'category': categoryName,
+      'created_at': DateTime.now().toIso8601String(),
+      'photos': photoPaths,
+      'reporter': user.value?['name'] ?? 'Karyawan',
+    };
+    _dummyReports.insert(0, newReport);
+    return {
+      'success': true,
+      'data': newReport,
+    };
+  }
+
   Future<Map<String, dynamic>?> takeObReport(String reportId) async {
+    _lastRequestError = null;
+
     try {
       final response = await _client.patch(
         '/api/ob/laporan/$reportId',
@@ -285,43 +662,133 @@ class AuthService extends GetxService {
         headers: authHeaders(),
       );
 
+      if (_isOfflineResponse(response)) {
+        return _takeObReportOffline(reportId);
+      }
+
       if (response.isOk) {
         return _asMap(response.body) ?? <String, dynamic>{'success': true};
       }
 
+      _lastRequestError =
+          _takeReportErrorMessage(response) ??
+          'Gagal mengambil laporan. Coba muat ulang daftar laporan.';
       debugPrint(
         'Gagal ambil laporan OB: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error ambil laporan OB: $e');
-      return null;
+      return _takeObReportOffline(reportId);
     }
+  }
+
+  Map<String, dynamic>? _takeObReportOffline(String reportId) {
+    debugPrint('Offline: Simulating taking report...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index == -1) return null;
+
+    final updated = Map<String, dynamic>.from(_dummyReports[index]);
+    updated['status'] = 'proses';
+    updated['ob_id'] = user.value?['id'] ?? 'dummy_ob_id';
+    updated['ob_name'] = user.value?['name'] ?? 'Rahman';
+    _dummyReports[index] = updated;
+
+    return {
+      'success': true,
+      'data': updated,
+    };
   }
 
   Future<Map<String, dynamic>?> getObReports({
     int page = 1,
     int limit = 10,
   }) async {
-    try {
-      final response = await _client.get(
-        '/api/ob/laporan',
-        query: {'page': page.toString(), 'limit': limit.toString()},
-        headers: authHeaders(),
-      );
+    _lastRequestError = null;
 
-      if (response.isOk) {
-        return _asMap(response.body);
+    const endpoints = [
+      '/api/ob/laporan-masuk',
+      '/api/ob/laporan/masuk',
+      '/api/ob/dashboard/laporan',
+      '/api/ob/dashboard/reports',
+      '/api/ob/laporan',
+      '/api/laporan-masuk',
+      '/api/laporan/masuk',
+      '/api/karyawan/laporan',
+      '/api/laporan',
+      '/api/reports',
+    ];
+
+    Response<dynamic>? lastResponse;
+    Object? lastError;
+    final mergedItems = <dynamic>[];
+    Map<String, dynamic>? firstSuccessfulBody;
+
+    for (final endpoint in endpoints) {
+      try {
+        final response = await _client.get(
+          endpoint,
+          query: {'page': page.toString(), 'limit': limit.toString()},
+          headers: authHeaders(),
+        );
+
+        if (response.isOk) {
+          final body =
+              _responseBodyAsMap(response.body, response.bodyString) ??
+              _asMap(response.body);
+          firstSuccessfulBody ??= body;
+          final items = _extractList(body ?? response.body, const [
+            'laporan',
+            'reports',
+            'items',
+            'data',
+            'laporan_masuk',
+            'laporanMasuk',
+            'incoming_reports',
+          ]);
+          if (items != null) {
+            mergedItems.addAll(items);
+            continue;
+          }
+          if (response.body is List) {
+            mergedItems.addAll(response.body as List);
+            continue;
+          }
+          if (response.body != null) {
+            firstSuccessfulBody ??= <String, dynamic>{'data': response.body};
+          }
+          continue;
+        }
+
+        lastResponse = response;
+      } catch (e) {
+        lastError = e;
       }
-
-      debugPrint(
-        'Gagal ambil laporan OB: ${response.bodyString ?? response.body}',
-      );
-      return null;
-    } catch (e) {
-      debugPrint('Error ambil laporan OB: $e');
-      return null;
     }
+
+    if (mergedItems.isNotEmpty) {
+      return <String, dynamic>{'data': _dedupeReportItems(mergedItems)};
+    }
+
+    if (firstSuccessfulBody != null) {
+      return firstSuccessfulBody;
+    }
+
+    final isOffline = lastResponse == null || _isOfflineResponse(lastResponse);
+    if (isOffline) {
+      _triggerOfflineNotificationTimer();
+      return _getReportsOffline();
+    }
+
+    _lastRequestError =
+        _errorMessageFromResponse(lastResponse) ??
+                'Endpoint daftar laporan OB belum ditemukan di server.';
+    debugPrint(
+      'Gagal ambil laporan OB: ${lastResponse.bodyString ?? lastResponse.body}',
+      );
+    return null;
   }
 
   Future<Map<String, dynamic>?> submitObReportHistory({
@@ -329,6 +796,8 @@ class AuthService extends GetxService {
     required String note,
     required List<String> photoPaths,
   }) async {
+    _lastRequestError = null;
+
     try {
       final response = await _client.post(
         '/api/ob/laporan/$reportId/histori',
@@ -348,24 +817,90 @@ class AuthService extends GetxService {
         headers: authHeaders(),
       );
 
+      if (_isOfflineResponse(response)) {
+        return _submitObReportHistoryOffline(reportId, note, photoPaths);
+      }
+
       if (response.isOk) {
         return _asMap(response.body) ?? <String, dynamic>{'success': true};
       }
 
+      _lastRequestError =
+          _errorMessageFromResponse(response) ??
+          'Gagal menyelesaikan laporan. Server menolak data histori.';
       debugPrint(
         'Gagal submit histori laporan OB: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error submit histori laporan OB: $e');
-      return null;
+      return _submitObReportHistoryOffline(reportId, note, photoPaths);
     }
+  }
+
+  Map<String, dynamic>? _submitObReportHistoryOffline(
+    String reportId,
+    String note,
+    List<String> photoPaths,
+  ) {
+    debugPrint('Offline: Simulating submitting history...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index == -1) return null;
+
+    final updated = Map<String, dynamic>.from(_dummyReports[index]);
+    updated['status'] = 'selesai';
+    updated['notes'] = note;
+    updated['photos'] = photoPaths;
+    _dummyReports[index] = updated;
+
+    return {
+      'success': true,
+      'data': updated,
+    };
+  }
+
+  List<dynamic> _dedupeReportItems(List<dynamic> items) {
+    final result = <dynamic>[];
+    final seenIds = <String>{};
+
+    for (final item in items) {
+      final map = _asMap(item);
+      final detail = _asMap(map?['laporan']) ?? _asMap(map?['report']) ?? map;
+      final id =
+          _firstText(map, const [
+        'laporan_id',
+        'report_id',
+      ]) ??
+          _firstText(detail, const [
+        'id',
+        'uuid',
+      ]) ??
+          _firstText(map, const [
+        'id',
+        'uuid',
+      ]);
+
+      if (id == null || id.isEmpty) {
+        result.add(item);
+        continue;
+      }
+
+      if (seenIds.add(id)) {
+        result.add(item);
+      }
+    }
+
+    return result;
   }
 
   Future<Map<String, dynamic>?> rejectObReport({
     required String reportId,
     required String reason,
   }) async {
+    _lastRequestError = null;
+
     try {
       final response = await _client.post(
         '/api/ob/laporan/$reportId/tolak',
@@ -373,18 +908,43 @@ class AuthService extends GetxService {
         headers: authHeaders(extra: const {'Content-Type': 'application/json'}),
       );
 
+      if (_isOfflineResponse(response)) {
+        return _rejectObReportOffline(reportId, reason);
+      }
+
       if (response.isOk) {
         return _asMap(response.body) ?? <String, dynamic>{'success': true};
       }
 
+      _lastRequestError =
+          _errorMessageFromResponse(response) ??
+          'Gagal menolak laporan. Server menolak alasan yang dikirim.';
       debugPrint(
         'Gagal tolak laporan OB: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error tolak laporan OB: $e');
-      return null;
+      return _rejectObReportOffline(reportId, reason);
     }
+  }
+
+  Map<String, dynamic>? _rejectObReportOffline(String reportId, String reason) {
+    debugPrint('Offline: Simulating rejecting report...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index == -1) return null;
+
+    final updated = Map<String, dynamic>.from(_dummyReports[index]);
+    updated['status'] = 'tolak';
+    updated['reason'] = reason;
+    _dummyReports[index] = updated;
+
+    return {
+      'success': true,
+      'data': updated,
+    };
   }
 
   Future<void> saveSession({
@@ -630,6 +1190,145 @@ class AuthService extends GetxService {
       } catch (_) {
         // Keep login tolerant of non-JSON error bodies.
       }
+    }
+
+    return null;
+  }
+
+  String? _errorMessageFromResponse(Response<dynamic> response) {
+    final body = _responseBodyAsMap(response.body, response.bodyString);
+    final errors = _asMap(body?['errors']);
+    final error = _asMap(body?['error']);
+
+    for (final source in [body, _asMap(body?['data']), errors, error]) {
+      if (source == null) continue;
+      for (final key in [
+        'message',
+        'pesan',
+        'error',
+        'detail',
+        'description',
+      ]) {
+        final value = source[key];
+        if (value == null) continue;
+        final text = value.toString().trim();
+        if (text.isNotEmpty) return text;
+      }
+    }
+
+    final bodyString = response.bodyString?.trim();
+    if (bodyString != null && bodyString.isNotEmpty && bodyString.length < 180) {
+      return bodyString;
+    }
+
+    final statusCode = response.statusCode;
+    if (statusCode == 401) {
+      return 'Sesi login sudah tidak valid. Silakan login kembali.';
+    }
+    if (statusCode == 403) {
+      return 'Akun Anda tidak memiliki akses untuk mengirim laporan.';
+    }
+    if (statusCode == 404) return 'Endpoint laporan tidak ditemukan di server.';
+    if (statusCode == 413) return 'Ukuran foto terlalu besar. Gunakan foto di bawah 1MB.';
+    if (statusCode != null && statusCode >= 500) {
+      return 'Server sedang bermasalah. Coba lagi beberapa saat lagi.';
+    }
+
+    return null;
+  }
+
+  String? _activationErrorMessage(Response<dynamic> response) {
+    final apiMessage = _errorMessageFromResponse(response);
+    if (apiMessage != null && !apiMessage.contains('laporan')) {
+      return apiMessage;
+    }
+
+    final statusCode = response.statusCode;
+    if (statusCode == 400) {
+      return 'Token tidak valid, validasi gagal, atau password tidak cocok.';
+    }
+    if (statusCode == 404) return 'Endpoint aktivasi tidak ditemukan di server.';
+    if (statusCode != null && statusCode >= 500) {
+      return 'Server sedang bermasalah. Coba lagi beberapa saat lagi.';
+    }
+
+    return apiMessage;
+  }
+
+  String? _takeReportErrorMessage(Response<dynamic> response) {
+    final body = _responseBodyAsMap(response.body, response.bodyString);
+    final takenBy = _firstTextFromSources([
+      body,
+      _asMap(body?['data']),
+      _asMap(body?['laporan']),
+      _asMap(body?['report']),
+    ], const [
+      'nama_ob',
+      'namaOb',
+      'ob_name',
+      'obName',
+      'assigned_ob_name',
+      'assignedObName',
+      'taken_by_name',
+      'takenByName',
+      'diambil_oleh',
+      'diambilOleh',
+      'assigned_to',
+      'assignedTo',
+      'taken_by',
+      'takenBy',
+      'petugas',
+      'petugas_ob',
+      'ob',
+    ]);
+
+    if (takenBy != null) {
+      return 'Laporan ini sudah diambil oleh $takenBy.';
+    }
+
+    final apiMessage = _errorMessageFromResponse(response);
+    if (apiMessage != null) return apiMessage;
+
+    if (response.statusCode == 409) {
+      return 'Laporan ini sudah diambil oleh OB lain.';
+    }
+
+    return null;
+  }
+
+  String? _firstTextFromSources(
+    List<Map<String, dynamic>?> sources,
+    List<String> keys,
+  ) {
+    for (final source in sources) {
+      final value = _firstText(source, keys);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  String? _firstText(Map<String, dynamic>? source, List<String> keys) {
+    if (source == null) return null;
+
+    for (final key in keys) {
+      final value = source[key];
+      if (value == null) continue;
+
+      if (value is Map) {
+        final nestedValue = _firstText(_asMap(value), const [
+          'nama_lengkap',
+          'nama',
+          'name',
+          'username',
+          'email',
+          'label',
+        ]);
+        if (nestedValue != null) return nestedValue;
+        continue;
+      }
+
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
     }
 
     return null;

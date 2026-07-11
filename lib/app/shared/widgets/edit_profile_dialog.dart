@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../theme/theme_controller.dart';
@@ -106,7 +107,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                   tileColor: sheetColor,
                   leading: Icon(Icons.photo_camera_outlined, color: iconColor),
                   title: Text(
-                    'Ambil dari kamera',
+                    'Ambil dari kamera'.tr,
                     style: TextStyle(color: textColor),
                   ),
                   onTap: () => Navigator.of(context).pop(ImageSource.camera),
@@ -115,7 +116,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                   tileColor: sheetColor,
                   leading: Icon(Icons.photo_library_outlined, color: iconColor),
                   title: Text(
-                    'Pilih dari galeri',
+                    'Pilih dari galeri'.tr,
                     style: TextStyle(color: textColor),
                   ),
                   onTap: () => Navigator.of(context).pop(ImageSource.gallery),
@@ -141,7 +142,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal mengambil foto. Coba lagi.')),
+        SnackBar(content: Text('Gagal mengambil foto. Coba lagi.'.tr)),
       );
     }
   }
@@ -153,7 +154,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final lastName = widget._lastNameController.text.trim();
     if (firstName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama depan wajib diisi.')),
+        SnackBar(content: Text('Nama depan wajib diisi.'.tr)),
       );
       return;
     }
@@ -196,7 +197,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                   const SizedBox(width: 34),
                   Expanded(
                     child: Text(
-                      'Edit Profil',
+                      'Edit Profil'.tr,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: titleColor,
@@ -254,7 +255,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               TextButton.icon(
                 onPressed: _isSaving ? null : _showImageSourceSheet,
                 icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                label: const Text('Ganti foto'),
+                label: Text('Ganti foto'.tr),
                 style: TextButton.styleFrom(
                   foregroundColor: accentColor,
                   textStyle: const TextStyle(
@@ -304,9 +305,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'Simpan',
-                          style: TextStyle(
+                      : Text(
+                          'Simpan'.tr,
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -400,7 +401,7 @@ class _EditField extends StatelessWidget {
       children: [
         RichText(
           text: TextSpan(
-            text: label,
+            text: label.tr,
             style: TextStyle(
               color: labelColor,
               fontSize: 12,

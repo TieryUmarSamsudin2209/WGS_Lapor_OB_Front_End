@@ -1,434 +1,163 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/home_controller.dart';
+
 import '../../../routes/app_pages.dart';
-import '../../../shared/widgets/bottom_nav.dart';
 import '../../../shared/theme/theme_controller.dart';
+import '../../../shared/widgets/bottom_nav.dart';
+import '../controllers/home_controller.dart';
+import '../controllers/karyawan_main_controller.dart';
 
 class HomeView extends GetView<HomeController> {
-  const HomeView({super.key});
+  const HomeView({super.key, this.isNested = false});
+
+  final bool isNested;
+
+  static const _blue = Color(0xFF0F4C81);
+  static const _buttonBlue = Color(0xFF16A9F5);
+  static const _pageBg = Color(0xFFF4F4F8);
+  static const _lightText = Color(0xFF202536);
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.viewPaddingOf(context).top;
+    final headerHeight = topPadding + 208;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppDarkColors.background
-          : const Color(0xFFF3F6FA), // Warna latar belakang abu-abu sangat muda
-      body: const HomePage(),
-      extendBody: true, // Agar konten bisa di-scroll sampai ke bawah navigasi
-      bottomNavigationBar: const BottomNavigationLayout(),
-    );
-  }
-}
-
-// --- WIDGET FLOATING NAVIGATION BAR ---
-class BottomNavigationLayout extends StatelessWidget {
-  const BottomNavigationLayout({super.key});
-
-  final Color navyColor = const Color(0xFF0F4C81);
-  static const _darkNav = Color(0xFF101418);
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 25),
-      child: Container(
-        height: 70,
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isDark ? _darkNav : Colors.white,
-          borderRadius: BorderRadius.circular(40),
-          border: isDark
-              ? Border.all(
-                  color: AppDarkColors.border.withValues(alpha: 0.75),
-                  width: 1.5,
-                )
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: 0.55)
-                  : const Color(0xFF4FA0FF).withValues(alpha: 0.3),
-              blurRadius: isDark ? 10 : 25,
-              spreadRadius: isDark ? 0 : 2,
-              offset: const Offset(0, 8),
+      backgroundColor: isDark ? AppDarkColors.background : _pageBg,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            top: headerHeight,
+            child: _HomeContent(controller: controller),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: _HomeHeader(controller: controller),
+          ),
+          if (!isNested)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: BottomNavigationLayout(),
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: BottomNavItem(
-                icon: Icons.home_outlined,
-                label: 'Home',
-                isActive: true,
-                onTap: () {},
-                navyColor: navyColor,
-              ),
-            ),
-            Expanded(
-              child: BottomNavItem(
-                icon: Icons.add_circle,
-                label: 'Report',
-                isActive: false,
-                onTap: () => Get.toNamed(Routes.REPORT),
-                navyColor: navyColor,
-              ),
-            ),
-            Expanded(
-              child: BottomNavItem(
-                icon: Icons.person_outline,
-                label: 'Profile',
-                isActive: false,
-                onTap: () => Get.toNamed(Routes.PROFILE),
-                navyColor: navyColor,
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
 
-// --- WIDGET KONTEN UTAMA ---
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({required this.controller});
 
-  final Color navyColor = const Color(0xFF0F4C81);
+  final HomeController controller;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sectionColor = isDark ? AppDarkColors.surface : navyColor;
-    final sectionBorderColor =
+    final headerColor = isDark ? AppDarkColors.header : HomeView._blue;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final cardBorderColor =
         isDark ? AppDarkColors.border : Colors.transparent;
-
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 320),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: sectionColor,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: sectionBorderColor),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Kategori',
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // GRID KATEGORI (TATA LETAK PRESISI)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Hero(
-                            tag: 'category-Plumbing',
-                            child: _buildCategoryItem(
-                              icon: Icons.home_outlined,
-                              label: 'Kebersihan',
-                              onTap: () => Get.toNamed(
-                                Routes.REPORT,
-                                arguments: 'Plumbing',
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Hero(
-                            tag: 'category-Furniture',
-                            child: _buildCategoryItem(
-                              icon: Icons.chair_outlined,
-                              label: 'Peralatan',
-                              onTap: () => Get.toNamed(
-                                Routes.REPORT,
-                                arguments: 'Furniture',
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Hero(
-                            tag: 'category-HVAC',
-                            child: _buildCategoryItem(
-                              icon: Icons.local_laundry_service_outlined,
-                              label: 'Maintenance',
-                              onTap: () => Get.toNamed(
-                                Routes.REPORT,
-                                arguments: 'HVAC',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Hero(
-                            tag: 'category-Miscellaneous',
-                            child: _buildCategoryItem(
-                              icon: Icons.home_outlined,
-                              label: 'Miscellaneous',
-                              onTap: () => Get.toNamed(
-                                Routes.REPORT,
-                                arguments: 'Miscellaneous',
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildCategoryItem(
-                            icon: Icons.chair_outlined,
-                            label: 'Blum ada',
-                            onTap: () {},
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildCategoryItem(
-                            icon: Icons.local_laundry_service_outlined,
-                            label: 'Blum ada',
-                            onTap: () {},
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20), // Celah putih
-          
-          // --- AKTIVITAS CARD (BACKGROUND BIRU) ---
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: sectionColor,
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: sectionBorderColor),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Aktivitas',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Get.toNamed(Routes.PROFILE),
-                      child: Text(
-                        'Lihat semua',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? AppDarkColors.accent : Colors.white70,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                
-                // KARTU AKTIVITAS 1
-                _buildActivityCard(
-                  context: context,
-                  icon: Icons.home_outlined,
-                  title: 'Leaking Pipe in\nRestroom B',
-                  subtitle: 'Reported: Today, 09:30 AM • ID:\n#REP-2023-11A',
-                  statusIcon: Icons.remove_circle_outline, // Ikon minus melingkar
-                  statusLabel: 'In Progress',
-                ),
-                const SizedBox(height: 15),
-                
-                // KARTU AKTIVITAS 2
-                _buildActivityCard(
-                  context: context,
-                  icon: Icons.electric_bolt_outlined,
-                  title: 'Flickering Lights in\nMeeting Room 4',
-                  subtitle: 'Reported: Yesterday, 14:15 PM •\nID: #REP-2023-10X',
-                  statusIcon: Icons.check_circle_outline,
-                  statusLabel: 'Resolved',
-                ),
-              ],
-            ),
-          ),
-              const SizedBox(height: 140),
-            ],
-          ),
-        ),
-        _buildPinnedHeader(context),
-      ],
-    );
-  }
-
-  Widget _buildPinnedHeader(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final reportButtonBg = isDark ? Colors.transparent : Colors.white;
-    final reportButtonFg = isDark ? AppDarkColors.accent : navyColor;
-    final reportButtonBorder =
-        isDark ? AppDarkColors.accent : Colors.transparent;
+    final headlineColor = isDark ? Colors.white : HomeView._blue;
 
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(22, 25, 22, 22),
       decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.header : navyColor,
+        color: headerColor,
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+          bottomLeft: Radius.circular(15),
+          bottomRight: Radius.circular(15),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.28),
+            blurRadius: 9,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 35),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Beranda',
-                    style: TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Obx(
+                    () => Text(
+                      'Halo, @name'.trParams({'name': controller.name.value}),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      _buildThemeButton(),
-                      const SizedBox(width: 8),
-                      _buildNotificationButton(),
-                    ],
+                ),
+                _ThemeButton(isDark: isDark),
+                IconButton(
+                  tooltip: 'Notifikasi'.tr,
+                  onPressed: () => Get.toNamed(Routes.NOTIFICATIONS),
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(17, 15, 17, 15),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: cardBorderColor),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ada Fasilitas\nBermasalah?'.tr,
+                    style: TextStyle(
+                      color: headlineColor,
+                      fontSize: 24,
+                      height: 0.95,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    height: 30,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Get.toNamed(Routes.REPORT),
+                      icon: const Icon(Icons.add_circle_outline, size: 13),
+                      label: Text('Buat Laporan Baru'.tr),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: HomeView._buttonBlue,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 25),
-              const Text(
-                'Selamat Pagi,',
-                style: TextStyle(fontSize: 13, color: Colors.white70),
-              ),
-              const SizedBox(height: 2),
-              Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Obx(
-                  () => Text(
-                    Get.find<HomeController>().name.value,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 25),
-
-              // TOMBOL LAPORKAN MASALAH
-              Hero(
-                tag: 'submit-report',
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: reportButtonBg,
-                      foregroundColor: reportButtonFg,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        side: BorderSide(color: reportButtonBorder, width: 1.4),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: () => Get.toNamed(Routes.REPORT),
-                    icon: Icon(Icons.add, size: 20, color: reportButtonFg),
-                    label: Text(
-                      'Laporkan masalah baru',
-                      style: TextStyle(
-                        color: reportButtonFg,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // HELPER: KATEGORI ITEM
-  Widget _buildCategoryItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Get.isDarkMode;
-    final itemColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
-    final borderColor = isDark ? AppDarkColors.border : Colors.transparent;
-    final iconColor = isDark ? AppDarkColors.accent : navyColor;
-    final labelColor = isDark ? Colors.white70 : Colors.white;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: double.infinity,
-        child: Column(
-          children: [
-            Container(
-              height: 55,
-              width: 85,
-              constraints: const BoxConstraints(maxWidth: 85),
-              decoration: BoxDecoration(
-                color: itemColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor),
-              ),
-              child: Icon(icon, size: 28, color: iconColor),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: labelColor,
               ),
             ),
           ],
@@ -436,22 +165,27 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildThemeButton() {
+class _ThemeButton extends StatelessWidget {
+  const _ThemeButton({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
 
     return Obx(
       () => Tooltip(
-        message: themeController.isDarkMode ? 'Mode terang' : 'Mode gelap',
+        message: themeController.isDarkMode ? 'Mode terang'.tr : 'Mode gelap'.tr,
         child: Material(
-          color: themeController.isDarkMode
-              ? AppDarkColors.surfaceVariant
-              : const Color(0xFF0D3A62),
+          color: Colors.white.withValues(alpha: 0.14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: themeController.isDarkMode
-                ? const BorderSide(color: AppDarkColors.border)
-                : BorderSide.none,
+            side: BorderSide(
+              color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.12),
+            ),
           ),
           child: InkWell(
             onTap: themeController.toggleTheme,
@@ -461,8 +195,8 @@ class HomePage extends StatelessWidget {
               height: 38,
               child: Icon(
                 themeController.isDarkMode
-                    ? Icons.light_mode_outlined
-                    : Icons.dark_mode_outlined,
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
                 color: Colors.white,
                 size: 21,
               ),
@@ -472,145 +206,558 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildNotificationButton() {
-    return Tooltip(
-      message: 'Notifikasi',
-      child: Material(
-        color: Get.isDarkMode
-            ? AppDarkColors.surfaceVariant
-            : const Color(0xFF0D3A62),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: Get.isDarkMode
-              ? const BorderSide(color: AppDarkColors.border)
-              : BorderSide.none,
+class _HomeContent extends StatelessWidget {
+  const _HomeContent({required this.controller});
+
+  final HomeController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(22, 40, 22, 122),
+      children: [
+        _SectionHeader(
+          title: 'Kategori'.tr,
+          titleColor: isDark ? Colors.white : HomeView._lightText,
         ),
-        child: InkWell(
-          onTap: () => Get.snackbar(
-            'Notifikasi',
-            'Belum ada notifikasi baru',
-            snackPosition: SnackPosition.TOP,
+        const SizedBox(height: 10),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.2,
+          children: const [
+            _CategoryCard(
+              icon: Icons.cleaning_services_outlined,
+              label: 'Kebersihan',
+              argument: 'Kebersihan',
+            ),
+            _CategoryCard(
+              icon: Icons.air_rounded,
+              label: 'AC & Udara',
+              argument: 'AC & Udara',
+            ),
+            _CategoryCard(
+              icon: Icons.water_drop_outlined,
+              label: 'Air & Galon',
+              argument: 'Air & Galon',
+            ),
+            _CategoryCard(
+              icon: Icons.bolt_rounded,
+              label: 'Kelistrikan',
+              argument: 'Kelistrikan',
+            ),
+            _CategoryCard(
+              icon: Icons.chair_outlined,
+              label: 'Meja & Kursi',
+              argument: 'Meja & Kursi',
+            ),
+            _CategoryCard(
+              icon: Icons.more_horiz_rounded,
+              label: 'Lainnya',
+              argument: 'Lainnya',
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _SectionHeader(
+          title: 'Aktivitas'.tr,
+          titleColor: isDark ? Colors.white : HomeView._lightText,
+          trailing: 'Lihat semua'.tr,
+          onTap: () {
+            if (Get.isRegistered<KaryawanMainController>()) {
+              Get.find<KaryawanMainController>().changePage(2);
+            } else {
+              Get.toNamed(Routes.PROFILE);
+            }
+          },
+        ),
+        const SizedBox(height: 10),
+        Obx(
+          () {
+            if (controller.isLoadingReports.value) {
+              return const _ActivityStateCard(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              );
+            }
+
+            final reports = controller.recentReports;
+            if (reports.isEmpty) {
+              return _ActivityStateCard(
+                child: Text(
+                  'Belum ada aktivitas laporan'.tr,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              );
+            }
+
+            return Column(
+              children: [
+                for (var i = 0; i < reports.length; i++) ...[
+                  _ActivityCard(
+                    report: reports[i],
+                    onTap: () => controller.openReport(reports[i]),
+                  ),
+                  if (i != reports.length - 1) const SizedBox(height: 10),
+                ],
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    required this.titleColor,
+    this.trailing,
+    this.onTap,
+  });
+
+  final String title;
+  final Color titleColor;
+  final String? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              color: titleColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-          borderRadius: BorderRadius.circular(8),
-          child: const SizedBox(
-            width: 38,
-            height: 38,
-            child: Icon(
-              Icons.notifications_none_rounded,
-              color: Colors.white,
-              size: 22,
+        ),
+        if (trailing != null)
+          GestureDetector(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+              child: Text(
+                trailing!,
+                style: TextStyle(
+                  color: titleColor,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({
+    required this.icon,
+    required this.label,
+    required this.argument,
+  });
+
+  final IconData icon;
+  final String label;
+  final String argument;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : Colors.transparent;
+    final labelColor = isDark ? Colors.white : const Color(0xFF253044);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Get.toNamed(Routes.REPORT, arguments: argument),
+        borderRadius: BorderRadius.circular(7),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.17),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppDarkColors.surfaceVariant
+                      : const Color(0xFFEFF2FF),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: isDark ? AppDarkColors.accent : HomeView._buttonBlue,
+                  size: 23,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label.tr,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: labelColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActivityCard extends StatelessWidget {
+  const _ActivityCard({
+    required this.report,
+    required this.onTap,
+  });
+
+  final Map<String, dynamic> report;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFCCD3DD);
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final bodyColor = isDark ? Colors.white70 : const Color(0xFF3E4653);
+    final priority = report['priority']?.toString() ?? 'STANDARD';
+    final status = report['status']?.toString() ?? 'Pending';
+    final title = report['title']?.toString() ?? 'Laporan';
+    final location = report['location']?.toString() ?? '-';
+    final description = report['description']?.toString() ?? '-';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(7),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(color: borderColor),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  width: 4,
+                  decoration: const BoxDecoration(
+                    color: HomeView._blue,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(7),
+                      bottomLeft: Radius.circular(7),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _Badge(style: _priorityStyle(priority)),
+                            const Spacer(),
+                            _Badge(style: _statusStyle(status)),
+                          ],
+                        ),
+                        const SizedBox(height: 11),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: titleColor,
+                            fontSize: 15,
+                            height: 1,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              color: Color(0xFF064BFF),
+                              size: 15,
+                            ),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF064BFF),
+                                  fontSize: 11,
+                                  height: 1,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: bodyColor,
+                            fontSize: 11,
+                            height: 1.18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  // HELPER: KARTU AKTIVITAS (PUTIH)
-  Widget _buildActivityCard({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required IconData statusIcon,
-    required String statusLabel,
-  }) {
+class _ActivityStateCard extends StatelessWidget {
+  const _ActivityStateCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
-    final titleColor = isDark ? Colors.white : navyColor;
-    final subtitleColor = isDark ? Colors.white70 : Colors.grey;
-    final iconBorderColor =
-        isDark ? AppDarkColors.border : Colors.grey.shade300;
-    final iconColor = isDark ? AppDarkColors.accent : Colors.blueGrey;
-    final badgeColor =
-        isDark ? const Color(0xFF052C58) : const Color(0xFFE6F0FA);
-    final badgeTextColor = isDark ? AppDarkColors.accent : navyColor;
 
     return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(15),
-        border: isDark ? Border.all(color: AppDarkColors.border) : null,
-      ),
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      height: 86,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFCCD3DD),
+        ),
+      ),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(
+          color: isDark ? Colors.white70 : const Color(0xFF3E4653),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _BadgeStyle {
+  const _BadgeStyle({
+    required this.text,
+    required this.icon,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String text;
+  final IconData icon;
+  final Color background;
+  final Color foreground;
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({required this.style});
+
+  final _BadgeStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 9),
+      decoration: BoxDecoration(
+        color: style.background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // IKON KIRI DENGAN BORDER
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: iconBorderColor, width: 1.5),
-                ),
-                child: Icon(icon, size: 24, color: iconColor),
-              ),
-              const SizedBox(width: 15),
-              
-              // TEKS UTAMA
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: titleColor,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: subtitleColor,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // BADGE STATUS (KANAN BAWAH)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-              decoration: BoxDecoration(
-                color: badgeColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(statusIcon, size: 14, color: badgeTextColor),
-                  const SizedBox(width: 4),
-                  Text(
-                    statusLabel,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: badgeTextColor,
-                    ),
-                  ),
-                ],
-              ),
+          Icon(style.icon, color: style.foreground, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            style.text.tr,
+            style: TextStyle(
+              color: style.foreground,
+              fontSize: 10,
+              height: 1,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+_BadgeStyle _priorityStyle(String priority) {
+  final normalized = priority.trim().toUpperCase();
+  switch (normalized) {
+    case 'URGENT':
+    case 'HIGH':
+    case 'TINGGI':
+      return _BadgeStyle(
+        text: normalized == 'HIGH' || normalized == 'TINGGI'
+            ? 'URGENT'
+            : normalized,
+        icon: Icons.error_outline,
+        background: const Color(0xFFFFE2E5),
+        foreground: const Color(0xFFC72535),
+      );
+    default:
+      return const _BadgeStyle(
+        text: 'STANDARD',
+        icon: Icons.error_outline,
+        background: Color(0xFFFFF2C8),
+        foreground: Color(0xFFFFA000),
+      );
+  }
+}
+
+_BadgeStyle _statusStyle(String status) {
+  switch (status) {
+    case 'Selesai':
+      return const _BadgeStyle(
+        text: 'Selesai',
+        icon: Icons.check_circle_outline,
+        background: Color(0xFFDDF8E9),
+        foreground: Color(0xFF2BAE66),
+      );
+    case 'Ditolak':
+      return const _BadgeStyle(
+        text: 'Ditolak',
+        icon: Icons.cancel_outlined,
+        background: Color(0xFFFFE2E5),
+        foreground: Color(0xFFC72535),
+      );
+    case 'Diproses':
+      return const _BadgeStyle(
+        text: 'Proses',
+        icon: Icons.sync_rounded,
+        background: Color(0xFFE3F0FF),
+        foreground: Color(0xFF1976D2),
+      );
+    default:
+      return const _BadgeStyle(
+        text: 'Pending',
+        icon: Icons.schedule_outlined,
+        background: Color(0xFFFFF2C8),
+        foreground: Color(0xFFFFA000),
+      );
+  }
+}
+
+class BottomNavigationLayout extends StatelessWidget {
+  const BottomNavigationLayout({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const navyTextColor = Color(0xFF003366);
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 25),
+      child: Container(
+        height: 70,
+        decoration: BoxDecoration(
+          color: isDark ? AppDarkColors.surface : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4FA0FF).withValues(alpha: 0.4),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: BottomNavItem(
+                icon: Icons.home_outlined,
+                label: 'Home',
+                isActive: true,
+                onTap: () {},
+                navyColor: navyTextColor,
+              ),
+            ),
+            Expanded(
+              child: BottomNavItem(
+                icon: Icons.add_circle_outline,
+                label: 'Report',
+                isActive: false,
+                onTap: () => Get.toNamed(Routes.REPORT),
+                navyColor: navyTextColor,
+              ),
+            ),
+            Expanded(
+              child: BottomNavItem(
+                icon: Icons.person,
+                label: 'Profile',
+                isActive: false,
+                onTap: () => Get.toNamed(Routes.PROFILE),
+                navyColor: navyTextColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

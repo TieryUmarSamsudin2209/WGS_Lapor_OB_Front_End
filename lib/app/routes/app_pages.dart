@@ -1,33 +1,32 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 
 import '../modules/aktivasi/bindings/aktivasi_binding.dart';
 import '../modules/aktivasi/views/aktivasi_view.dart';
+
 import '../modules/home/bindings/home_binding.dart';
-import '../modules/home/views/home_view.dart';
+import '../modules/home/views/karyawan_main_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
-import '../modules/ob/home/bindings/ob_home_binding.dart';
-import '../modules/ob/home/views/ob_home_view.dart';
+import '../modules/ob/checklist/bindings/ob_checklist_binding.dart';
 import '../modules/ob/detail/bindings/ob_detail_binding.dart';
 import '../modules/ob/detail/views/ob_detail_view.dart';
-import '../modules/profile/bindings/profile_binding.dart';
-import '../modules/profile/views/profile_view.dart';
+import '../modules/ob/home/bindings/ob_home_binding.dart';
+import '../modules/ob/notifications/bindings/ob_notifications_binding.dart';
+import '../modules/ob/notifications/views/ob_notifications_view.dart';
+import '../modules/ob/profil/bindings/ob_profil_binding.dart';
+import '../modules/ob/reports/bindings/ob_reports_binding.dart';
+import '../modules/ob/reports/views/ob_reports_view.dart';
+import '../modules/ob/main/views/ob_main_view.dart';
+import '../modules/notifications/bindings/notifications_binding.dart';
+import '../modules/notifications/views/notifications_view.dart';
 import '../modules/privacy/views/privacy_view.dart';
+import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/report/bindings/report_binding.dart';
-import '../modules/report/views/report_view.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
 import '../modules/splash_screen/views/splash_screen_view.dart';
 import '../modules/terms/views/terms_view.dart';
-
-import '../modules/ob/profil/bindings/ob_profil_binding.dart';
-import '../modules/ob/profil/views/ob_profil_view.dart';
-import '../modules/ob/checklist/bindings/ob_checklist_binding.dart';
-import '../modules/ob/checklist/views/ob_checklist_view.dart';
-import '../modules/ob/notifications/bindings/ob_notifications_binding.dart';
-import '../modules/ob/notifications/views/ob_notifications_view.dart';
-import '../modules/ob/reports/bindings/ob_reports_binding.dart';
-import '../modules/ob/reports/views/ob_reports_view.dart';
 
 part 'app_routes.dart';
 
@@ -51,18 +50,36 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.HOME,
-      page: () => const HomeView(),
-      binding: HomeBinding(),
+      page: () => const KaryawanMainView(initialTab: 0),
+      bindings: [
+        HomeBinding(),
+        ReportBinding(),
+        ProfileBinding(),
+      ],
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 250),
     ),
     GetPage(
       name: _Paths.PROFILE,
-      page: () => const ProfilePage(),
-      binding: ProfileBinding(),
+      page: () => const KaryawanMainView(initialTab: 2),
+      bindings: [
+        HomeBinding(),
+        ReportBinding(),
+        ProfileBinding(),
+      ],
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 250),
     ),
     GetPage(
       name: _Paths.REPORT,
-      page: () => const ReportPage(),
-      binding: ReportBinding(),
+      page: () => const KaryawanMainView(initialTab: 1),
+      bindings: [
+        HomeBinding(),
+        ReportBinding(),
+        ProfileBinding(),
+      ],
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 250),
     ),
     GetPage(
       name: _Paths.SPLASH_SCREEN,
@@ -79,31 +96,62 @@ class AppPages {
       name: Routes.OB_DETAIL,
       page: () => const ObDetailView(),
       binding: ObDetailBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 250),
     ),
     GetPage(
       name: Routes.OB_HOME,
-      page: () => const OBHomeView(),
-      binding: ObHomeBinding(),
+      page: () => const ObMainView(initialTab: 0),
+      bindings: [
+        ObHomeBinding(),
+        ObChecklistBinding(),
+        ObProfilBinding(),
+      ],
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 1),
     ),
     GetPage(
       name: Routes.OB_PROFIL,
-      page: () => const ObProfilView(),
-      binding: ObProfilBinding(),
+      page: () => const ObMainView(initialTab: 2),
+      bindings: [
+        ObHomeBinding(),
+        ObChecklistBinding(),
+        ObProfilBinding(),
+      ],
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 1),
     ),
     GetPage(
       name: Routes.OB_CHECKLIST,
-      page: () => const ObChecklistView(),
-      binding: ObChecklistBinding(),
+      page: () => const ObMainView(initialTab: 1),
+      bindings: [
+        ObHomeBinding(),
+        ObChecklistBinding(),
+        ObProfilBinding(),
+      ],
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 1),
     ),
     GetPage(
       name: Routes.OB_NOTIFICATIONS,
       page: () => const ObNotificationsView(),
       binding: ObNotificationsBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 250),
+    ),
+    GetPage(
+      name: Routes.NOTIFICATIONS,
+      page: () => const NotificationsView(),
+      binding: NotificationsBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 250),
     ),
     GetPage(
       name: Routes.OB_REPORTS,
       page: () => const ObReportsView(),
       binding: ObReportsBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 250),
     ),
     GetPage(name: Routes.TERMS, page: () => _lightOnly(const TermsView())),
     GetPage(name: Routes.PRIVACY, page: () => _lightOnly(const PrivacyView())),

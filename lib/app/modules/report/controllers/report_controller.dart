@@ -129,15 +129,15 @@ class ReportController extends GetxController {
           attachedPhotos.add(image.path);
         } else {
           Get.snackbar(
-            'Batas Maksimal',
-            'Anda hanya dapat mengunggah maksimal 3 foto.',
+            'Batas Maksimal'.tr,
+            'Anda hanya dapat mengunggah maksimal 3 foto.'.tr,
             snackPosition: SnackPosition.BOTTOM,
             margin: const EdgeInsets.all(16),
           );
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal mengambil foto: $e');
+      Get.snackbar('Error', 'Gagal mengambil foto: @error'.trParams({'error': '$e'}));
     }
   }
 
@@ -155,8 +155,8 @@ class ReportController extends GetxController {
 
     if (!_authService.isLoggedIn) {
       Get.snackbar(
-        'Sesi tidak ditemukan',
-        'Silakan login kembali sebelum mengirim laporan.',
+        'Sesi tidak ditemukan'.tr,
+        'Silakan login kembali sebelum mengirim laporan.'.tr,
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
@@ -164,8 +164,8 @@ class ReportController extends GetxController {
 
     if (category == null) {
       Get.snackbar(
-        'Peringatan',
-        'Harap pilih kategori masalah terlebih dahulu.',
+        'Peringatan'.tr,
+        'Harap pilih kategori masalah terlebih dahulu.'.tr,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -177,8 +177,8 @@ class ReportController extends GetxController {
 
     if (floor == null) {
       Get.snackbar(
-        'Peringatan',
-        'Harap pilih lokasi gedung terlebih dahulu.',
+        'Peringatan'.tr,
+        'Harap pilih lokasi gedung terlebih dahulu.'.tr,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -190,8 +190,8 @@ class ReportController extends GetxController {
 
     if (description.isEmpty) {
       Get.snackbar(
-        'Peringatan',
-        'Harap isi deskripsi masalah terlebih dahulu.',
+        'Peringatan'.tr,
+        'Harap isi deskripsi masalah terlebih dahulu.'.tr,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -203,8 +203,8 @@ class ReportController extends GetxController {
 
     if (attachedPhotos.isEmpty) {
       Get.snackbar(
-        'Peringatan',
-        'Harap unggah minimal 1 foto bukti.',
+        'Peringatan'.tr,
+        'Harap unggah minimal 1 foto bukti.'.tr,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -218,7 +218,8 @@ class ReportController extends GetxController {
     try {
       final completeDescription = [
         description,
-        if (locationDetail.isNotEmpty) 'Lokasi detail: $locationDetail',
+        if (locationDetail.isNotEmpty)
+          'Lokasi detail: @location'.trParams({'location': locationDetail}),
       ].join('\n\n');
 
       final response = await _authService.createEmployeeReport(
@@ -237,7 +238,8 @@ class ReportController extends GetxController {
       }
 
       submitFailureMessage.value =
-          'Laporan belum terkirim. Periksa koneksi, sesi login, atau data kategori/lokasi.';
+          _authService.lastRequestError ??
+          'Laporan belum terkirim. Periksa koneksi, sesi login, atau data kategori/lokasi.'.tr;
       return false;
     } finally {
       isSubmitting.value = false;

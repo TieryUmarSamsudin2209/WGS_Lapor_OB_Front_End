@@ -2,15 +2,25 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../routes/app_pages.dart';
+import '../../../shared/theme/theme_controller.dart';
+import '../../../shared/translations/app_translations.dart';
 import '../../../shared/widgets/bottom_nav.dart';
 import '../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../shared/widgets/logout_confirmation_dialog.dart';
-import '../../../shared/theme/theme_controller.dart';
 import '../controllers/profile_controllers.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, this.isNested = false});
+
+  final bool isNested;
+
+  static const _blue = Color(0xFF14558B);
+  static const _text = Color(0xFF172033);
+  static const _pageBg = Color(0xFFF4F4F8);
+  static const _panelTop = 142.0;
+  static const _bottomSpace = 116.0;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -18,11 +28,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   late final ProfileController controller;
-
-  final Color navyTextColor = const Color(0xFF003366);
-
-  String _searchQuery = '';
-  String? _selectedStatus;
+  final TextEditingController _searchController = TextEditingController();
+  bool _showAllHistory = false;
 
   @override
   void initState() {
@@ -31,593 +38,121 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pageBg = isDark ? AppDarkColors.background : const Color(0xFF104A7F);
-    final surface = isDark ? AppDarkColors.surface : Colors.white;
-    final textColor = isDark ? Colors.white : navyTextColor;
-    final mutedColor =
-        isDark ? Colors.white70 : navyTextColor.withValues(alpha: 0.7);
-
-    return Scaffold(
-      backgroundColor: pageBg,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                const headerHeight = 180.0;
-                final bodyMinHeight = (constraints.maxHeight - headerHeight)
-                    .clamp(0.0, double.infinity);
-
-                return SingleChildScrollView(
-                  child: Stack(
-                    alignment: Alignment.topCenter,
-                    children: [
-                      // Background & Content Column
-                      Column(
-                        children: [
-                      // Blue header background with title
-                      Container(
-                        width: double.infinity,
-                        height: 180,
-                        color: pageBg,
-                        child: const SafeArea(
-                          bottom: false,
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: Padding(
-                              padding: EdgeInsets.only(top: 25),
-                              child: Text(
-                                "Profil Saya",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // White body container
-                      Container(
-                        width: double.infinity,
-                        constraints: BoxConstraints(
-                          minHeight: bodyMinHeight,
-                        ),
-                        decoration: BoxDecoration(
-                          color: surface,
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(30),
-                            topRight: Radius.circular(30),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: IntrinsicHeight(
-                          child: Column(
-                              children: [
-                              const SizedBox(
-                              height: 70,
-                            ), // Spacing for the overlapping avatar
-
-                            // Name and Username
-                            Obx(
-                              () => Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      controller.name.value,
-                                      textAlign: TextAlign.center,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: textColor,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  InkWell(
-                                    borderRadius: BorderRadius.circular(20),
-                                    onTap: () {
-                                      final nameParts = controller.name.value
-                                          .trim()
-                                          .split(RegExp(r'\s+'));
-                                      EditProfileDialog.show(
-                                        context,
-                                        avatarUrl: controller.avatarUrl.value,
-                                        firstName: nameParts.first,
-                                        lastName: nameParts.skip(1).join(' '),
-                                        onSave: controller.updateProfile,
-                                      );
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(4),
-                                      child: Icon(
-                                        Icons.edit_outlined,
-                                        size: 18,
-                                        color: textColor,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.person_pin,
-                                  size: 14,
-                                  color: mutedColor,
-                                ),
-                                const SizedBox(width: 4),
-                                Obx(
-                                  () => Text(
-                                    controller.username.value,
-                                    style: TextStyle(
-                                      color: mutedColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-
-                            // "My Reports" Button
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF104A7F),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 28,
-                                  vertical: 10,
-                                ),
-                              ),
-                              child: const Text(
-                                "Laporan Saya",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Search Bar
-                            Container(
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? AppDarkColors.surfaceVariant
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isDark
-                                      ? AppDarkColors.accent
-                                      : const Color(0xFFE2EAF8),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: TextField(
-                                onChanged: (value) {
-                                  setState(() => _searchQuery = value);
-                                  controller.onSearchChanged(value);
-                                },
-                                style: TextStyle(
-                                  color:
-                                      isDark ? Colors.white : Colors.black87,
-                                  fontSize: 13,
-                                ),
-                                decoration: const InputDecoration(
-                                  hintText: "Search reports by ID or category...",
-                                  hintStyle: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 13,
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.search,
-                                    color: Colors.grey,
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-
-                            // Filter Button
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: OutlinedButton.icon(
-                                onPressed: _showFilterSheet,
-                                icon: Icon(
-                                  Icons.tune,
-                                  size: 16,
-                                  color:
-                                      isDark ? Colors.white70 : Colors.black87,
-                                ),
-                                label: Text(
-                                    _selectedStatus ?? "Filter",
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black87,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  side: BorderSide(
-                                    color: isDark
-                                        ? AppDarkColors.border
-                                        : const Color(0xFFE2EAF8),
-                                    width: 1.5,
-                                  ),
-                                  backgroundColor: isDark
-                                      ? AppDarkColors.surfaceVariant
-                                      : Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-
-                            // List of Reports
-                            Obx(() {
-                              if (controller.isLoading.value) {
-                                return const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 30),
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
-
-                              final filteredReports =
-                                  controller.filteredReports;
-                              if (filteredReports.isEmpty) {
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 30),
-                                  child: Text(
-                                    "Tidak ada laporan yang cocok",
-                                    style: TextStyle(
-                                      color: mutedColor,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              return Column(
-                                children: filteredReports
-                                    .map((report) => _buildReportCard(report))
-                                    .toList(),
-                              );
-                            }),
-
-                            const Spacer(),
-                            const SizedBox(height: 12),
-
-                            _LogoutButton(
-                              onPressed: () => LogoutConfirmationDialog.show(
-                                context,
-                                onConfirm: controller.logout,
-                              ),
-                            ),
-
-                            const SizedBox(height: 120),
-                            ],
-                          ),
-                        ),
-                      ),
-                        ],
-                      ),
-
-                  // Positioned Avatar drawn ON TOP of the white container
-                  Positioned(
-                    top: 126, // 180 (header height) - 54 (radius + border)
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          )
-                        ],
-                      ),
-                      child: Hero(
-                        tag: 'profile-avatar',
-                        child: ClipOval(
-                          child: Obx(() {
-                            final avatarUrl = controller.avatarUrl.value;
-                            if (avatarUrl.startsWith('http')) {
-                              return Image.network(
-                                avatarUrl,
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              );
-                            }
-                            return Image.file(
-                              File(avatarUrl),
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            );
-                          }),
-                        ),
-                      ),
-                    ),
-                  ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // --- FLOATING NAVIGATION BAR ---
-          Positioned(
-            bottom: 25,
-            left: 20,
-            right: 20,
-            child: Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: isDark ? AppDarkColors.surface : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4FA0FF).withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: BottomNavItem(
-                      icon: Icons.home_outlined,
-                      label: "Home",
-                      isActive: false,
-                      onTap: () => Get.offAllNamed(Routes.HOME),
-                      navyColor: navyTextColor,
-                    ),
-                  ),
-                  Expanded(
-                    child: BottomNavItem(
-                      icon: Icons.add_circle_outline,
-                      label: "Report",
-                      isActive: false,
-                      onTap: () => Get.toNamed(Routes.REPORT),
-                      navyColor: navyTextColor,
-                    ),
-                  ),
-                  Expanded(
-                    child: BottomNavItem(
-                      icon: Icons.person,
-                      label: "Profile",
-                      isActive: true,
-                      onTap: () {},
-                      navyColor: navyTextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
-  Widget _buildReportCard(Map<String, dynamic> report) {
-    final String priority = report["priority"] as String;
-    final String status = report["status"] as String;
-    final String title = report["title"] as String;
-    final String location = report["location"] as String;
-    final String description = report["description"] as String;
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
-    final titleColor = isDark ? Colors.white : const Color(0xFF1E2A3A);
-    final bodyColor = isDark ? Colors.white70 : const Color(0xFF3F4653);
-    final borderColor = isDark ? AppDarkColors.accent : const Color(0xFFD6DCE8);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => controller.openReport(report),
-        borderRadius: BorderRadius.circular(7),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: borderColor, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.035),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+    return PopScope(
+      canPop: !_showAllHistory,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _showAllHistory) {
+          _closeHistory();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppDarkColors.background : ProfilePage._pageBg,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: _showAllHistory
+                    ? _AllHistoryView(
+                        key: const ValueKey('history'),
+                        controller: controller,
+                        searchController: _searchController,
+                        onBack: _closeHistory,
+                      )
+                    : _ProfileDashboard(
+                        key: const ValueKey('profile'),
+                        controller: controller,
+                        onEditProfile: _showEditProfileDialog,
+                        onOpenHistory: _openHistory,
+                      ),
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(7),
-            child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                width: 4,
-                color: const Color(0xFF00518E),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 14, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          _buildPriorityBadge(priority),
-                          const Spacer(),
-                          _buildStatusBadge(status),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: titleColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          height: 1.05,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 1),
-                            child: Icon(
-                              Icons.location_on_outlined,
-                              size: 16,
-                              color: Color(0xFF0057D9),
-                            ),
-                          ),
-                          const SizedBox(width: 3),
-                          Expanded(
-                            child: Text(
-                              location,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Color(0xFF0057D9),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                height: 1.15,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: bodyColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          height: 1.25,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
             ),
-          ),
+            if (!widget.isNested)
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _ProfileBottomNav(),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  void _showFilterSheet() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sheetColor = isDark ? AppDarkColors.surface : Colors.white;
-    final titleColor = isDark ? Colors.white : navyTextColor;
-    final itemColor = isDark ? Colors.white70 : const Color(0xFF1E2A3A);
-    const statuses = ['Selesai', 'Pending', 'Ditolak'];
+  void _openHistory() {
+    _searchController.clear();
+    controller.onSearchChanged('');
+    controller.setFilter('Semua');
+    setState(() => _showAllHistory = true);
+  }
 
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return SafeArea(
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(0, 0, 0, 120),
-            padding: const EdgeInsets.fromLTRB(8, 12, 8, 16),
-            decoration: BoxDecoration(
-              color: sheetColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
+  void _closeHistory() {
+    _searchController.clear();
+    controller.onSearchChanged('');
+    controller.setFilter('Semua');
+    setState(() => _showAllHistory = false);
+  }
+
+  void _showEditProfileDialog() {
+    EditProfileDialog.show(
+      context,
+      avatarUrl: controller.avatarUrl.value,
+      firstName: controller.firstName,
+      lastName: controller.lastName,
+      onSave: controller.updateProfile,
+    );
+  }
+}
+
+class _ProfileDashboard extends StatelessWidget {
+  const _ProfileDashboard({
+    super.key,
+    required this.controller,
+    required this.onEditProfile,
+    required this.onOpenHistory,
+  });
+
+  final ProfileController controller;
+  final VoidCallback onEditProfile;
+  final VoidCallback onOpenHistory;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minPanelHeight =
+            constraints.maxHeight - ProfilePage._panelTop - ProfilePage._bottomSpace;
+
+        return RefreshIndicator(
+          onRefresh: controller.loadProfile,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            padding: const EdgeInsets.only(bottom: ProfilePage._bottomSpace),
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  'Filter berdasarkan status',
-                  style: TextStyle(
-                    color: titleColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                const _ProfileHeader(),
+                Padding(
+                  padding: const EdgeInsets.only(top: ProfilePage._panelTop),
+                  child: _ProfilePanel(
+                    controller: controller,
+                    minHeight: minPanelHeight > 0 ? minPanelHeight : 0,
+                    onEditProfile: onEditProfile,
+                    onOpenHistory: onOpenHistory,
                   ),
                 ),
-                const SizedBox(height: 8),
-                ListTile(
-                  tileColor: sheetColor,
-                  leading: Icon(
-                    _selectedStatus == null
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_unchecked,
-                    color: isDark ? AppDarkColors.accent : navyTextColor,
-                  ),
-                  title: Text('Semua', style: TextStyle(color: itemColor)),
-                  onTap: () {
-                    setState(() => _selectedStatus = null);
-                    controller.setStatusFilter(null);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                for (final status in statuses)
-                  ListTile(
-                    tileColor: sheetColor,
-                    leading: Icon(
-                      _selectedStatus == status
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_unchecked,
-                      color: isDark ? AppDarkColors.accent : navyTextColor,
-                    ),
-                    title: Text(status, style: TextStyle(color: itemColor)),
-                    onTap: () {
-                      setState(() => _selectedStatus = status);
-                      controller.setStatusFilter(status);
-                      Navigator.of(context).pop();
-                    },
-                  ),
               ],
             ),
           ),
@@ -625,92 +160,226 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-
-  Widget _buildPriorityBadge(String priority) {
-    final isUrgent = priority == "URGENT";
-    final color = isUrgent ? const Color(0xFFD11C25) : const Color(0xFFFFB020);
-    final bgColor = isUrgent ? const Color(0xFFFFE4E7) : const Color(0xFFFFF2C8);
-
-    return _ReportBadge(
-      text: priority,
-      icon: Icons.error_outline,
-      color: color,
-      bgColor: bgColor,
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color bgColor;
-    Color textColor;
-    IconData icon;
-
-    switch (status) {
-      case "Selesai":
-        bgColor = const Color(0xFFDDF8E9);
-        textColor = const Color(0xFF2B9A57);
-        icon = Icons.check_circle_outline;
-        break;
-      case "Pending":
-        bgColor = const Color(0xFFFFF2C8);
-        textColor = const Color(0xFFFFA000);
-        icon = Icons.schedule_outlined;
-        break;
-      case "Ditolak":
-        bgColor = const Color(0xFFFFE4E7);
-        textColor = const Color(0xFFD11C25);
-        icon = Icons.cancel_outlined;
-        break;
-      default:
-        bgColor = const Color(0xFFE8ECF3);
-        textColor = const Color(0xFF596273);
-        icon = Icons.info_outline;
-    }
-
-    return _ReportBadge(
-      text: status,
-      icon: icon,
-      color: textColor,
-      bgColor: bgColor,
-    );
-  }
-
-  // Helper untuk Item Navigation Bar (sama seperti ReportPage)
 }
 
-class _ReportBadge extends StatelessWidget {
-  const _ReportBadge({
-    required this.text,
-    required this.icon,
-    required this.color,
-    required this.bgColor,
-  });
-
-  final String text;
-  final IconData icon;
-  final Color color;
-  final Color bgColor;
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader();
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            text,
+      width: double.infinity,
+      height: 238,
+      color: isDark ? AppDarkColors.header : ProfilePage._blue,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 34),
+          child: Text(
+            'Profil Saya'.tr,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: color,
+              color: Colors.white,
+              fontSize: 25,
+              fontWeight: FontWeight.w900,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 3,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfilePanel extends StatelessWidget {
+  const _ProfilePanel({
+    required this.controller,
+    required this.minHeight,
+    required this.onEditProfile,
+    required this.onOpenHistory,
+  });
+
+  final ProfileController controller;
+  final double minHeight;
+  final VoidCallback onEditProfile;
+  final VoidCallback onOpenHistory;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(minHeight: minHeight),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.background : Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(19, 58, 19, 26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ProfileSummary(
+                  controller: controller,
+                  onEditProfile: onEditProfile,
+                ),
+                const SizedBox(height: 14),
+                _TotalReportCard(controller: controller),
+                const SizedBox(height: 17),
+                _HistoryPreviewSection(
+                  controller: controller,
+                  onOpenHistory: onOpenHistory,
+                ),
+                const SizedBox(height: 18),
+                _SettingsSection(controller: controller),
+              ],
+            ),
+          ),
+          Positioned(
+            top: -39,
+            child: _Avatar(controller: controller, onTap: onEditProfile),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileSummary extends StatelessWidget {
+  const _ProfileSummary({
+    required this.controller,
+    required this.onEditProfile,
+  });
+
+  final ProfileController controller;
+  final VoidCallback onEditProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : ProfilePage._text;
+    final mutedColor = isDark ? Colors.white60 : const Color(0xFF7C8694);
+
+    return Column(
+      children: [
+        Obx(
+          () => Text(
+            controller.name.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 17,
+              height: 1.1,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Obx(
+          () => Text(
+            '${'Karyawan'.tr} | ${controller.username.value}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: mutedColor,
               fontSize: 11,
-              fontWeight: FontWeight.w800,
-              height: 1,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(height: 15),
+        SizedBox(
+          width: double.infinity,
+          height: 41,
+          child: ElevatedButton.icon(
+            onPressed: onEditProfile,
+            icon: const Icon(Icons.edit_rounded, size: 16),
+            label: Text('Edit Profil'.tr),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ProfilePage._blue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.controller, required this.onTap});
+
+  final ProfileController controller;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 78,
+            height: 78,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: Colors.white, width: 3.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Obx(() => _AvatarImage(url: controller.avatarUrl.value)),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 5,
+            child: Container(
+              width: 25,
+              height: 25,
+              decoration: BoxDecoration(
+                color: ProfilePage._blue,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2.5),
+              ),
+              child: const Icon(
+                Icons.camera_alt_rounded,
+                color: Colors.white,
+                size: 12,
+              ),
             ),
           ),
         ],
@@ -719,33 +388,1100 @@ class _ReportBadge extends StatelessWidget {
   }
 }
 
-class _LogoutButton extends StatelessWidget {
-  const _LogoutButton({required this.onPressed});
-  final VoidCallback onPressed;
+class _AvatarImage extends StatelessWidget {
+  const _AvatarImage({required this.url});
+
+  final String url;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final value = url.trim();
+    if (value.isEmpty) return const _AvatarFallback();
+
+    if (value.startsWith('http')) {
+      return Image.network(
+        value,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const _AvatarFallback(),
+      );
+    }
+
+    return Image.file(
+      File(value),
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => const _AvatarFallback(),
+    );
+  }
+}
+
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFE5EAF1),
+      child: const Icon(
+        Icons.person_rounded,
+        size: 38,
+        color: Color(0xFF8A94A4),
+      ),
+    );
+  }
+}
+
+class _TotalReportCard extends StatelessWidget {
+  const _TotalReportCard({required this.controller});
+
+  final ProfileController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : const Color(0xFFFBFCFE);
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFE0E7F0);
+
+    return Container(
       width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: const Icon(Icons.logout_rounded, size: 28),
-        label: const Text(
-          "Log Out",
+      padding: const EdgeInsets.fromLTRB(13, 10, 13, 9),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Total Laporan'.tr,
+            style: TextStyle(
+              color: isDark ? Colors.white60 : const Color(0xFF7A8492),
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Obx(
+            () => Row(
+              children: [
+                Text(
+                  controller.totalReports.toString(),
+                  style: const TextStyle(
+                    color: Color(0xFF0071B9),
+                    fontSize: 22,
+                    height: 1,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                const Icon(
+                  Icons.trending_up_rounded,
+                  color: Color(0xFF21B36A),
+                  size: 14,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HistoryPreviewSection extends StatelessWidget {
+  const _HistoryPreviewSection({
+    required this.controller,
+    required this.onOpenHistory,
+  });
+
+  final ProfileController controller;
+  final VoidCallback onOpenHistory;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Riwayat Laporan Saya'.tr,
+                style: TextStyle(
+                  color: isDark ? Colors.white : ProfilePage._text,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: onOpenHistory,
+              style: TextButton.styleFrom(
+                minimumSize: const Size(0, 28),
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Lihat Semua'.tr,
+                style: const TextStyle(
+                  color: ProfilePage._blue,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 9),
+        Obx(() {
+          if (controller.isLoading.value) {
+            return const _StateBox(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.4),
+              ),
+            );
+          }
+
+          final reports = controller.recentReports;
+          if (reports.isEmpty) {
+            return _StateBox(
+              child: Text(
+                'Belum ada riwayat laporan'.tr,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+              ),
+            );
+          }
+
+          return Column(
+            children: [
+              for (var i = 0; i < reports.length; i++) ...[
+                _ReportCard(
+                  report: reports[i],
+                  onTap: onOpenHistory,
+                ),
+                if (i != reports.length - 1) const SizedBox(height: 9),
+              ],
+            ],
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({required this.controller});
+
+  final ProfileController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pengaturan & Akun'.tr,
           style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : ProfilePage._text,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
           ),
         ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFA11E1E),
-          side: const BorderSide(color: Color(0xFFA11E1E), width: 1.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+        const SizedBox(height: 12),
+        _SettingsCard(
+          children: [
+            _SettingsTile(
+              icon: Icons.description_outlined,
+              label: 'Syarat & Ketentuan'.tr,
+              onTap: () => Get.toNamed(Routes.TERMS),
+            ),
+            const Divider(height: 1),
+            _SettingsTile(
+              icon: Icons.privacy_tip_outlined,
+              label: 'Kebijakan Privasi'.tr,
+              onTap: () => Get.toNamed(Routes.PRIVACY),
+            ),
+            const Divider(height: 1),
+            Obx(() => _SettingsTile(
+                  icon: Icons.translate_rounded,
+                  label: 'Bahasa'.tr,
+                  trailingText: controller.selectedLanguage.value,
+                  onTap: () => _showLanguageBottomSheet(context, controller.selectedLanguage),
+                )),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          height: 46,
+          child: OutlinedButton.icon(
+            onPressed: () => LogoutConfirmationDialog.show(
+              context,
+              onConfirm: controller.logout,
+            ),
+            icon: const Icon(Icons.logout_rounded, size: 16),
+            label: Text('Keluar Sesi'.tr),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFE53935),
+              side: BorderSide(
+                color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
+              ),
+              backgroundColor: isDark ? AppDarkColors.surface : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+      ],
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.035),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.trailingText,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final String? trailingText;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: 44,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 13),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isDark ? Colors.white70 : const Color(0xFF4A5568),
+                  size: 18,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF4A5568),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (trailingText != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Text(
+                      trailingText!,
+                      style: TextStyle(
+                        color: isDark ? Colors.white60 : const Color(0xFF718096),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
+}
+
+class _AllHistoryView extends StatelessWidget {
+  const _AllHistoryView({
+    super.key,
+    required this.controller,
+    required this.searchController,
+    required this.onBack,
+  });
+
+  final ProfileController controller;
+  final TextEditingController searchController;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return SafeArea(
+      bottom: false,
+      child: RefreshIndicator(
+        onRefresh: controller.loadProfile,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            SliverToBoxAdapter(
+              child: _HistoryHeader(onBack: onBack),
+            ),
+            SliverToBoxAdapter(
+              child: _SearchAndFilters(
+                controller: controller,
+                searchController: searchController,
+              ),
+            ),
+            Obx(() {
+              if (controller.isLoading.value) {
+                return const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final reports = controller.filteredReports;
+              if (reports.isEmpty) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 16, 118),
+                    child: Center(
+                      child: Text(
+                        'Tidak ada laporan yang cocok',
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white70
+                              : const Color(0xFF718096),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 16, 118),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final report = reports[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _ReportCard(
+                          report: report,
+                          onTap: () => controller.openReport(report),
+                        ),
+                      );
+                    },
+                    childCount: reports.length,
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HistoryHeader extends StatelessWidget {
+  const _HistoryHeader({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 4, 18, 11),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onBack,
+            icon: Icon(
+              Icons.arrow_back_rounded,
+              color: isDark ? Colors.white : ProfilePage._blue,
+              size: 22,
+            ),
+            tooltip: 'Kembali'.tr,
+          ),
+          Expanded(
+            child: Text(
+              'Semua Riwayat Laporan'.tr,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isDark ? Colors.white : ProfilePage._blue,
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchAndFilters extends StatelessWidget {
+  const _SearchAndFilters({
+    required this.controller,
+    required this.searchController,
+  });
+
+  final ProfileController controller;
+  final TextEditingController searchController;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fieldColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFDDE5EF);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 16, 8),
+      child: Column(
+        children: [
+          Container(
+            height: 43,
+            decoration: BoxDecoration(
+              color: fieldColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: borderColor),
+            ),
+            child: TextField(
+              controller: searchController,
+              onChanged: controller.onSearchChanged,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 13,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Cari laporan atau lokasi...'.tr,
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white54 : const Color(0xFF9AA4B2),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF718096),
+                  size: 20,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 36,
+            child: Obx(
+              () => ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  const filters = [
+                    'Semua',
+                    'Proses',
+                    'Selesai',
+                    'Tertolak',
+                    'Pending',
+                  ];
+                  final filter = filters[index];
+                  return _FilterChip(
+                    label: filter,
+                    active: controller.selectedFilter.value == filter,
+                    onTap: () => controller.setFilter(filter),
+                  );
+                },
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemCount: 5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = active
+        ? ProfilePage._blue
+        : isDark
+            ? AppDarkColors.surfaceVariant
+            : Colors.white;
+    final fg = active
+        ? Colors.white
+        : isDark
+            ? Colors.white70
+            : const Color(0xFF5C6675);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 17),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: active ? ProfilePage._blue : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Text(
+          label.tr,
+          style: TextStyle(
+            color: fg,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReportCard extends StatelessWidget {
+  const _ReportCard({
+    required this.report,
+    required this.onTap,
+  });
+
+  final Map<String, dynamic> report;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppDarkColors.surface : Colors.white;
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFD1D9E5);
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final bodyColor = isDark ? Colors.white70 : const Color(0xFF465160);
+    final priority = report['priority']?.toString() ?? 'STANDARD';
+    final status = report['status']?.toString() ?? 'Pending';
+    final title = report['title']?.toString() ?? 'Laporan';
+    final location = report['location']?.toString() ?? '-';
+    final description = report['description']?.toString() ?? '-';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 101),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderColor),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  width: 4,
+                  decoration: const BoxDecoration(
+                    color: ProfilePage._blue,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 11, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _ReportPill(style: _priorityStyle(priority)),
+                            const Spacer(),
+                            _ReportPill(style: _statusStyle(status)),
+                          ],
+                        ),
+                        const SizedBox(height: 9),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: titleColor,
+                            fontSize: 14,
+                            height: 1.04,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              color: Color(0xFF064BFF),
+                              size: 14,
+                            ),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF064BFF),
+                                  fontSize: 10,
+                                  height: 1.1,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: bodyColor,
+                            fontSize: 10,
+                            height: 1.24,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StateBox extends StatelessWidget {
+  const _StateBox({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      height: 104,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
+        ),
+      ),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(
+          color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _PillStyle {
+  const _PillStyle({
+    required this.label,
+    required this.icon,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color background;
+  final Color foreground;
+}
+
+class _ReportPill extends StatelessWidget {
+  const _ReportPill({required this.style});
+
+  final _PillStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: style.background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(style.icon, size: 10, color: style.foreground),
+          const SizedBox(width: 3),
+          Text(
+            style.label.tr,
+            style: TextStyle(
+              color: style.foreground,
+              fontSize: 9,
+              height: 1,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+_PillStyle _priorityStyle(String priority) {
+  final normalized = priority.trim().toUpperCase();
+  if (normalized.contains('URGENT') ||
+      normalized.contains('HIGH') ||
+      normalized.contains('TINGGI')) {
+    return const _PillStyle(
+      label: 'URGENT',
+      icon: Icons.error_outline,
+      background: Color(0xFFFFE2E5),
+      foreground: Color(0xFFC72535),
+    );
+  }
+
+  return const _PillStyle(
+    label: 'STANDARD',
+    icon: Icons.error_outline,
+    background: Color(0xFFFFF2C8),
+    foreground: Color(0xFFFFA000),
+  );
+}
+
+_PillStyle _statusStyle(String status) {
+  final normalized = status.trim().toLowerCase();
+  if (normalized.contains('selesai') ||
+      normalized.contains('resolved') ||
+      normalized.contains('done')) {
+    return const _PillStyle(
+      label: 'Selesai',
+      icon: Icons.check_circle_outline,
+      background: Color(0xFFDDF8E9),
+      foreground: Color(0xFF2BAE66),
+    );
+  }
+  if (normalized.contains('tolak') || normalized.contains('reject')) {
+    return const _PillStyle(
+      label: 'Ditolak',
+      icon: Icons.cancel_outlined,
+      background: Color(0xFFFFE2E5),
+      foreground: Color(0xFFC72535),
+    );
+  }
+  if (normalized.contains('proses') || normalized.contains('progress')) {
+    return const _PillStyle(
+      label: 'Proses',
+      icon: Icons.sync_rounded,
+      background: Color(0xFFE3F0FF),
+      foreground: Color(0xFF1976D2),
+    );
+  }
+
+  return const _PillStyle(
+    label: 'Pending',
+    icon: Icons.schedule_outlined,
+    background: Color(0xFFFFF2C8),
+    foreground: Color(0xFFFFA000),
+  );
+}
+
+class _ProfileBottomNav extends StatelessWidget {
+  const _ProfileBottomNav();
+
+  static const _navyTextColor = Color(0xFF003366);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 7),
+      child: Container(
+        height: 62,
+        decoration: BoxDecoration(
+          color: isDark ? AppDarkColors.surface : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isDark ? AppDarkColors.border : const Color(0xFFD9E7FF),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4FA0FF).withValues(alpha: 0.38),
+              blurRadius: 14,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: BottomNavItem(
+                icon: Icons.home_outlined,
+                label: 'Home',
+                isActive: false,
+                onTap: () => Get.offAllNamed(Routes.HOME),
+                navyColor: _navyTextColor,
+              ),
+            ),
+            Expanded(
+              child: BottomNavItem(
+                icon: Icons.add_circle,
+                label: 'Report',
+                isActive: false,
+                onTap: () => Get.toNamed(Routes.REPORT),
+                navyColor: _navyTextColor,
+              ),
+            ),
+            Expanded(
+              child: BottomNavItem(
+                icon: Icons.person_outline,
+                label: 'Profile',
+                isActive: true,
+                onTap: () {},
+                navyColor: _navyTextColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _showLanguageBottomSheet(BuildContext context, RxString selectedLanguage) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final titleColor = isDark ? Colors.white : const Color(0xFF172033);
+  final subtitleColor = isDark ? Colors.white70 : const Color(0xFF6F7785);
+  final sheetBg = isDark ? AppDarkColors.surface : Colors.white;
+
+  Get.bottomSheet(
+    Container(
+      decoration: BoxDecoration(
+        color: sheetBg,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'language_sheet_title'.tr,
+            style: TextStyle(
+              color: titleColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'language_sheet_subtitle'.tr,
+            style: TextStyle(
+              color: subtitleColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Obx(() {
+            return Column(
+              children: AppTranslations.languages.map((language) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildLanguageOption(
+                    context: context,
+                    label: language.nativeLabel,
+                    value: language.nativeLabel,
+                    isSelected: selectedLanguage.value == language.nativeLabel,
+                    onTap: () async {
+                      selectedLanguage.value = language.nativeLabel;
+                      await AppTranslations.updateLocale(language);
+                      Get.back();
+                      Get.snackbar(
+                        'language_changed_title'.tr,
+                        'language_changed_message'.trParams({
+                          'language': language.nativeLabel,
+                        }),
+                        snackPosition: SnackPosition.BOTTOM,
+                        duration: const Duration(seconds: 2),
+                      );
+                    },
+                  ),
+                );
+              }).toList(),
+            );
+          }),
+          const SizedBox(height: 2),
+        ],
+      ),
+    ),
+    isScrollControlled: true,
+  );
+}
+
+Widget _buildLanguageOption({
+  required BuildContext context,
+  required String label,
+  required String value,
+  required bool isSelected,
+  required VoidCallback onTap,
+}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final cardColor = isDark ? AppDarkColors.background : const Color(0xFFF7FAFC);
+  final activeColor = const Color(0xFF0F4C81);
+
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? activeColor.withValues(alpha: 0.08)
+              : cardColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? activeColor
+                : (isDark ? AppDarkColors.border : const Color(0xFFE2E8F0)),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? activeColor
+                      : (isDark ? Colors.white : const Color(0xFF2D3748)),
+                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                color: activeColor,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

@@ -183,14 +183,16 @@ class ObDetailView extends GetView<ObDetailController> {
               Icon(Icons.location_on_outlined, size: 16, color: navyColor),
               const SizedBox(width: 4),
               Expanded(
-                child: Text(
-                  'HQ Tower A, Lantai 4 (Toilet Pria)',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: navyColor,
+                child: Obx(
+                  () => Text(
+                    controller.location.value,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: navyColor,
+                    ),
                   ),
                 ),
               ),
@@ -203,15 +205,29 @@ class ObDetailView extends GetView<ObDetailController> {
           ),
 
           // Info List (Pelapor, Lokasi, Kategori)
-          _buildInfoRow(Icons.person_outline, 'Dilaporkan Oleh', 'Alex'),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            Icons.location_on_outlined,
-            'Lokasi',
-            'HQ Tower A, Lantai 3, Toilet Pria',
+          Obx(
+            () => _buildInfoRow(
+              Icons.person_outline,
+              'Dilaporkan Oleh',
+              controller.reporterName.value,
+            ),
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.edit_outlined, 'Kategori', 'Plumbing (Pipa)'),
+          Obx(
+            () => _buildInfoRow(
+              Icons.location_on_outlined,
+              'Lokasi',
+              controller.location.value,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Obx(
+            () => _buildInfoRow(
+              Icons.edit_outlined,
+              'Kategori',
+              controller.categoryName.value,
+            ),
+          ),
 
           // BAGIAN YANG BISA DI-EXPAND / COLLAPSE
           Obx(() {
@@ -517,8 +533,7 @@ class ObDetailView extends GetView<ObDetailController> {
         ],
       ),
       child: Obx(() {
-        if (controller.pageState.value == 'initial' ||
-            controller.pageState.value == 'resolved') {
+        if (controller.pageState.value == 'initial') {
           return Column(
             children: [
               _buildSolidButton(
@@ -537,7 +552,9 @@ class ObDetailView extends GetView<ObDetailController> {
               ),
             ],
           );
-        } else if (controller.pageState.value == 'working') {
+        }
+
+        if (controller.pageState.value == 'working') {
           return Column(
             children: [
               _buildSolidButton(
@@ -562,7 +579,9 @@ class ObDetailView extends GetView<ObDetailController> {
               ),
             ],
           );
-        } else if (controller.pageState.value == 'rejecting') {
+        }
+
+        if (controller.pageState.value == 'rejecting') {
           return Column(
             children: [
               _buildSolidButton(
@@ -574,6 +593,26 @@ class ObDetailView extends GetView<ObDetailController> {
             ],
           );
         }
+
+        if (controller.pageState.value == 'taken') {
+          final name = controller.takenByName.value?.trim();
+          return _buildLockedNotice(
+            icon: Icons.lock_clock_rounded,
+            title: 'Laporan sudah diambil',
+            message:
+                'Laporan ini sudah diambil oleh ${name == null || name.isEmpty ? 'OB lain' : name}.',
+          );
+        }
+
+        if (controller.pageState.value == 'resolved') {
+          final status = controller.activeReport?.status.value ?? 'selesai';
+          return _buildLockedNotice(
+            icon: Icons.verified_outlined,
+            title: 'Laporan sudah ${status.toLowerCase()}',
+            message: 'Laporan ini sudah tidak dapat diambil lagi.',
+          );
+        }
+
         return const SizedBox.shrink();
       }),
     );
@@ -703,10 +742,11 @@ class ObDetailView extends GetView<ObDetailController> {
   Widget _buildSolidButton(
     String text,
     Color color,
-    VoidCallback onTap, {
+    VoidCallback? onTap, {
     IconData? icon,
   }) {
     final isDark = Get.isDarkMode;
+    final isBusy = controller.isSubmitting.value;
     final buttonColor = isDark && color == navyColor
         ? const Color(0xFF052C58)
         : color;
@@ -729,25 +769,72 @@ class ObDetailView extends GetView<ObDetailController> {
               ? Colors.transparent
               : navyColor.withValues(alpha: 0.28),
         ),
-        onPressed: onTap,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 18, color: foregroundColor),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              text,
-              style: TextStyle(
-                color: foregroundColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
+        onPressed: isBusy ? null : onTap,
+        child: isBusy
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: foregroundColor,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 18, color: foregroundColor),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    text,
+                    style: TextStyle(
+                      color: foregroundColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
+    );
+  }
+
+  Widget _buildLockedNotice({
+    required IconData icon,
+    required String title,
+    required String message,
+  }) {
+    final isDark = Get.isDarkMode;
+    final iconColor = isDark ? AppDarkColors.accent : navyColor;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final bodyColor = isDark ? Colors.white70 : const Color(0xFF6B7280);
+
+    return Column(
+      children: [
+        Icon(icon, color: iconColor, size: 34),
+        const SizedBox(height: 10),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: titleColor,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: bodyColor,
+            fontSize: 13,
+            height: 1.35,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 

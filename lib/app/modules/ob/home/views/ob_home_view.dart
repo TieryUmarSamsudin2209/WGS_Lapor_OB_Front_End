@@ -7,7 +7,9 @@ import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_home_controller.dart';
 
 class OBHomeView extends GetView<ObHomeController> {
-  const OBHomeView({super.key});
+  const OBHomeView({super.key, this.isNested = false});
+
+  final bool isNested;
 
   static const _blue = Color(0xFF14558B);
   static const _pageBg = Color(0xFFF4F4F8);
@@ -31,11 +33,20 @@ class OBHomeView extends GetView<ObHomeController> {
                 ),
                 padding: const EdgeInsets.fromLTRB(22, 16, 22, 116),
                 children: [
-                  _ProgressCard(controller: controller),
+                  _FadeInSlideUp(
+                    delay: Duration.zero,
+                    child: _ProgressCard(controller: controller),
+                  ),
                   const SizedBox(height: 24),
-                  _TaskPreview(controller: controller),
+                  _FadeInSlideUp(
+                    delay: const Duration(milliseconds: 25),
+                    child: _TaskPreview(controller: controller),
+                  ),
                   const SizedBox(height: 20),
-                  _LatestReports(controller: controller),
+                  _FadeInSlideUp(
+                    delay: const Duration(milliseconds: 50),
+                    child: _LatestReports(controller: controller),
+                  ),
                 ],
               ),
             ),
@@ -46,12 +57,13 @@ class OBHomeView extends GetView<ObHomeController> {
             top: 0,
             child: _HomeHeader(controller: controller),
           ),
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: ObBottomNav(activeItem: ObBottomNavItem.home),
-          ),
+          if (!isNested)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: ObBottomNav(activeItem: ObBottomNavItem.home),
+            ),
         ],
       ),
     );
@@ -193,127 +205,134 @@ class _ProgressCard extends StatelessWidget {
     return Obx(() {
       final total = controller.totalTaskCount;
       final done = controller.completedTaskCount;
-      final percent = controller.taskProgressPercent;
       final progress = total == 0 ? 0.0 : done / total;
 
-      return Container(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: borderColor),
-          boxShadow: [
-            if (!isDark)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.09),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Progress Kerja Hari Ini',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF1D2A3A),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
+      return TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0.0, end: progress),
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+        builder: (context, animValue, _) {
+          final percent = (animValue * 100).round();
+          return Container(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: borderColor),
+              boxShadow: [
+                if (!isDark)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.09),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  const SizedBox(height: 6),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '$done/$total',
-                          style: const TextStyle(
-                            color: Color(0xFF0071B9),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        TextSpan(
-                          text: ' Tugas Selesai',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF0071B9),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 6,
-                            backgroundColor: isDark
-                                ? AppDarkColors.surfaceVariant
-                                : const Color(0xFFE8E6FA),
-                            valueColor: const AlwaysStoppedAnimation(
-                              Color(0xFF0071B9),
-                            ),
-                          ),
+                      Text(
+                        'Progress Kerja Hari Ini',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : const Color(0xFF1D2A3A),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        '$percent%',
-                        style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black87,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                      const SizedBox(height: 6),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '$done/$total',
+                              style: const TextStyle(
+                                color: Color(0xFF0071B9),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' Tugas Selesai',
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0071B9),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: LinearProgressIndicator(
+                                value: animValue,
+                                minHeight: 6,
+                                backgroundColor: isDark
+                                    ? AppDarkColors.surfaceVariant
+                                    : const Color(0xFFE8E6FA),
+                                valueColor: const AlwaysStoppedAnimation(
+                                  Color(0xFF0071B9),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            '$percent%',
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 18),
+                SizedBox(
+                  width: 58,
+                  height: 58,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: animValue,
+                        strokeWidth: 6,
+                        backgroundColor: isDark
+                            ? AppDarkColors.surfaceVariant
+                            : const Color(0xFFE6ECF5),
+                        valueColor: const AlwaysStoppedAnimation(
+                          Color(0xFF0071B9),
+                        ),
+                      ),
+                      Center(
+                        child: Text(
+                          '$percent%',
+                          style: const TextStyle(
+                            color: Color(0xFF0071B9),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: 18),
-            SizedBox(
-              width: 58,
-              height: 58,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CircularProgressIndicator(
-                    value: progress,
-                    strokeWidth: 6,
-                    backgroundColor: isDark
-                        ? AppDarkColors.surfaceVariant
-                        : const Color(0xFFE6ECF5),
-                    valueColor: const AlwaysStoppedAnimation(
-                      Color(0xFF0071B9),
-                    ),
-                  ),
-                  Center(
-                    child: Text(
-                      '$percent%',
-                      style: const TextStyle(
-                        color: Color(0xFF0071B9),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       );
     });
   }
@@ -368,7 +387,7 @@ class _LatestReports extends StatelessWidget {
     return Column(
       children: [
         _SectionHeader(
-          title: 'Laporan Terbaru',
+          title: 'Laporan Masuk',
           onTap: () => Get.toNamed(Routes.OB_REPORTS),
         ),
         const SizedBox(height: 12),
@@ -385,7 +404,10 @@ class _LatestReports extends StatelessWidget {
                 .map(
                   (report) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _HomeReportCard(report: report),
+                    child: _HomeReportCard(
+                      controller: controller,
+                      report: report,
+                    ),
                   ),
                 )
                 .toList(),
@@ -452,7 +474,9 @@ class _TaskCard extends StatelessWidget {
       final done = task.status.value == 'resolved';
       final status = done ? _donePill : _pendingPill;
 
-      return Container(
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
         padding: const EdgeInsets.fromLTRB(16, 16, 14, 12),
         decoration: BoxDecoration(
           color: cardColor,
@@ -462,7 +486,7 @@ class _TaskCard extends StatelessWidget {
             if (!isDark)
               BoxShadow(
                 color: const Color(0xFF8FC5FF).withValues(alpha: 0.48),
-                blurRadius: 4,
+                blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
           ],
@@ -470,22 +494,23 @@ class _TaskCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SmallStatusIcon(style: status),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : OBHomeView._blue,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
+              _SmallStatusIcon(style: status),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : OBHomeView._blue,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        decoration: null,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 4),
                   Text(
                     task.location,
@@ -514,8 +539,12 @@ class _TaskCard extends StatelessWidget {
 }
 
 class _HomeReportCard extends StatelessWidget {
-  const _HomeReportCard({required this.report});
+  const _HomeReportCard({
+    required this.controller,
+    required this.report,
+  });
 
+  final ObHomeController controller;
   final HomeReport report;
 
   @override
@@ -625,21 +654,23 @@ class _HomeReportCard extends StatelessWidget {
                             children: [
                               if (report.hasCollaboration.value)
                                 const _TinyLabel(text: 'Kolaborasi'),
-                              const Spacer(),
-                              Text(
-                                'Lihat Detail',
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.white70
-                                      : const Color(0xFF1F2937),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
+                              if (report.assignedObName != null &&
+                                  report.assignedObName!.trim().isNotEmpty)
+                                _TinyLabel(text: report.assignedObName!.trim()),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: report.status.value ==
+                                          'Belum Diproses'
+                                      ? _TakeReportButton(
+                                          isLoading:
+                                              controller.isTakingReport(report),
+                                          onPressed: () =>
+                                              controller.takeReport(report),
+                                        )
+                                      : _DetailLink(isDark: isDark),
                                 ),
-                              ),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: isDark ? Colors.white60 : Colors.grey,
-                                size: 16,
                               ),
                             ],
                           ),
@@ -654,6 +685,79 @@ class _HomeReportCard extends StatelessWidget {
         ),
       );
     });
+  }
+}
+
+class _TakeReportButton extends StatelessWidget {
+  const _TakeReportButton({
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 30,
+      child: ElevatedButton.icon(
+        onPressed: isLoading ? null : onPressed,
+        icon: isLoading
+            ? const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.assignment_turned_in_outlined, size: 14),
+        label: Text(isLoading ? 'Mengambil' : 'Ambil'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: OBHomeView._blue,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFF7AA7CE),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          textStyle: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailLink extends StatelessWidget {
+  const _DetailLink({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Lihat Detail',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : const Color(0xFF1F2937),
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        Icon(
+          Icons.chevron_right_rounded,
+          color: isDark ? Colors.white60 : Colors.grey,
+          size: 16,
+        ),
+      ],
+    );
   }
 }
 
@@ -719,19 +823,24 @@ class _TinyLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFA000),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 9,
-          height: 1,
-          fontWeight: FontWeight.w900,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 120),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFA000),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 9,
+            height: 1,
+            fontWeight: FontWeight.w900,
+          ),
         ),
       ),
     );
@@ -745,14 +854,28 @@ class _SmallStatusIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      width: 22,
-      height: 22,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
-        color: style.background,
+        color: isDark ? AppDarkColors.surface : Colors.white,
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFE6EDF5),
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: const Color(0xFF8FC5FF).withValues(alpha: 0.3),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+        ],
       ),
-      child: Icon(style.icon, color: style.foreground, size: 13),
+      child: Center(
+        child: Icon(style.icon, color: style.foreground, size: 15),
+      ),
     );
   }
 }
@@ -865,4 +988,69 @@ String _firstName(String value) {
   final text = value.trim();
   if (text.isEmpty) return 'OB';
   return text.split(RegExp(r'\s+')).first;
+}
+
+class _FadeInSlideUp extends StatefulWidget {
+  const _FadeInSlideUp({
+    required this.child,
+    this.delay = Duration.zero,
+  }) : duration = const Duration(milliseconds: 180);
+
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+
+  @override
+  State<_FadeInSlideUp> createState() => _FadeInSlideUpState();
+}
+
+class _FadeInSlideUpState extends State<_FadeInSlideUp> with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _opacityAnim;
+  late Animation<Offset> _offsetAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(vsync: this, duration: widget.duration);
+    _opacityAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+    );
+    _offsetAnim = Tween<Offset>(begin: const Offset(0.0, 0.08), end: Offset.zero).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+    );
+
+    if (widget.delay == Duration.zero) {
+      _animController.forward();
+    } else {
+      Future.delayed(widget.delay, () {
+        if (mounted) {
+          _animController.forward();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _opacityAnim.value,
+          child: FractionalTranslation(
+            translation: _offsetAnim.value,
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
 }

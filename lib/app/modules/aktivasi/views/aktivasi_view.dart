@@ -69,104 +69,156 @@ class AktivasiView extends GetView<AktivasiController> {
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Center(
-                          child: Text(
-                            "Halo,Usn!",
-                            style: TextStyle(
-                              fontSize: 42,
-                              fontWeight: FontWeight.w900,
-                              color: navyTextColor,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Center(
-                          child: Text(
-                            "Selamat datang di Lapor OB!",
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: navyTextColor,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        _buildLabel("Password"),
-                        _buildInputField(
-                          hint: "Masukan Password",
-                          isPassword: true,
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        _buildLabel("Password Confirmation"),
-                        _buildInputField(
-                          hint: "Konfirmasi Password",
-                          isPassword: true,
-                        ),
-
-                        const SizedBox(height: 30),
-
-                        Center(
-                          child: SizedBox(
-                            width: 130,
-                            height: 38,
-                            child: ElevatedButton(
-                              onPressed: () => Get.offAllNamed(Routes.LOGIN),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4FA0FF),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shadowColor: const Color(
-                                  0xFF4FA0FF,
-                                ).withValues(alpha: 0.5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                padding: EdgeInsets.zero,
-                              ),
-                              child: const Text(
-                                "Aktivasi",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                ),
+                    child: Form(
+                      key: controller.formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Center(
+                            child: Text(
+                              "Aktivasi Akun",
+                              style: TextStyle(
+                                fontSize: 34,
+                                fontWeight: FontWeight.w900,
+                                color: navyTextColor,
                               ),
                             ),
                           ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        Center(
-                          child: RichText(
-                            text: TextSpan(
-                              text: "Belum punya akun? ",
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey,
+                          const SizedBox(height: 8),
+                          Center(
+                            child: Text(
+                              "Buat password pertama untuk masuk ke Lapor OB.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: navyTextColor,
                               ),
-                              children: [
-                                TextSpan(
-                                  text: "Hubungi admin",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: navyTextColor,
+                            ),
+                          ),
+
+                          const SizedBox(height: 40),
+
+                          _buildLabel("Password"),
+                          Obx(
+                            () => _buildInputField(
+                              controller: controller.passwordController,
+                              hint: "Masukan Password",
+                              obscureText: controller.obscurePassword.value,
+                              onToggleVisibility:
+                                  controller.togglePasswordVisibility,
+                              validator: (value) {
+                                final text = value?.trim() ?? '';
+                                if (text.isEmpty) {
+                                  return 'Password wajib diisi';
+                                }
+                                if (text.length < 6) {
+                                  return 'Password minimal 6 karakter';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          _buildLabel("Password Confirmation"),
+                          Obx(
+                            () => _buildInputField(
+                              controller:
+                                  controller.confirmPasswordController,
+                              hint: "Konfirmasi Password",
+                              obscureText:
+                                  controller.obscureConfirmPassword.value,
+                              onToggleVisibility:
+                                  controller.toggleConfirmPasswordVisibility,
+                              validator: (value) {
+                                final text = value ?? '';
+                                if (text.isEmpty) {
+                                  return 'Konfirmasi password wajib diisi';
+                                }
+                                if (text !=
+                                    controller.passwordController.text) {
+                                  return 'Password tidak cocok';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 30),
+
+                          Center(
+                            child: SizedBox(
+                              width: 130,
+                              height: 38,
+                              child: Obx(
+                                () => ElevatedButton(
+                                  onPressed: controller.isLoading.value
+                                      ? null
+                                      : controller.activateAccount,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4FA0FF),
+                                    foregroundColor: Colors.white,
+                                    disabledBackgroundColor:
+                                        const Color(0xFF9DCBFF),
+                                    elevation: 0,
+                                    shadowColor: const Color(
+                                      0xFF4FA0FF,
+                                    ).withValues(alpha: 0.5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                    padding: EdgeInsets.zero,
                                   ),
+                                  child: controller.isLoading.value
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text(
+                                          "Aktivasi",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                          ),
+                                        ),
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+
+                          const SizedBox(height: 40),
+
+                          Center(
+                            child: RichText(
+                              text: TextSpan(
+                                text: "Belum punya akun? ",
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: "Hubungi admin",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: navyTextColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -320,7 +372,13 @@ class AktivasiView extends GetView<AktivasiController> {
     );
   }
 
-  Widget _buildInputField({required String hint, bool isPassword = false}) {
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String hint,
+    required bool obscureText,
+    required VoidCallback onToggleVisibility,
+    String? Function(String?)? validator,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -335,8 +393,11 @@ class AktivasiView extends GetView<AktivasiController> {
           ),
         ],
       ),
-      child: TextField(
-        obscureText: isPassword,
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        validator: validator,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         style: TextStyle(color: navyTextColor, fontSize: 14),
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(
@@ -347,6 +408,17 @@ class AktivasiView extends GetView<AktivasiController> {
           isDense: true,
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          suffixIcon: IconButton(
+            tooltip: obscureText ? 'Tampilkan password' : 'Sembunyikan password',
+            onPressed: onToggleVisibility,
+            icon: Icon(
+              obscureText
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+              color: const Color(0xFF6B7280),
+              size: 18,
+            ),
+          ),
         ),
       ),
     );

@@ -9,7 +9,9 @@ import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_checklist_controller.dart';
 
 class ObChecklistView extends GetView<ObChecklistController> {
-  const ObChecklistView({super.key});
+  const ObChecklistView({super.key, this.isNested = false});
+
+  final bool isNested;
 
   static const _navy = Color(0xFF0F2A5E);
   static const _bg = Color(0xFFF5F6FA);
@@ -52,12 +54,13 @@ class ObChecklistView extends GetView<ObChecklistController> {
               ],
             ),
           ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: const ObBottomNav(activeItem: ObBottomNavItem.checklist),
-          ),
+          if (!isNested)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: const ObBottomNav(activeItem: ObBottomNavItem.checklist),
+            ),
         ],
       ),
     );
@@ -88,7 +91,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
           child: const Text(
-            'Daftar List',
+            'Daftar Tugas',
             style: TextStyle(
               color: Colors.white,
               fontSize: 32,
@@ -116,13 +119,18 @@ class ObChecklistView extends GetView<ObChecklistController> {
           child: const _ChecklistEmptyState(),
         );
       }
+      final list = controller.sections.toList();
       return Column(
-        children: controller.sections
-            .map((section) => Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                  child: _buildSectionCard(section),
-                ))
-            .toList(),
+        children: [
+          for (var i = 0; i < list.length; i++)
+            _FadeInSlideUp(
+              delay: Duration(milliseconds: i * 35),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: _buildSectionCard(list[i]),
+              ),
+            ),
+        ],
       );
     });
   }
@@ -798,3 +806,67 @@ _StatusStyle _statusStyle(String status) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── Bottom Navigation Bar ────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
+class _FadeInSlideUp extends StatefulWidget {
+  const _FadeInSlideUp({
+    required this.child,
+    this.delay = Duration.zero,
+  }) : duration = const Duration(milliseconds: 180);
+
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+
+  @override
+  State<_FadeInSlideUp> createState() => _FadeInSlideUpState();
+}
+
+class _FadeInSlideUpState extends State<_FadeInSlideUp> with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _opacityAnim;
+  late Animation<Offset> _offsetAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(vsync: this, duration: widget.duration);
+    _opacityAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
+    );
+    _offsetAnim = Tween<Offset>(begin: const Offset(0.0, 0.08), end: Offset.zero).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+    );
+
+    if (widget.delay == Duration.zero) {
+      _animController.forward();
+    } else {
+      Future.delayed(widget.delay, () {
+        if (mounted) {
+          _animController.forward();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _opacityAnim.value,
+          child: FractionalTranslation(
+            translation: _offsetAnim.value,
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}

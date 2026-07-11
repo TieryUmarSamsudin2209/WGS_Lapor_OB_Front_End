@@ -5,13 +5,16 @@ import 'package:get/get.dart';
 
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/theme/theme_controller.dart';
+import '../../../../shared/translations/app_translations.dart';
 import '../../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../../shared/widgets/logout_confirmation_dialog.dart';
 import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_profil_controller.dart';
 
 class ObProfilView extends GetView<ObProfilController> {
-  const ObProfilView({super.key});
+  const ObProfilView({super.key, this.isNested = false});
+
+  final bool isNested;
 
   static const _blue = Color(0xFF14558B);
   static const _text = Color(0xFF172033);
@@ -49,12 +52,13 @@ class ObProfilView extends GetView<ObProfilController> {
               },
             ),
           ),
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: ObBottomNav(activeItem: ObBottomNavItem.profile),
-          ),
+          if (!isNested)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: ObBottomNav(activeItem: ObBottomNavItem.profile),
+            ),
         ],
       ),
     );
@@ -95,7 +99,7 @@ class _ProfileScrollContent extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(top: 28),
               child: Text(
-                'Profil Saya',
+                'Profil Saya'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -192,7 +196,7 @@ class _ProfileSummaryCard extends StatelessWidget {
         const SizedBox(height: 3),
         Obx(
           () => Text(
-            'Staff OB | ${controller.username.value}',
+            '${'Staff OB'.tr} | ${controller.username.value}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -215,7 +219,7 @@ class _ProfileSummaryCard extends StatelessWidget {
               onSave: controller.updateProfile,
             ),
             icon: const Icon(Icons.edit_rounded, size: 17),
-            label: const Text('Edit Profil'),
+            label: Text('Edit Profil'.tr),
             style: ElevatedButton.styleFrom(
               backgroundColor: ObProfilView._blue,
               foregroundColor: Colors.white,
@@ -391,7 +395,7 @@ class _StatCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            label,
+            label.tr,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -423,7 +427,7 @@ class _HistorySection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Riwayat Laporan',
+                'Riwayat Laporan'.tr,
                 style: TextStyle(
                   color: isDark ? Colors.white : ObProfilView._text,
                   fontSize: 16,
@@ -438,9 +442,9 @@ class _HistorySection extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
-                'Lihat Semua',
-                style: TextStyle(
+              child: Text(
+                'Lihat Semua'.tr,
+                style: const TextStyle(
                   color: ObProfilView._blue,
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
@@ -493,7 +497,7 @@ class _SettingsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Pengaturan & Akun',
+          'Pengaturan & Akun'.tr,
           style: TextStyle(
             color: titleColor,
             fontSize: 16,
@@ -505,15 +509,22 @@ class _SettingsSection extends StatelessWidget {
           children: [
             _SettingsTile(
               icon: Icons.description_outlined,
-              label: 'Syarat & Ketentuan',
+              label: 'Syarat & Ketentuan'.tr,
               onTap: () => Get.toNamed(Routes.TERMS),
             ),
             const Divider(height: 1),
             _SettingsTile(
               icon: Icons.privacy_tip_outlined,
-              label: 'Kebijakan Privasi',
+              label: 'Kebijakan Privasi'.tr,
               onTap: () => Get.toNamed(Routes.PRIVACY),
             ),
+            const Divider(height: 1),
+            Obx(() => _SettingsTile(
+                  icon: Icons.translate_rounded,
+                  label: 'Bahasa'.tr,
+                  trailingText: controller.selectedLanguage.value,
+                  onTap: () => _showLanguageBottomSheet(context, controller.selectedLanguage),
+                )),
           ],
         ),
         const SizedBox(height: 12),
@@ -526,7 +537,7 @@ class _SettingsSection extends StatelessWidget {
               onConfirm: controller.logout,
             ),
             icon: const Icon(Icons.logout_rounded, size: 17),
-            label: const Text('Keluar Sesi'),
+            label: Text('Keluar Sesi'.tr),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFE53935),
               side: const BorderSide(color: Color(0xFFE1E8F0)),
@@ -581,11 +592,13 @@ class _SettingsTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.trailingText,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final String? trailingText;
 
   @override
   Widget build(BuildContext context) {
@@ -619,6 +632,18 @@ class _SettingsTile extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (trailingText != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Text(
+                      trailingText!,
+                      style: TextStyle(
+                        color: isDark ? Colors.white60 : const Color(0xFF718096),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 Icon(
                   Icons.chevron_right_rounded,
                   color: isDark ? Colors.white54 : const Color(0xFF6B7280),
@@ -791,7 +816,7 @@ class _EmptyBox extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            message,
+            message.tr,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isDark ? Colors.white70 : const Color(0xFF6B7280),
@@ -839,7 +864,7 @@ class _ReportPill extends StatelessWidget {
           Icon(style.icon, size: 10, color: style.foreground),
           const SizedBox(width: 4),
           Text(
-            style.label,
+            style.label.tr,
             style: TextStyle(
               color: style.foreground,
               fontSize: 10,
@@ -908,4 +933,146 @@ String _firstName(String value) {
   final text = value.trim();
   if (text.isEmpty) return 'OB';
   return text.split(RegExp(r'\s+')).first;
+}
+
+void _showLanguageBottomSheet(BuildContext context, RxString selectedLanguage) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final titleColor = isDark ? Colors.white : const Color(0xFF172033);
+  final subtitleColor = isDark ? Colors.white70 : const Color(0xFF6F7785);
+  final sheetBg = isDark ? AppDarkColors.surface : Colors.white;
+
+  Get.bottomSheet(
+    Container(
+      decoration: BoxDecoration(
+        color: sheetBg,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'language_sheet_title'.tr,
+            style: TextStyle(
+              color: titleColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'language_sheet_subtitle'.tr,
+            style: TextStyle(
+              color: subtitleColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Obx(() {
+            return Column(
+              children: AppTranslations.languages.map((language) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildLanguageOption(
+                    context: context,
+                    label: language.nativeLabel,
+                    value: language.nativeLabel,
+                    isSelected: selectedLanguage.value == language.nativeLabel,
+                    onTap: () async {
+                      selectedLanguage.value = language.nativeLabel;
+                      await AppTranslations.updateLocale(language);
+                      Get.back();
+                      Get.snackbar(
+                        'language_changed_title'.tr,
+                        'language_changed_message'.trParams({
+                          'language': language.nativeLabel,
+                        }),
+                        snackPosition: SnackPosition.BOTTOM,
+                        duration: const Duration(seconds: 2),
+                      );
+                    },
+                  ),
+                );
+              }).toList(),
+            );
+          }),
+          const SizedBox(height: 2),
+        ],
+      ),
+    ),
+    isScrollControlled: true,
+  );
+}
+
+Widget _buildLanguageOption({
+  required BuildContext context,
+  required String label,
+  required String value,
+  required bool isSelected,
+  required VoidCallback onTap,
+}) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final cardColor = isDark ? AppDarkColors.background : const Color(0xFFF7FAFC);
+  final activeColor = const Color(0xFF0F4C81);
+
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? activeColor.withValues(alpha: 0.08)
+              : cardColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? activeColor
+                : (isDark ? AppDarkColors.border : const Color(0xFFE2E8F0)),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? activeColor
+                      : (isDark ? Colors.white : const Color(0xFF2D3748)),
+                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                color: activeColor,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

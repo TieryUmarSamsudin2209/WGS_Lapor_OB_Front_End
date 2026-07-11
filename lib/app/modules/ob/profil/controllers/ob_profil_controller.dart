@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/controllers/auth_controller.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/translations/app_translations.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
 /// ================= MODEL =================
@@ -68,6 +69,7 @@ class ObProfilController extends GetxController {
 
   /// ---- State ----
   var isLoading = false.obs;
+  final selectedLanguage = 'Indonesia'.obs;
 
   /// ---- Data ----
   var reports = <ReportModel>[].obs;
@@ -85,6 +87,7 @@ class ObProfilController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    selectedLanguage.value = AppTranslations.currentLanguageLabel();
     loadProfile();
   }
 
@@ -200,6 +203,7 @@ class ObProfilController extends GetxController {
         description: report.description,
         priority: report.priority,
         status: _homeStatusFromProfileStatus(report.status),
+        assignedObName: name.value,
       ),
     );
   }

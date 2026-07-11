@@ -32,7 +32,7 @@ class ObNotificationsView extends GetView<ObNotificationsController> {
           ),
         ),
         title: Text(
-          'Notifikasi',
+          'notifikasi'.tr,
           style: TextStyle(
             color: isDark ? Colors.white : _blue,
             fontSize: 19,
@@ -67,7 +67,13 @@ class ObNotificationsView extends GetView<ObNotificationsController> {
               padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
               children: grouped.entries.expand((entry) {
                 return [
-                  _SectionTitle(title: entry.key),
+                  _SectionTitle(
+                    title: entry.key == 'TERBARU'
+                        ? 'terbaru'.tr
+                        : entry.key == 'SEBELUMNYA'
+                            ? 'sebelumnya'.tr
+                            : entry.key.tr,
+                  ),
                   const SizedBox(height: 10),
                   ...entry.value.map(
                     (item) => Padding(
@@ -235,7 +241,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Belum ada notifikasi',
+            'belum_ada_notifikasi'.tr,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isDark ? Colors.white70 : const Color(0xFF4E5765),

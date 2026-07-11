@@ -12,11 +12,13 @@ class ObBottomNav extends StatelessWidget {
     required this.activeItem,
     this.middleLabel = 'Checklist',
     this.compact = false,
+    this.onTap,
   });
 
   final ObBottomNavItem activeItem;
   final String middleLabel;
   final bool compact;
+  final ValueChanged<ObBottomNavItem>? onTap;
 
   static const _blue = Color(0xFF15598D);
 
@@ -136,15 +138,20 @@ class ObBottomNav extends StatelessWidget {
   void _goTo(ObBottomNavItem item) {
     if (item == activeItem) return;
 
+    if (onTap != null) {
+      onTap!(item);
+      return;
+    }
+
     switch (item) {
       case ObBottomNavItem.home:
-        Get.offAllNamed(Routes.OB_HOME);
+        Get.offNamed(Routes.OB_HOME);
         break;
       case ObBottomNavItem.checklist:
-        Get.toNamed(Routes.OB_CHECKLIST);
+        Get.offNamed(Routes.OB_CHECKLIST);
         break;
       case ObBottomNavItem.profile:
-        Get.offAllNamed(Routes.OB_PROFIL);
+        Get.offNamed(Routes.OB_PROFIL);
         break;
     }
   }
@@ -224,8 +231,8 @@ class _NavButton extends StatelessWidget {
                 if (!iconOnly) ...[
                   SizedBox(width: compact ? 4 : 6),
                   Flexible(
-                    child: Text(
-                      label,
+                  child: Text(
+                      label.tr,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

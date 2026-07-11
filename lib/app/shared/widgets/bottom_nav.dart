@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../theme/theme_controller.dart';
 
@@ -45,7 +46,7 @@ class BottomNavItem extends StatelessWidget {
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                label,
+                label.tr,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

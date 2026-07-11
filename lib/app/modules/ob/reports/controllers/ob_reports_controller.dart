@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
 import '../../../../routes/app_pages.dart';
@@ -15,18 +17,22 @@ class ObReportsController extends GetxController {
   final selectedFilter = 'Semua'.obs;
 
   String _searchQuery = '';
+  Timer? _reportPollingTimer;
 
   @override
   void onInit() {
     super.onInit();
     loadReports();
+    _startReportPolling();
   }
 
-  Future<void> loadReports() async {
-    isLoading.value = true;
+  Future<void> loadReports({bool silent = false}) async {
+    if (!silent) {
+      isLoading.value = true;
+    }
 
     try {
-      final response = await _authService.getObReports(limit: 50);
+      final response = await _authService.getObReports(limit: 100);
       final items = _extractItems(response);
 
       reports.value = items
@@ -35,10 +41,14 @@ class ObReportsController extends GetxController {
           .toList();
       _applyFilter();
     } catch (_) {
-      reports.clear();
-      filteredReports.clear();
+      if (!silent) {
+        reports.clear();
+        filteredReports.clear();
+      }
     } finally {
-      isLoading.value = false;
+      if (!silent) {
+        isLoading.value = false;
+      }
     }
   }
 
@@ -93,10 +103,16 @@ class ObReportsController extends GetxController {
 
     return HomeReport(
       id:
-          _stringValueFromSources([item, detail], [
-            'id',
+          _stringValue(item, [
             'laporan_id',
             'report_id',
+          ]) ??
+          _stringValue(detail, [
+            'id',
+            'uuid',
+          ]) ??
+          _stringValue(item, [
+            'id',
             'uuid',
           ]) ??
           '',
@@ -150,6 +166,51 @@ class ObReportsController extends GetxController {
         'kolaborasi',
         'butuh_bantuan',
         'need_help',
+      ]),
+      reporterName: _stringValueFromSources([item, detail], [
+        'nama_pelapor',
+        'pelapor',
+        'reporter',
+        'reported_by',
+        'reportedBy',
+        'karyawan',
+        'pegawai',
+        'user',
+      ]),
+      categoryName: _stringValueFromSources([item, detail], [
+        'nama_kategori',
+        'kategori',
+        'category',
+        'category_name',
+        'categoryName',
+      ]),
+      assignedObId: _stringValueFromSources([item, detail], [
+        'ob_id',
+        'id_ob',
+        'petugas_id',
+        'assigned_ob_id',
+        'assignedObId',
+        'taken_by_id',
+        'takenById',
+      ]),
+      assignedObName: _stringValueFromSources([item, detail], [
+        'nama_ob',
+        'namaOb',
+        'ob_name',
+        'obName',
+        'assigned_ob_name',
+        'assignedObName',
+        'taken_by_name',
+        'takenByName',
+        'diambil_oleh',
+        'diambilOleh',
+        'assigned_to',
+        'assignedTo',
+        'taken_by',
+        'takenBy',
+        'petugas',
+        'petugas_ob',
+        'ob',
       ]),
       photos: photos.isNotEmpty ? photos : _photosFromApi(detail),
     );
@@ -207,7 +268,10 @@ class ObReportsController extends GetxController {
     }
     if (normalized.contains('proses') ||
         normalized.contains('progress') ||
-        normalized.contains('diproses')) {
+        normalized.contains('diproses') ||
+        normalized.contains('ambil') ||
+        normalized.contains('taken') ||
+        normalized.contains('assigned')) {
       return 'Sedang Diproses';
     }
     return 'Belum Diproses';
@@ -259,12 +323,12 @@ class ObReportsController extends GetxController {
       final value = source[key];
       if (value is List) {
         return value
-            .map((item) => item.toString().trim())
+            .map((item) => AuthService.resolveMediaUrl(item.toString()))
             .where((item) => item.isNotEmpty)
             .toList();
       }
       if (value != null && value.toString().trim().isNotEmpty) {
-        return [value.toString().trim()];
+        return [AuthService.resolveMediaUrl(value.toString())];
       }
     }
     return const [];
@@ -277,11 +341,15 @@ class ObReportsController extends GetxController {
       if (value is Map) {
         final nested = _asMap(value);
         final nestedValue = _stringValue(nested ?? const {}, [
+          'nama_lengkap',
           'nama_lokasi',
           'nama_kategori',
           'nomor_lantai',
           'nama',
           'name',
+          'username',
+          'email',
+          'label',
           'title',
           'judul',
           'alamat',
@@ -312,5 +380,18 @@ class ObReportsController extends GetxController {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
     return null;
+  }
+
+  void _startReportPolling() {
+    _reportPollingTimer?.cancel();
+    _reportPollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      loadReports(silent: true);
+    });
+  }
+
+  @override
+  void onClose() {
+    _reportPollingTimer?.cancel();
+    super.onClose();
   }
 }

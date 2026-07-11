@@ -40,6 +40,11 @@ class ObNotificationsController extends GetxController {
     isLoading.value = true;
 
     try {
+      if (_authService.isOfflineMode) {
+        _showDummyNotifications();
+        return;
+      }
+
       final results = await Future.wait([
         _authService.getDailyChecklist(limit: 20),
         _authService.getObReports(limit: 20),
@@ -52,10 +57,52 @@ class ObNotificationsController extends GetxController {
 
       notifications.value = items;
     } catch (_) {
-      notifications.clear();
+      _showDummyNotifications();
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void _showDummyNotifications() {
+    final now = DateTime.now();
+    notifications.value = [
+      ObNotificationItem(
+        type: 'task',
+        title: 'Tugas Baru: Bersihkan Ruang Meeting A',
+        message: 'Admin baru saja menugaskan Anda.',
+        section: 'HARI INI',
+        timeLabel: '10 mnt',
+        createdAt: now.subtract(const Duration(minutes: 10)),
+        isUnread: true,
+      ),
+      ObNotificationItem(
+        type: 'report',
+        title: 'Laporan Baru: AC Bocor di Pantry',
+        message: 'Karyawan (Asep) melaporkan masalah baru.',
+        section: 'HARI INI',
+        timeLabel: '1 jam',
+        createdAt: now.subtract(const Duration(hours: 1)),
+        isUnread: true,
+      ),
+      ObNotificationItem(
+        type: 'system',
+        title: 'Pembaruan Sistem',
+        message: 'Versi aplikasi 2.4.1 tersedia.',
+        section: 'HARI INI',
+        timeLabel: '3 jam',
+        createdAt: now.subtract(const Duration(hours: 3)),
+        isUnread: false,
+      ),
+      ObNotificationItem(
+        type: 'task',
+        title: 'Pengingat Tugas: Cek Toilet Lantai 2',
+        message: 'Tugas ini harus selesai dalam 30 menit.',
+        section: 'KEMARIN',
+        timeLabel: 'Kemarin',
+        createdAt: now.subtract(const Duration(days: 1)),
+        isUnread: false,
+      ),
+    ];
   }
 
   Map<String, List<ObNotificationItem>> get groupedNotifications {
@@ -156,11 +203,23 @@ class ObNotificationsController extends GetxController {
             'reported_by',
           ]) ??
           'Karyawan';
+      final location =
+          _firstValueFromSources([item, detail], [
+            'location',
+            'lokasi',
+            'ruangan',
+            'area',
+            'detail_lokasi',
+            'alamat',
+            'lantai',
+          ]) ??
+          'lokasi terkait';
 
       return ObNotificationItem(
         type: 'report',
-        title: 'Laporan Baru: $title',
-        message: '$reporter melaporkan masalah baru.',
+        title: 'Penugasan Baru',
+        message:
+            'Ada tugas perbaikan $title di $location. Dilaporkan oleh $reporter.',
         section: _sectionFromDate(createdAt),
         timeLabel: _timeAgo(createdAt),
         createdAt: createdAt,

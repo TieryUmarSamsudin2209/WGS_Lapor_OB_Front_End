@@ -6,6 +6,7 @@ import 'app/routes/app_pages.dart';
 import 'app/shared/controllers/auth_controller.dart';
 import 'app/shared/services/auth_service.dart';
 import 'app/shared/theme/theme_controller.dart';
+import 'app/shared/translations/app_translations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,11 +16,15 @@ Future<void> main() async {
   Get.put(AuthController(), permanent: true);
 
   final themeController = Get.put(ThemeController());
+  await AppTranslations.loadSavedLocale();
 
   runApp(
     Obx(
       () => GetMaterialApp(
         title: "Lapor OB",
+        translations: AppTranslations(),
+        locale: AppTranslations.currentLocale.value,
+        fallbackLocale: AppTranslations.fallbackLocale,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF0F4C81),

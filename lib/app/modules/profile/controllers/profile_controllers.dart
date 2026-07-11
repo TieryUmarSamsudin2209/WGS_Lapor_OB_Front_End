@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../shared/controllers/auth_controller.dart';
 import '../../../shared/services/auth_service.dart';
+import '../../../shared/translations/app_translations.dart';
 
 class ProfileController extends GetxController {
   final AuthService _authService = Get.isRegistered<AuthService>()
@@ -16,51 +17,82 @@ class ProfileController extends GetxController {
   final reports = <Map<String, dynamic>>[].obs;
   final filteredReports = <Map<String, dynamic>>[].obs;
   final isLoading = false.obs;
+  final selectedFilter = 'Semua'.obs;
+  final selectedLanguage = 'Indonesia'.obs;
 
   String _searchQuery = '';
   String? _selectedStatus;
 
+  List<Map<String, dynamic>> get recentReports => reports.take(2).toList();
+  int get totalReports => reports.length;
+
+  String get firstName {
+    final parts = name.value.trim().split(RegExp(r'\s+'));
+    return parts.isEmpty || parts.first.isEmpty ? 'Karyawan' : parts.first;
+  }
+
+  String get lastName {
+    final parts = name.value.trim().split(RegExp(r'\s+'));
+    if (parts.length <= 1) return '';
+    return parts.skip(1).join(' ');
+  }
+
   @override
   void onInit() {
     super.onInit();
+    selectedLanguage.value = AppTranslations.currentLanguageLabel();
     loadProfile();
   }
 
   Future<void> loadProfile() async {
     isLoading.value = true;
+    try {
+      final response = await _authService.getUserProfile();
+      final data = _asMap(response?['data']) ?? response;
+      final profile = _asMap(data?['user']) ??
+          _asMap(data?['profile']) ??
+          _asMap(data?['data']) ??
+          data;
 
-    final response = await _authService.getUserProfile();
-    final data = _asMap(response?['data']) ?? response;
-    final profile = _asMap(data?['user']) ??
-        _asMap(data?['profile']) ??
-        _asMap(data?['data']) ??
-        data;
+      _setProfile(profile);
 
-    _setProfile(profile);
-
-    var reportItems = _extractReportItems(
-      response: response,
-      data: data,
-      profile: profile,
-    );
-
-    if (reportItems.isEmpty) {
-      final reportsResponse = await _authService.getEmployeeReports();
-      final reportsData = _asMap(reportsResponse?['data']) ?? reportsResponse;
-      reportItems = _extractReportItems(
-        response: reportsResponse,
-        data: reportsData,
-        profile: null,
+      var reportItems = _extractReportItems(
+        response: response,
+        data: data,
+        profile: profile,
       );
+
+      if (reportItems.isEmpty) {
+        final reportsResponse = await _authService.getEmployeeReports(
+          limit: 50,
+        );
+        final reportsData = _asMap(reportsResponse?['data']) ?? reportsResponse;
+        reportItems = _extractReportItems(
+          response: reportsResponse,
+          data: reportsData,
+          profile: null,
+        );
+      }
+
+      final parsedReports = reportItems
+          .whereType<Map>()
+          .map((item) => _reportFromApi(_asMap(item) ?? const {}))
+          .toList();
+
+      parsedReports.sort((a, b) {
+        final aDate = _dateValue(a['created_at']);
+        final bDate = _dateValue(b['created_at']);
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return bDate.compareTo(aDate);
+      });
+
+      reports.value = parsedReports;
+      _applyFilter();
+    } finally {
+      isLoading.value = false;
     }
-
-    reports.value = reportItems
-        .whereType<Map>()
-        .map((item) => _reportFromApi(_asMap(item) ?? const {}))
-        .toList();
-    _applyFilter();
-
-    isLoading.value = false;
   }
 
   Future<bool> updateProfile(
@@ -110,6 +142,13 @@ class ProfileController extends GetxController {
 
   void setStatusFilter(String? status) {
     _selectedStatus = status;
+    selectedFilter.value = _filterLabelFromStatus(status);
+    _applyFilter();
+  }
+
+  void setFilter(String filter) {
+    selectedFilter.value = filter;
+    _selectedStatus = _statusFromFilter(filter);
     _applyFilter();
   }
 
@@ -199,6 +238,9 @@ class ProfileController extends GetxController {
     if (photo.startsWith('uploads/')) {
       return '${AuthService.baseUrl}/$photo';
     }
+    if (photo.startsWith('/') || photo.contains('\\') || photo.contains(':')) {
+      return photo;
+    }
     return photo;
   }
 
@@ -259,6 +301,14 @@ class ProfileController extends GetxController {
             'keterangan',
           ]) ??
           '-',
+      'created_at': _firstValueFromSources(sources, [
+        'created_at',
+        'createdAt',
+        'tanggal',
+        'date',
+        'tanggal_laporan',
+        'waktu_laporan',
+      ]),
     };
   }
 
@@ -273,7 +323,11 @@ class ProfileController extends GetxController {
       'laporanKaryawan',
       'reports',
       'riwayat_laporan',
+      'riwayatLaporan',
       'history',
+      'histori',
+      'report_history',
+      'reportHistory',
       'employee_reports',
       'employeeReports',
       'data',
@@ -331,6 +385,36 @@ class ProfileController extends GetxController {
     }
 
     filteredReports.value = result;
+  }
+
+  String _filterLabelFromStatus(String? status) {
+    switch (status) {
+      case 'Diproses':
+        return 'Proses';
+      case 'Selesai':
+        return 'Selesai';
+      case 'Ditolak':
+        return 'Tertolak';
+      case 'Pending':
+        return 'Pending';
+      default:
+        return 'Semua';
+    }
+  }
+
+  String? _statusFromFilter(String filter) {
+    switch (filter) {
+      case 'Proses':
+        return 'Diproses';
+      case 'Selesai':
+        return 'Selesai';
+      case 'Tertolak':
+        return 'Ditolak';
+      case 'Pending':
+        return 'Pending';
+      default:
+        return null;
+    }
   }
 
   String _statusLabel(String status) {
@@ -397,5 +481,10 @@ class ProfileController extends GetxController {
   List<dynamic>? _asList(Object? value) {
     if (value is List) return value;
     return null;
+  }
+
+  DateTime? _dateValue(Object? value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
   }
 }

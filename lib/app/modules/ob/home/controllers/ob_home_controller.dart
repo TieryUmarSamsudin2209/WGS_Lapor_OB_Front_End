@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/widgets/ob_assignment_alert.dart';
 
 class DailyTask {
   final String title;
@@ -23,6 +26,10 @@ class HomeReport {
   final RxString status; // 'Belum Diproses', 'Sedang Diproses', 'Selesai', 'Ditolak'
   final RxBool hasCollaboration;
   final List<String> photos;
+  final String? reporterName;
+  final String? categoryName;
+  String? assignedObId;
+  String? assignedObName;
 
   HomeReport({
     required this.id,
@@ -33,6 +40,10 @@ class HomeReport {
     required String status,
     bool hasCollaboration = false,
     this.photos = const [],
+    this.reporterName,
+    this.categoryName,
+    this.assignedObId,
+    this.assignedObName,
   }) : status = status.obs,
        hasCollaboration = hasCollaboration.obs;
 }
@@ -51,6 +62,11 @@ class ObHomeController extends GetxController {
 
   // List of Reports
   final reports = <HomeReport>[].obs;
+  final takingReportIds = <String>{}.obs;
+  final _knownReportIds = <String>{};
+
+  Timer? _reportPollingTimer;
+  bool _hasLoadedReportsOnce = false;
 
   int get completedTaskCount =>
       dailyTasks.where((task) => task.status.value == 'resolved').length;
@@ -74,13 +90,14 @@ class ObHomeController extends GetxController {
     return 'Penugasan: Gedung A - Lantai 1 & 2';
   }
 
-  List<HomeReport> get latestReports => reports.take(2).toList();
+  List<HomeReport> get latestReports => reports.toList();
 
   @override
   void onInit() {
     super.onInit();
     _loadUser();
     loadHomeData();
+    _startReportPolling();
   }
 
   void _loadUser() {
@@ -119,24 +136,36 @@ class ObHomeController extends GetxController {
     }
   }
 
-  Future<void> loadReports() async {
-    isLoadingReports.value = true;
+  Future<void> loadReports({
+    bool showNewReportAlert = false,
+    bool silent = false,
+  }) async {
+    if (!silent) {
+      isLoadingReports.value = true;
+    }
 
     try {
-      final response = await _authService.getObReports();
+      final response = await _authService.getObReports(limit: 100);
       final items = _extractItems(
         response,
         keys: const ['laporan', 'reports', 'items', 'data'],
       );
 
-      reports.value = items
+      final nextReports = items
           .whereType<Map>()
           .map((item) => _reportFromApi(_asMap(item) ?? const {}))
           .toList();
+
+      _showNewReportAlert(nextReports, showNewReportAlert);
+      reports.value = nextReports;
     } catch (_) {
-      reports.clear();
+      if (!silent) {
+        reports.clear();
+      }
     } finally {
-      isLoadingReports.value = false;
+      if (!silent) {
+        isLoadingReports.value = false;
+      }
     }
   }
 
@@ -164,6 +193,49 @@ class ObHomeController extends GetxController {
 
   void openReportDetail(HomeReport report) {
     Get.toNamed(Routes.OB_DETAIL, arguments: report);
+  }
+
+  bool isTakingReport(HomeReport report) {
+    final reportId = _normalizedReportId(report);
+    return reportId != null && takingReportIds.contains(reportId);
+  }
+
+  Future<void> takeReport(HomeReport report) async {
+    final reportId = _normalizedReportId(report);
+    if (reportId == null) {
+      Get.snackbar('Gagal', 'ID laporan tidak ditemukan');
+      return;
+    }
+
+    if (takingReportIds.contains(reportId)) return;
+
+    takingReportIds.add(reportId);
+    try {
+      final response = await _authService.takeObReport(reportId);
+      if (response == null) {
+        Get.snackbar(
+          'Gagal mengambil laporan',
+          _authService.lastRequestError ??
+              'Laporan belum bisa diambil. Coba muat ulang daftar laporan.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      report.assignedObName =
+          _assignedObNameFromResponse(response) ?? _currentObName ?? 'Anda';
+      report.assignedObId = _assignedObIdFromResponse(response) ?? _currentObId;
+      report.status.value = 'Sedang Diproses';
+
+      Get.snackbar(
+        'Laporan diambil',
+        'Laporan sudah masuk daftar pekerjaan Anda.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      await loadReports(silent: true);
+    } finally {
+      takingReportIds.remove(reportId);
+    }
   }
 
   DailyTask _dailyTaskFromApi(Map<String, dynamic> item) {
@@ -195,13 +267,16 @@ class ObHomeController extends GetxController {
     final photos = _photosFromApi(item);
 
     return HomeReport(
-      id: _stringValueFromSources([
-            item,
-            detail,
-          ], [
-            'id',
+      id: _stringValue(item, [
             'laporan_id',
             'report_id',
+          ]) ??
+          _stringValue(detail, [
+            'id',
+            'uuid',
+          ]) ??
+          _stringValue(item, [
+            'id',
             'uuid',
           ]) ??
           '',
@@ -211,6 +286,7 @@ class ObHomeController extends GetxController {
             'nama_laporan',
             'kategori',
             'category',
+            'nama_kategori',
           ]) ??
           'Laporan',
       location: _stringValueFromSources([item, detail], [
@@ -220,11 +296,13 @@ class ObHomeController extends GetxController {
             'area',
             'detail_lokasi',
             'alamat',
+            'lantai',
           ]) ??
           '-',
       description: _stringValueFromSources([item, detail], [
             'description',
             'deskripsi',
+            'deskripsi_kendala',
             'catatan',
             'keluhan',
             'keterangan',
@@ -250,6 +328,51 @@ class ObHomeController extends GetxController {
         'butuh_bantuan',
         'need_help',
       ]),
+      reporterName: _stringValueFromSources([item, detail], [
+        'nama_pelapor',
+        'pelapor',
+        'reporter',
+        'reported_by',
+        'reportedBy',
+        'karyawan',
+        'pegawai',
+        'user',
+      ]),
+      categoryName: _stringValueFromSources([item, detail], [
+        'nama_kategori',
+        'kategori',
+        'category',
+        'category_name',
+        'categoryName',
+      ]),
+      assignedObId: _stringValueFromSources([item, detail], [
+        'ob_id',
+        'id_ob',
+        'petugas_id',
+        'assigned_ob_id',
+        'assignedObId',
+        'taken_by_id',
+        'takenById',
+      ]),
+      assignedObName: _stringValueFromSources([item, detail], [
+        'nama_ob',
+        'namaOb',
+        'ob_name',
+        'obName',
+        'assigned_ob_name',
+        'assignedObName',
+        'taken_by_name',
+        'takenByName',
+        'diambil_oleh',
+        'diambilOleh',
+        'assigned_to',
+        'assignedTo',
+        'taken_by',
+        'takenBy',
+        'petugas',
+        'petugas_ob',
+        'ob',
+      ]),
       photos: photos.isNotEmpty ? photos : _photosFromApi(detail),
     );
   }
@@ -274,6 +397,81 @@ class ObHomeController extends GetxController {
     return const [];
   }
 
+  String? _normalizedReportId(HomeReport report) {
+    final rawId = report.id.trim();
+    if (rawId.isEmpty) return null;
+    final normalized = rawId.startsWith('#') ? rawId.substring(1) : rawId;
+    final text = normalized.trim();
+    return text.isEmpty ? null : text;
+  }
+
+  String? get _currentObName {
+    final user = _authService.user.value ?? const <String, dynamic>{};
+    return _stringValue(user, const [
+      'nama_lengkap',
+      'nama',
+      'name',
+      'username',
+      'email',
+    ]);
+  }
+
+  String? get _currentObId {
+    final user = _authService.user.value ?? const <String, dynamic>{};
+    return _stringValue(user, const [
+      'id',
+      'user_id',
+      'userId',
+      'ob_id',
+      'obId',
+      'uuid',
+    ]);
+  }
+
+  String? _assignedObNameFromResponse(Map<String, dynamic> response) {
+    return _stringValueFromSources([
+      response,
+      _asMap(response['data']) ?? const <String, dynamic>{},
+      _asMap(response['laporan']) ?? const <String, dynamic>{},
+      _asMap(response['report']) ?? const <String, dynamic>{},
+    ], const [
+      'nama_ob',
+      'namaOb',
+      'ob_name',
+      'obName',
+      'assigned_ob_name',
+      'assignedObName',
+      'taken_by_name',
+      'takenByName',
+      'diambil_oleh',
+      'diambilOleh',
+      'assigned_to',
+      'assignedTo',
+      'taken_by',
+      'takenBy',
+      'petugas',
+      'petugas_ob',
+      'ob',
+    ]);
+  }
+
+  String? _assignedObIdFromResponse(Map<String, dynamic> response) {
+    return _stringValueFromSources([
+      response,
+      _asMap(response['data']) ?? const <String, dynamic>{},
+      _asMap(response['laporan']) ?? const <String, dynamic>{},
+      _asMap(response['report']) ?? const <String, dynamic>{},
+    ], const [
+      'ob_id',
+      'id_ob',
+      'petugas_id',
+      'assigned_ob_id',
+      'assignedObId',
+      'taken_by_id',
+      'takenById',
+    ]);
+  }
+
   String _taskStatusFromApi(String status) {
     final normalized = status.trim().toLowerCase().replaceAll('_', ' ');
     if (normalized.contains('selesai') ||
@@ -296,7 +494,10 @@ class ObHomeController extends GetxController {
     }
     if (normalized.contains('proses') ||
         normalized.contains('progress') ||
-        normalized.contains('diproses')) {
+        normalized.contains('diproses') ||
+        normalized.contains('ambil') ||
+        normalized.contains('taken') ||
+        normalized.contains('assigned')) {
       return 'Sedang Diproses';
     }
     return 'Belum Diproses';
@@ -340,6 +541,7 @@ class ObHomeController extends GetxController {
       'photos',
       'foto',
       'foto_laporan',
+      'foto_masalah',
       'bukti_foto',
       'gambar',
       'images',
@@ -347,12 +549,13 @@ class ObHomeController extends GetxController {
       final value = source[key];
       final list = _asList(value);
       if (list != null) {
-        return list.map((item) => item.toString()).where((item) {
-          return item.trim().isNotEmpty;
-        }).toList();
+        return list
+            .map((item) => AuthService.resolveMediaUrl(item.toString()))
+            .where((item) => item.trim().isNotEmpty)
+            .toList();
       }
       if (value != null && value.toString().trim().isNotEmpty) {
-        return [value.toString().trim()];
+        return [AuthService.resolveMediaUrl(value.toString())];
       }
     }
     return const [];
@@ -365,8 +568,12 @@ class ObHomeController extends GetxController {
       if (value is Map) {
         final nested = _asMap(value);
         final nestedValue = _stringValue(nested ?? const {}, [
+          'nama_lengkap',
           'nama',
           'name',
+          'username',
+          'email',
+          'label',
           'title',
           'judul',
           'alamat',
@@ -401,5 +608,50 @@ class ObHomeController extends GetxController {
   List<dynamic>? _asList(Object? value) {
     if (value is List) return value;
     return null;
+  }
+
+  void _startReportPolling() {
+    _reportPollingTimer?.cancel();
+    _reportPollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      loadReports(showNewReportAlert: true, silent: true);
+    });
+  }
+
+  void _showNewReportAlert(List<HomeReport> nextReports, bool enabled) {
+    final previousIds = Set<String>.of(_knownReportIds);
+    final nextIds = nextReports
+        .map((report) => report.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    if (_hasLoadedReportsOnce && enabled) {
+      final newReports = nextReports.where((report) {
+        final id = report.id.trim();
+        return id.isNotEmpty &&
+            !previousIds.contains(id) &&
+            report.status.value == 'Belum Diproses';
+      }).toList();
+
+      if (newReports.isNotEmpty) {
+        final report = newReports.first;
+        final location = report.location == '-' ? 'lokasi terkait' : report.location;
+        ObAssignmentAlert.show(
+          title: 'Penugasan Baru',
+          message:
+              'Ada tugas perbaikan ${report.title} di $location. Harap segera menuju lokasi.',
+        );
+      }
+    }
+
+    _knownReportIds
+      ..clear()
+      ..addAll(nextIds);
+    _hasLoadedReportsOnce = true;
+  }
+
+  @override
+  void onClose() {
+    _reportPollingTimer?.cancel();
+    super.onClose();
   }
 }

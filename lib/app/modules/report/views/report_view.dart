@@ -10,7 +10,9 @@ import '../../../shared/widgets/custom_alert.dart';
 import '../../../shared/theme/theme_controller.dart';
 
 class ReportPage extends StatelessWidget {
-  const ReportPage({super.key});
+  const ReportPage({super.key, this.isNested = false});
+
+  final bool isNested;
 
   final Color navyColor = const Color(0xFF003366);
   final Color urgentRed = const Color(0xFFC62828);
@@ -58,15 +60,17 @@ class ReportPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: pageBg,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: titleColor),
-          onPressed: () {
-            controller.clearForm();
-            Get.back();
-          },
-        ),
+        leading: isNested
+            ? null
+            : IconButton(
+                icon: Icon(Icons.arrow_back, color: titleColor),
+                onPressed: () {
+                  controller.clearForm();
+                  Get.back();
+                },
+              ),
         title: Text(
-          "Lapor OB",
+          'Lapor OB',
           style: TextStyle(
             color: titleColor,
             fontWeight: FontWeight.bold,
@@ -97,7 +101,7 @@ class ReportPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Kirim Laporan",
+                                'Kirim Laporan'.tr,
                                 style: TextStyle(
                                   color: titleColor,
                                   fontSize: 28,
@@ -106,7 +110,7 @@ class ReportPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                "Jelaskan secara rinci masalah fasilitas di bawah ini. Menyertakan foto yang jelas dan lokasi yang akurat akan membantu tim kami merespons lebih cepat.",
+                                'Jelaskan secara rinci masalah fasilitas di bawah ini. Menyertakan foto yang jelas dan lokasi yang akurat akan membantu tim kami merespons lebih cepat.'.tr,
                                 style: TextStyle(
                                   color: bodyColor,
                                   fontSize: 13,
@@ -139,7 +143,7 @@ class ReportPage extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildLabel(
-                                  "Kategori Masalah",
+                                  'Kategori Masalah',
                                   isRequired: true,
                                   color: Colors.white,
                                 ),
@@ -150,7 +154,7 @@ class ReportPage extends StatelessWidget {
                                   () => _buildModernDropdown(
                                     value:
                                         controller.selectedCategory.value?.id,
-                                    hint: "Pilih Kategori",
+                                    hint: 'Pilih Kategori',
                                     items: controller.categoryOptions,
                                     onChanged: controller.setCategoryById,
                                   ),
@@ -204,7 +208,7 @@ class ReportPage extends StatelessWidget {
                                 const SizedBox(height: 12),
 
                                 _buildLabel(
-                                  "Prioritas",
+                                  'Prioritas',
                                   color: Colors.white,
                                 ),
                                 const SizedBox(height: 8),
@@ -214,7 +218,7 @@ class ReportPage extends StatelessWidget {
                                   () => Row(
                                     children: [
                                       _buildPriorityButton(
-                                        label: "Standard",
+                                        label: 'Standard',
                                         isActive:
                                             controller.priorityLevel.value ==
                                             "STANDARD",
@@ -229,7 +233,7 @@ class ReportPage extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 15),
                                       _buildPriorityButton(
-                                        label: "Urgent",
+                                        label: 'Urgent',
                                         isActive:
                                             controller.priorityLevel.value ==
                                             "URGENT",
@@ -266,7 +270,7 @@ class ReportPage extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       _buildLabel(
-                                        "Lokasi",
+                                        'Lokasi',
                                         isRequired: true,
                                         color: titleColor,
                                       ),
@@ -279,7 +283,7 @@ class ReportPage extends StatelessWidget {
                                               .selectedFloor
                                               .value
                                               ?.id,
-                                          hint: "Pilih lokasi gedung",
+                                          hint: 'Pilih lokasi gedung',
                                           items: controller.floorOptions,
                                           onChanged: controller.setFloorById,
                                         ),
@@ -288,12 +292,12 @@ class ReportPage extends StatelessWidget {
                                       const SizedBox(height: 20),
 
                                       _buildLabel(
-                                        "Detail Ruangan",
+                                        'Detail Ruangan',
                                         color: titleColor,
                                       ),
                                       const SizedBox(height: 8),
                                       _buildTextField(
-                                        hint: "Keterangan Tempat",
+                                        hint: 'Keterangan Tempat',
                                         onChanged: (val) =>
                                             controller
                                                     .floorRoomController
@@ -304,14 +308,14 @@ class ReportPage extends StatelessWidget {
                                       const SizedBox(height: 20),
 
                                       _buildLabel(
-                                        "Deskripsi Masalah",
+                                        'Deskripsi Masalah',
                                         isRequired: true,
                                         color: titleColor,
                                       ),
                                       const SizedBox(height: 8),
                                       _buildTextField(
                                         hint:
-                                            "Jelaskan masalahnya secara rinci.",
+                                            'Jelaskan masalahnya secara rinci.',
                                         maxLines: 4,
                                         onChanged: (val) =>
                                             controller
@@ -328,11 +332,11 @@ class ReportPage extends StatelessWidget {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           _buildLabel(
-                                            "Bukti Foto",
+                                            'Bukti Foto',
                                             color: titleColor,
                                           ),
                                           Text(
-                                            "Max 3 foto (1MB)",
+                                            'Max 3 foto (1MB)'.tr,
                                             style: TextStyle(
                                               color: mutedTextColor,
                                               fontSize: 11,
@@ -373,7 +377,7 @@ class ReportPage extends StatelessWidget {
                                                             bottom: 20,
                                                           ),
                                                       child: Text(
-                                                        "Pilih Sumber Foto",
+                                                        'Pilih Sumber Foto'.tr,
                                                         style: TextStyle(
                                                           color: titleColor,
                                                           fontSize: 16,
@@ -411,7 +415,7 @@ class ReportPage extends StatelessWidget {
                                                         ),
                                                       ),
                                                       title: Text(
-                                                        "Kamera",
+                                                        'Kamera'.tr,
                                                         style: TextStyle(
                                                           color: titleColor,
                                                         ),
@@ -453,7 +457,7 @@ class ReportPage extends StatelessWidget {
                                                         ),
                                                       ),
                                                       title: Text(
-                                                        "Galeri",
+                                                        'Galeri'.tr,
                                                         style: TextStyle(
                                                           color: titleColor,
                                                         ),
@@ -495,7 +499,7 @@ class ReportPage extends StatelessWidget {
                                               ),
                                               const SizedBox(height: 8),
                                               Text(
-                                                "Ketuk untuk mengunggah foto",
+                                                'Ketuk untuk mengunggah foto'.tr,
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold,
@@ -622,7 +626,7 @@ class ReportPage extends StatelessWidget {
                                                           context,
                                                           isSuccess: true,
                                                           description:
-                                                              'Laporan berhasil dikirim.',
+                                                              'Laporan berhasil dikirim.'.tr,
                                                         );
                                                         controller.clearForm();
                                                         Get.back();
@@ -665,8 +669,8 @@ class ReportPage extends StatelessWidget {
                                                     ),
                                               label: Text(
                                                 isSubmitting
-                                                    ? "Mengirim..."
-                                                    : "Kirim Laporan",
+                                                    ? 'Mengirim...'.tr
+                                                    : 'Kirim Laporan'.tr,
                                                 style: TextStyle(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.bold,
@@ -710,61 +714,62 @@ class ReportPage extends StatelessWidget {
           ),
 
           // --- FLOATING NAVIGATION BAR ---
-          Positioned(
-            bottom: 25,
-            left: 20,
-            right: 20,
-            child: Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: navBarColor,
-                borderRadius: BorderRadius.circular(
-                  20,
-                ), // Sudut melengkung penuh (stadium)
-                border: Border.all(color: navBorderColor, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: navShadowColor,
-                    blurRadius: isDark ? 10 : 20,
-                    spreadRadius: isDark ? 0 : 2,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: BottomNavItem(
-                      icon: Icons.home_outlined,
-                      label: "Home",
-                      isActive: false,
-                      onTap: () => Get.offAllNamed(Routes.HOME),
-                      navyColor: navyColor,
+          if (!isNested)
+            Positioned(
+              bottom: 25,
+              left: 20,
+              right: 20,
+              child: Container(
+                height: 70,
+                decoration: BoxDecoration(
+                  color: navBarColor,
+                  borderRadius: BorderRadius.circular(
+                    20,
+                  ), // Sudut melengkung penuh (stadium)
+                  border: Border.all(color: navBorderColor, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: navShadowColor,
+                      blurRadius: isDark ? 10 : 20,
+                      spreadRadius: isDark ? 0 : 2,
+                      offset: const Offset(0, 5),
                     ),
-                  ),
-                  Expanded(
-                    child: BottomNavItem(
-                      icon: Icons.add_circle,
-                      label: "Report",
-                      isActive: true,
-                      onTap: () {},
-                      navyColor: navyColor,
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: BottomNavItem(
+                        icon: Icons.home_outlined,
+                        label: "Home",
+                        isActive: false,
+                        onTap: () => Get.offAllNamed(Routes.HOME),
+                        navyColor: navyColor,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: BottomNavItem(
-                      icon: Icons.person_outline,
-                      label: "Profile",
-                      isActive: false,
-                      onTap: () => Get.offAllNamed(Routes.PROFILE),
-                      navyColor: navyColor,
+                    Expanded(
+                      child: BottomNavItem(
+                        icon: Icons.add_circle,
+                        label: "Report",
+                        isActive: true,
+                        onTap: () {},
+                        navyColor: navyColor,
+                      ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: BottomNavItem(
+                        icon: Icons.person_outline,
+                        label: "Profile",
+                        isActive: false,
+                        onTap: () => Get.offAllNamed(Routes.PROFILE),
+                        navyColor: navyColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -777,7 +782,7 @@ class ReportPage extends StatelessWidget {
   }) {
     return RichText(
       text: TextSpan(
-        text: text,
+        text: text.tr,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
@@ -842,7 +847,7 @@ class ReportPage extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
-          hintText: hint,
+          hintText: hint.tr,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -858,7 +863,7 @@ class ReportPage extends StatelessWidget {
         items: items.map((ReportOption option) {
           return DropdownMenuItem<String>(
             value: option.id,
-            child: Text(option.label),
+            child: Text(option.label.tr),
           );
         }).toList(),
         onChanged: onChanged,
@@ -895,7 +900,7 @@ class ReportPage extends StatelessWidget {
         onChanged: onChanged,
         style: TextStyle(fontSize: 14, color: textColor),
         decoration: InputDecoration(
-          hintText: hint,
+          hintText: hint.tr,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -949,7 +954,7 @@ class ReportPage extends StatelessWidget {
           ),
           alignment: Alignment.center,
           child: Text(
-            label,
+            label.tr,
             style: TextStyle(
               color: isActive ? activeTextColor : Colors.white,
               fontWeight: FontWeight.bold,
