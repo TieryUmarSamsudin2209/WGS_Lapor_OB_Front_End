@@ -1,30 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import '../../../shared/theme/theme_controller.dart';
 import '../../../shared/widgets/bottom_nav.dart';
 import '../../profile/views/profile_view.dart';
 import '../../report/views/report_view.dart';
-import '../controllers/karyawan_main_controller.dart';
 import 'home_view.dart';
 
-class KaryawanMainView extends StatelessWidget {
+class KaryawanMainView extends StatefulWidget {
   const KaryawanMainView({super.key, required this.initialTab});
 
   final int initialTab;
 
   @override
+  State<KaryawanMainView> createState() => _KaryawanMainViewState();
+}
+
+class _KaryawanMainViewState extends State<KaryawanMainView> {
+  late final PageController _pageController;
+  late int _activeIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _activeIndex = _safeTab(widget.initialTab);
+    _pageController = PageController(initialPage: _activeIndex);
+  }
+
+  @override
+  void didUpdateWidget(covariant KaryawanMainView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextTab = _safeTab(widget.initialTab);
+    if (nextTab == _activeIndex) return;
+    _activeIndex = nextTab;
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(nextTab);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(KaryawanMainController());
-
-    // Sync initial index safely
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (controller.pageController.hasClients) {
-        controller.pageController.jumpToPage(initialTab);
-      }
-      controller.activeIndex.value = initialTab;
-    });
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -33,9 +53,9 @@ class KaryawanMainView extends StatelessWidget {
         children: [
           Positioned.fill(
             child: PageView(
-              controller: controller.pageController,
+              controller: _pageController,
               onPageChanged: (index) {
-                controller.activeIndex.value = index;
+                setState(() => _activeIndex = index);
               },
               children: const [
                 HomeView(isNested: true),
@@ -48,19 +68,25 @@ class KaryawanMainView extends StatelessWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            child: Obx(() {
-              return KaryawanBottomNav(
-                activeIndex: controller.activeIndex.value,
-                onTap: (index) {
-                  controller.changePage(index);
-                },
-              );
-            }),
+            child: KaryawanBottomNav(
+              activeIndex: _activeIndex,
+              onTap: _changePage,
+            ),
           ),
         ],
       ),
     );
   }
+
+  void _changePage(int index) {
+    final nextIndex = _safeTab(index);
+    setState(() => _activeIndex = nextIndex);
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(nextIndex);
+    }
+  }
+
+  int _safeTab(int index) => index.clamp(0, 2);
 }
 
 class KaryawanBottomNav extends StatelessWidget {

@@ -68,11 +68,7 @@ class ObNotificationsView extends GetView<ObNotificationsController> {
               children: grouped.entries.expand((entry) {
                 return [
                   _SectionTitle(
-                    title: entry.key == 'TERBARU'
-                        ? 'terbaru'.tr
-                        : entry.key == 'SEBELUMNYA'
-                            ? 'sebelumnya'.tr
-                            : entry.key.tr,
+                    title: _translatedSection(entry.key),
                   ),
                   const SizedBox(height: 10),
                   ...entry.value.map(
@@ -162,7 +158,9 @@ class _NotificationCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        item.title,
+                        item.title.trParams(
+                          _translatedParams(item.titleParams),
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -175,7 +173,7 @@ class _NotificationCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      item.timeLabel,
+                      _translatedTimeLabel(item.timeLabel),
                       style: TextStyle(
                         color: isDark
                             ? Colors.white54
@@ -188,7 +186,9 @@ class _NotificationCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  item.message,
+                  item.message.trParams(
+                    _translatedParams(item.messageParams),
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -286,4 +286,55 @@ _NotificationStyle _styleForType(String type) {
     background: Color(0xFFD8F0FF),
     foreground: Color(0xFF1689D8),
   );
+}
+
+String _translatedSection(String section) {
+  switch (section) {
+    case 'HARI INI':
+      return 'Hari Ini'.tr;
+    case 'KEMARIN':
+      return 'Kemarin'.tr;
+    case 'TERBARU':
+      return 'terbaru'.tr;
+    case 'SEBELUMNYA':
+      return 'sebelumnya'.tr;
+    default:
+      return section.tr;
+  }
+}
+
+Map<String, String> _translatedParams(Map<String, String> params) {
+  return params.map((key, value) => MapEntry(key, _translatedParamValue(value)));
+}
+
+String _translatedParamValue(String value) {
+  final text = value.trim();
+  final employeeMatch = RegExp(r'^Karyawan\s*(\(.*\))$').firstMatch(text);
+  if (employeeMatch != null) {
+    return '${'Karyawan'.tr} ${employeeMatch.group(1)}';
+  }
+  return text.tr;
+}
+
+String _translatedTimeLabel(String label) {
+  final value = label.trim();
+  if (value == 'Baru') return 'Baru'.tr;
+  if (value == 'Kemarin') return 'Kemarin'.tr;
+
+  final parts = value.split(RegExp(r'\s+'));
+  if (parts.length >= 2) {
+    final count = parts.first;
+    final unit = parts[1];
+    if (unit == 'mnt') {
+      return '@count mnt'.trParams({'count': count});
+    }
+    if (unit == 'jam') {
+      return '@count jam'.trParams({'count': count});
+    }
+    if (unit == 'hari') {
+      return '@count hari'.trParams({'count': count});
+    }
+  }
+
+  return value.tr;
 }

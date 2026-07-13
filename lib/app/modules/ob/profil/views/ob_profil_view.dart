@@ -710,7 +710,7 @@ class _ProfileReportCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          report.title,
+                          report.title.tr,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -729,7 +729,7 @@ class _ProfileReportCard extends StatelessWidget {
                             ),
                             Expanded(
                               child: Text(
-                                report.location,
+                                report.location.tr,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -743,7 +743,7 @@ class _ProfileReportCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          report.description,
+                          report.description.tr,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

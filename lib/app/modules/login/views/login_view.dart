@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../routes/app_pages.dart';
+import '../../../shared/widgets/contact_admin_dialog.dart';
 import '../controllers/login_controller.dart';
 
 class LoginPage extends GetView<LoginController> {
@@ -143,23 +144,7 @@ class _LoginCard extends StatelessWidget {
                 },
               ),
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8, right: 8),
-                child: GestureDetector(
-                  onTap: () {},
-                  child: const Text(
-                    'Lupa Password?',
-                    style: TextStyle(
-                      color: LoginPage._navyTextColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            
             const SizedBox(height: 30),
             Center(
               child: SizedBox(
@@ -175,8 +160,9 @@ class _LoginCard extends StatelessWidget {
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: const Color(0xFF9CCBFF),
                       elevation: 0,
-                      shadowColor:
-                          const Color(0xFF4FA0FF).withValues(alpha: 0.5),
+                      shadowColor: const Color(
+                        0xFF4FA0FF,
+                      ).withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
@@ -204,30 +190,44 @@ class _LoginCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            Center(
-              child: RichText(
-                text: const TextSpan(
-                  text: 'Belum punya akun? ',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: 'Hubungi admin',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: LoginPage._navyTextColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            const _AdminContactPrompt(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AdminContactPrompt extends StatelessWidget {
+  const _AdminContactPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          const Text(
+            'Belum punya akun? ',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
+          ),
+          GestureDetector(
+            onTap: () => ContactAdminDialog.show(context),
+            child: const Text(
+              'Hubungi admin',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: LoginPage._navyTextColor,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

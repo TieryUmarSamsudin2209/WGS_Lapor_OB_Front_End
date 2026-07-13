@@ -508,7 +508,7 @@ class _ActivityCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 11),
                         Text(
-                          title,
+                          title.tr,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -529,7 +529,7 @@ class _ActivityCard extends StatelessWidget {
                             const SizedBox(width: 2),
                             Expanded(
                               child: Text(
-                                location,
+                                location.tr,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -544,7 +544,7 @@ class _ActivityCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          description,
+                          description.tr,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

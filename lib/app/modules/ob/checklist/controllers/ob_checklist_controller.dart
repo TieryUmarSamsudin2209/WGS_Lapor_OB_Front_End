@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/utils/checklist_translation_key.dart';
 import '../../../../shared/widgets/custom_alert.dart';
 
 /// ==================== MODELS ====================
@@ -91,13 +92,13 @@ class ObChecklistController extends GetxController {
     final isPhotoEmpty = item.photos.isEmpty;
 
     if (isNoteEmpty && isPhotoEmpty) {
-      return 'Catatan dan bukti foto wajib diisi.';
+      return 'Catatan dan bukti foto wajib diisi.'.tr;
     }
     if (isNoteEmpty) {
-      return 'Catatan wajib diisi.';
+      return 'Catatan wajib diisi.'.tr;
     }
     if (isPhotoEmpty) {
-      return 'Bukti foto wajib diisi.';
+      return 'Bukti foto wajib diisi.'.tr;
     }
 
     return null;
@@ -144,17 +145,19 @@ class ObChecklistController extends GetxController {
           _asMap(item['tugas']) ??
           item;
       final photos = _photosFromApi(item);
-      final sectionTitle = _firstValueFromSources([item, detail], [
-            'section',
-            'section_name',
-            'kategori',
-            'category',
-            'area',
-            'ruangan',
-            'lokasi',
-            'location',
-          ]) ??
-          'Checklist Harian';
+      final sectionTitle = checklistTranslationKey(
+        _firstValueFromSources([item, detail], [
+              'section',
+              'section_name',
+              'kategori',
+              'category',
+              'area',
+              'ruangan',
+              'lokasi',
+              'location',
+            ]) ??
+            'Checklist Harian',
+      );
 
       groupedItems.putIfAbsent(sectionTitle, () => []).add(
             ChecklistItem(
@@ -165,24 +168,28 @@ class ObChecklistController extends GetxController {
                     'uuid',
                   ]) ??
                   '',
-              title: _firstValueFromSources([item, detail], [
-                    'title',
-                    'judul',
-                    'nama',
-                    'nama_checklist',
-                    'nama_tugas',
-                    'kegiatan',
-                    'task',
-                  ]) ??
-                  'Checklist',
-              description: _firstValueFromSources([item, detail], [
-                    'description',
-                    'deskripsi',
-                    'keterangan',
-                    'catatan',
-                    'detail',
-                  ]) ??
-                  '-',
+              title: checklistTranslationKey(
+                _firstValueFromSources([item, detail], [
+                      'title',
+                      'judul',
+                      'nama',
+                      'nama_checklist',
+                      'nama_tugas',
+                      'kegiatan',
+                      'task',
+                    ]) ??
+                    'Checklist',
+              ),
+              description: checklistTranslationKey(
+                _firstValueFromSources([item, detail], [
+                      'description',
+                      'deskripsi',
+                      'keterangan',
+                      'catatan',
+                      'detail',
+                    ]) ??
+                    '-',
+              ),
               status: _statusFromApi(
                 _firstValueFromSources([item, detail], [
                       'status',
@@ -302,11 +309,11 @@ class ObChecklistController extends GetxController {
         if (item.photos.length < 3) {
           item.photos.add(image.path);
         } else {
-          _showErrorAlert('Maksimal 3 foto per item.');
+          _showErrorAlert('Maksimal 3 foto per item.'.tr);
         }
       }
     } catch (_) {
-      _showErrorAlert('Gagal mengambil foto. Silakan coba lagi.');
+      _showErrorAlert('Gagal mengambil foto. Silakan coba lagi.'.tr);
     }
   }
 
@@ -315,7 +322,7 @@ class ObChecklistController extends GetxController {
     try {
       item.photos.removeAt(index);
     } catch (_) {
-      _showErrorAlert('Gagal menghapus foto. Silakan coba lagi.');
+      _showErrorAlert('Gagal menghapus foto. Silakan coba lagi.'.tr);
     }
   }
 

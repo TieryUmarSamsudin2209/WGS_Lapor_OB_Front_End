@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/utils/report_translation_key.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
 class ObReportsController extends GetxController {
@@ -116,37 +117,40 @@ class ObReportsController extends GetxController {
             'uuid',
           ]) ??
           '',
-      title:
-          _stringValueFromSources([item, detail], [
-            'title',
-            'judul',
-            'nama_laporan',
-            'kategori',
-            'category',
-            'nama_kategori',
-          ]) ??
-          'Laporan',
-      location:
-          _stringValueFromSources([item, detail], [
-            'location',
-            'lokasi',
-            'ruangan',
-            'area',
-            'detail_lokasi',
-            'alamat',
-            'lantai',
-          ]) ??
-          '-',
-      description:
-          _stringValueFromSources([item, detail], [
-            'description',
-            'deskripsi',
-            'deskripsi_kendala',
-            'catatan',
-            'keluhan',
-            'keterangan',
-          ]) ??
-          '-',
+      title: reportTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'title',
+              'judul',
+              'nama_laporan',
+              'kategori',
+              'category',
+              'nama_kategori',
+            ]) ??
+            'Laporan',
+      ),
+      location: reportTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'location',
+              'lokasi',
+              'ruangan',
+              'area',
+              'detail_lokasi',
+              'alamat',
+              'lantai',
+            ]) ??
+            '-',
+      ),
+      description: reportTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'description',
+              'deskripsi',
+              'deskripsi_kendala',
+              'catatan',
+              'keluhan',
+              'keterangan',
+            ]) ??
+            '-',
+      ),
       priority: _priorityFromApi(
         _stringValueFromSources([item, detail], [
               'priority',
@@ -177,13 +181,15 @@ class ObReportsController extends GetxController {
         'pegawai',
         'user',
       ]),
-      categoryName: _stringValueFromSources([item, detail], [
-        'nama_kategori',
-        'kategori',
-        'category',
-        'category_name',
-        'categoryName',
-      ]),
+      categoryName: _translatedValueOrNull(
+        _stringValueFromSources([item, detail], [
+          'nama_kategori',
+          'kategori',
+          'category',
+          'category_name',
+          'categoryName',
+        ]),
+      ),
       assignedObId: _stringValueFromSources([item, detail], [
         'ob_id',
         'id_ob',
@@ -373,6 +379,11 @@ class ObReportsController extends GetxController {
       if (value != null) return value;
     }
     return null;
+  }
+
+  String? _translatedValueOrNull(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    return reportTranslationKey(value);
   }
 
   Map<String, dynamic>? _asMap(Object? value) {

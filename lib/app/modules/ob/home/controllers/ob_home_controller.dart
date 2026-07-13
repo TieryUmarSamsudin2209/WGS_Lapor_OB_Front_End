@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:get/get.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/utils/checklist_translation_key.dart';
+import '../../../../shared/utils/report_translation_key.dart';
 import '../../../../shared/widgets/ob_assignment_alert.dart';
 
 class DailyTask {
@@ -203,7 +205,7 @@ class ObHomeController extends GetxController {
   Future<void> takeReport(HomeReport report) async {
     final reportId = _normalizedReportId(report);
     if (reportId == null) {
-      Get.snackbar('Gagal', 'ID laporan tidak ditemukan');
+      Get.snackbar('Gagal'.tr, 'ID laporan tidak ditemukan'.tr);
       return;
     }
 
@@ -214,9 +216,9 @@ class ObHomeController extends GetxController {
       final response = await _authService.takeObReport(reportId);
       if (response == null) {
         Get.snackbar(
-          'Gagal mengambil laporan',
+          'Gagal mengambil laporan'.tr,
           _authService.lastRequestError ??
-              'Laporan belum bisa diambil. Coba muat ulang daftar laporan.',
+              'Laporan belum bisa diambil. Coba muat ulang daftar laporan.'.tr,
           snackPosition: SnackPosition.BOTTOM,
         );
         return;
@@ -228,8 +230,8 @@ class ObHomeController extends GetxController {
       report.status.value = 'Sedang Diproses';
 
       Get.snackbar(
-        'Laporan diambil',
-        'Laporan sudah masuk daftar pekerjaan Anda.',
+        'Laporan diambil'.tr,
+        'Laporan sudah masuk daftar pekerjaan Anda.'.tr,
         snackPosition: SnackPosition.BOTTOM,
       );
       await loadReports(silent: true);
@@ -239,26 +241,43 @@ class ObHomeController extends GetxController {
   }
 
   DailyTask _dailyTaskFromApi(Map<String, dynamic> item) {
+    final detail = _asMap(item['checklist']) ??
+        _asMap(item['checklist_harian']) ??
+        _asMap(item['tugas']) ??
+        item;
+
     return DailyTask(
-      title: _stringValue(item, [
-            'title',
-            'judul',
-            'nama',
-            'nama_checklist',
-            'kegiatan',
-          ]) ??
-          'Checklist',
-      location: _stringValue(item, [
-            'location',
-            'lokasi',
-            'ruangan',
-            'area',
-            'description',
-            'deskripsi',
-            'keterangan',
-          ]) ??
-          '-',
-      status: _taskStatusFromApi(_stringValue(item, ['status']) ?? 'pending'),
+      title: checklistTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'title',
+              'judul',
+              'nama',
+              'nama_checklist',
+              'nama_tugas',
+              'kegiatan',
+              'task',
+            ]) ??
+            'Checklist',
+      ),
+      location: checklistTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'location',
+              'lokasi',
+              'ruangan',
+              'area',
+              'description',
+              'deskripsi',
+              'keterangan',
+            ]) ??
+            '-',
+      ),
+      status: _taskStatusFromApi(
+        _stringValueFromSources(
+              [item, detail],
+              ['status', 'status_checklist', 'status_tugas'],
+            ) ??
+            'pending',
+      ),
     );
   }
 
@@ -280,34 +299,40 @@ class ObHomeController extends GetxController {
             'uuid',
           ]) ??
           '',
-      title: _stringValueFromSources([item, detail], [
-            'title',
-            'judul',
-            'nama_laporan',
-            'kategori',
-            'category',
-            'nama_kategori',
-          ]) ??
-          'Laporan',
-      location: _stringValueFromSources([item, detail], [
-            'location',
-            'lokasi',
-            'ruangan',
-            'area',
-            'detail_lokasi',
-            'alamat',
-            'lantai',
-          ]) ??
-          '-',
-      description: _stringValueFromSources([item, detail], [
-            'description',
-            'deskripsi',
-            'deskripsi_kendala',
-            'catatan',
-            'keluhan',
-            'keterangan',
-          ]) ??
-          '-',
+      title: reportTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'title',
+              'judul',
+              'nama_laporan',
+              'kategori',
+              'category',
+              'nama_kategori',
+            ]) ??
+            'Laporan',
+      ),
+      location: reportTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'location',
+              'lokasi',
+              'ruangan',
+              'area',
+              'detail_lokasi',
+              'alamat',
+              'lantai',
+            ]) ??
+            '-',
+      ),
+      description: reportTranslationKey(
+        _stringValueFromSources([item, detail], [
+              'description',
+              'deskripsi',
+              'deskripsi_kendala',
+              'catatan',
+              'keluhan',
+              'keterangan',
+            ]) ??
+            '-',
+      ),
       priority: _priorityFromApi(
         _stringValueFromSources([item, detail], [
               'priority',
@@ -338,13 +363,15 @@ class ObHomeController extends GetxController {
         'pegawai',
         'user',
       ]),
-      categoryName: _stringValueFromSources([item, detail], [
-        'nama_kategori',
-        'kategori',
-        'category',
-        'category_name',
-        'categoryName',
-      ]),
+      categoryName: _translatedValueOrNull(
+        _stringValueFromSources([item, detail], [
+          'nama_kategori',
+          'kategori',
+          'category',
+          'category_name',
+          'categoryName',
+        ]),
+      ),
       assignedObId: _stringValueFromSources([item, detail], [
         'ob_id',
         'id_ob',
@@ -598,6 +625,11 @@ class ObHomeController extends GetxController {
     return null;
   }
 
+  String? _translatedValueOrNull(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    return reportTranslationKey(value);
+  }
+
   Map<String, dynamic>? _asMap(Object? value) {
     if (value is Map) {
       return value.map((key, value) => MapEntry(key.toString(), value));
@@ -636,9 +668,13 @@ class ObHomeController extends GetxController {
         final report = newReports.first;
         final location = report.location == '-' ? 'lokasi terkait' : report.location;
         ObAssignmentAlert.show(
-          title: 'Penugasan Baru',
+          title: 'Penugasan Baru'.tr,
           message:
-              'Ada tugas perbaikan ${report.title} di $location. Harap segera menuju lokasi.',
+              'Ada tugas perbaikan @title di @location. Harap segera menuju lokasi.'
+                  .trParams({
+                    'title': report.title,
+                    'location': location,
+                  }),
         );
       }
     }

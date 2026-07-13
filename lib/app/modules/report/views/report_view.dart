@@ -292,17 +292,22 @@ class ReportPage extends StatelessWidget {
                                       const SizedBox(height: 20),
 
                                       _buildLabel(
-                                        'Detail Ruangan',
+                                        'Ruangan',
+                                        isRequired: true,
                                         color: titleColor,
                                       ),
                                       const SizedBox(height: 8),
-                                      _buildTextField(
-                                        hint: 'Keterangan Tempat',
-                                        onChanged: (val) =>
-                                            controller
-                                                    .floorRoomController
-                                                    .value =
-                                                val,
+
+                                      Obx(
+                                        () => _buildModernDropdown(
+                                          value: controller
+                                              .selectedRoom
+                                              .value
+                                              ?.id,
+                                          hint: 'Pilih ruangan',
+                                          items: controller.roomOptions,
+                                          onChanged: controller.setRoomById,
+                                        ),
                                       ),
 
                                       const SizedBox(height: 20),
@@ -336,7 +341,7 @@ class ReportPage extends StatelessWidget {
                                             color: titleColor,
                                           ),
                                           Text(
-                                            'Max 3 foto (1MB)'.tr,
+                                            'Max 5 foto (1MB)'.tr,
                                             style: TextStyle(
                                               color: mutedTextColor,
                                               fontSize: 11,

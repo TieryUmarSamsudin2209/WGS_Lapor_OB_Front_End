@@ -26,9 +26,12 @@ class ObDetailView extends GetView<ObDetailController> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
-          'Detail Laporan',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          'Detail Laporan'.tr,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: false,
       ),
@@ -110,7 +113,7 @@ class ObDetailView extends GetView<ObDetailController> {
                           Icon(Icons.circle, size: 8, color: urgentRed),
                           const SizedBox(width: 4),
                           Obx(() => Text(
-                            controller.priority.value,
+                            controller.priority.value.tr,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -131,18 +134,18 @@ class ObDetailView extends GetView<ObDetailController> {
                             color: const Color(0xFFF57C00).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.help,
                                 size: 8,
                                 color: Color(0xFFF57C00),
                               ),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
-                                'BUTUH BANTUAN',
-                                style: TextStyle(
+                                'BUTUH BANTUAN'.tr,
+                                style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFFF57C00),
@@ -159,7 +162,7 @@ class ObDetailView extends GetView<ObDetailController> {
               ),
               const SizedBox(width: 8),
               Text(
-                '10 menit yang lalu',
+                '10 menit yang lalu'.tr,
                 style: TextStyle(fontSize: 11, color: mutedColor),
               ),
             ],
@@ -168,7 +171,7 @@ class ObDetailView extends GetView<ObDetailController> {
 
           // Judul Laporan
           Obx(() => Text(
-            controller.title.value,
+            controller.title.value.tr,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
@@ -185,7 +188,7 @@ class ObDetailView extends GetView<ObDetailController> {
               Expanded(
                 child: Obx(
                   () => Text(
-                    controller.location.value,
+                    controller.location.value.tr,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -237,7 +240,7 @@ class ObDetailView extends GetView<ObDetailController> {
                 children: [
                   const SizedBox(height: 25),
                   Text(
-                    'DESKRIPSI LAPORAN',
+                    'DESKRIPSI LAPORAN'.tr,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -246,7 +249,7 @@ class ObDetailView extends GetView<ObDetailController> {
                   ),
                   const SizedBox(height: 8),
                   Obx(() => Text(
-                    controller.description.value,
+                    controller.description.value.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: titleColor,
@@ -255,7 +258,7 @@ class ObDetailView extends GetView<ObDetailController> {
                   )),
                   const SizedBox(height: 25),
                   Text(
-                    'BUKTI FOTO',
+                    'BUKTI FOTO'.tr,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -290,7 +293,7 @@ class ObDetailView extends GetView<ObDetailController> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Foto belum ada',
+                              'Foto belum ada'.tr,
                               style: TextStyle(
                                 color: mutedColor,
                                 fontSize: 12,
@@ -333,17 +336,17 @@ class ObDetailView extends GetView<ObDetailController> {
                               color: Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(5),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.search,
                                   size: 14,
                                   color: Colors.black87,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'Klik untuk Perbesar',
-                                  style: TextStyle(
+                                  'Klik untuk Perbesar'.tr,
+                                  style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -362,9 +365,9 @@ class ObDetailView extends GetView<ObDetailController> {
                 padding: const EdgeInsets.only(top: 20),
                 child: GestureDetector(
                   onTap: () => controller.toggleDetailExpand(),
-                  child: const Text(
-                    'LIHAT SELENGKAPNYA >',
-                    style: TextStyle(
+                  child: Text(
+                    'LIHAT SELENGKAPNYA >'.tr,
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -400,7 +403,7 @@ class ObDetailView extends GetView<ObDetailController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            titleText,
+            titleText.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -418,7 +421,7 @@ class ObDetailView extends GetView<ObDetailController> {
               controller: controller.noteController,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: hintText,
+                hintText: hintText.tr,
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                 contentPadding: const EdgeInsets.all(15),
                 border: InputBorder.none,
@@ -427,7 +430,7 @@ class ObDetailView extends GetView<ObDetailController> {
           ),
           const SizedBox(height: 20),
           Text(
-            photoLabel,
+            photoLabel.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -458,7 +461,7 @@ class ObDetailView extends GetView<ObDetailController> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Ambil / Pilih Foto Bukti',
+                        'Ambil / Pilih Foto Bukti'.tr,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -599,8 +602,9 @@ class ObDetailView extends GetView<ObDetailController> {
           return _buildLockedNotice(
             icon: Icons.lock_clock_rounded,
             title: 'Laporan sudah diambil',
-            message:
-                'Laporan ini sudah diambil oleh ${name == null || name.isEmpty ? 'OB lain' : name}.',
+            message: 'Laporan ini sudah diambil oleh @name.'.trParams({
+              'name': name == null || name.isEmpty ? 'OB lain'.tr : name,
+            }),
           );
         }
 
@@ -608,7 +612,9 @@ class ObDetailView extends GetView<ObDetailController> {
           final status = controller.activeReport?.status.value ?? 'selesai';
           return _buildLockedNotice(
             icon: Icons.verified_outlined,
-            title: 'Laporan sudah ${status.toLowerCase()}',
+            title: 'Laporan sudah @status'.trParams({
+              'status': status.tr.toLowerCase(),
+            }),
             message: 'Laporan ini sudah tidak dapat diambil lagi.',
           );
         }
@@ -640,7 +646,7 @@ class ObDetailView extends GetView<ObDetailController> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Pilih Sumber Foto',
+                'Pilih Sumber Foto'.tr,
                 style: TextStyle(
                   color: titleColor,
                   fontSize: 16,
@@ -663,7 +669,7 @@ class ObDetailView extends GetView<ObDetailController> {
                     color: isDark ? AppDarkColors.accent : Colors.blue,
                   ),
                 ),
-                title: Text('Kamera', style: TextStyle(color: titleColor)),
+                title: Text('Kamera'.tr, style: TextStyle(color: titleColor)),
                 onTap: () {
                   Get.back();
                   controller.pickImage(ImageSource.camera);
@@ -684,7 +690,7 @@ class ObDetailView extends GetView<ObDetailController> {
                     color: isDark ? const Color(0xFFB58CFF) : Colors.purple,
                   ),
                 ),
-                title: Text('Galeri', style: TextStyle(color: titleColor)),
+                title: Text('Galeri'.tr, style: TextStyle(color: titleColor)),
                 onTap: () {
                   Get.back();
                   controller.pickImage(ImageSource.gallery);
@@ -720,12 +726,12 @@ class ObDetailView extends GetView<ObDetailController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                title.tr,
                 style: TextStyle(fontSize: 10, color: titleColor),
               ),
               const SizedBox(height: 2),
               Text(
-                value,
+                value.tr,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -787,7 +793,7 @@ class ObDetailView extends GetView<ObDetailController> {
                     const SizedBox(width: 8),
                   ],
                   Text(
-                    text,
+                    text.tr,
                     style: TextStyle(
                       color: foregroundColor,
                       fontWeight: FontWeight.bold,
@@ -815,7 +821,7 @@ class ObDetailView extends GetView<ObDetailController> {
         Icon(icon, color: iconColor, size: 34),
         const SizedBox(height: 10),
         Text(
-          title,
+          title.tr,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: titleColor,
@@ -825,7 +831,7 @@ class ObDetailView extends GetView<ObDetailController> {
         ),
         const SizedBox(height: 6),
         Text(
-          message,
+          message.tr,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: bodyColor,
@@ -873,7 +879,7 @@ class ObDetailView extends GetView<ObDetailController> {
             Icon(usedIcon, size: 22, color: fgColor),
             const SizedBox(width: 8),
             Text(
-              text,
+              text.tr,
               style: TextStyle(
                 color: fgColor,
                 fontWeight: FontWeight.bold,

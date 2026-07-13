@@ -39,7 +39,7 @@ class ObReportsView extends GetView<ObReportsController> {
                       );
                     }
 
-                    final reports = controller.filteredReports;
+                    final reports = controller.filteredReports.toList();
                     if (reports.isEmpty) {
                       return const SliverFillRemaining(
                         hasScrollBody: false,
@@ -105,7 +105,7 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 2),
           Expanded(
             child: Text(
-              'Semua Laporan Masuk',
+              'Semua Laporan Masuk'.tr,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -146,7 +146,7 @@ class _SearchAndFilters extends GetView<ObReportsController> {
               onChanged: controller.onSearchChanged,
               style: TextStyle(color: isDark ? Colors.white : Colors.black87),
               decoration: InputDecoration(
-                hintText: 'Cari pelaporan atau lokasi...',
+                hintText: 'Cari pelaporan atau lokasi...'.tr,
                 hintStyle: TextStyle(
                   color: isDark ? Colors.white54 : const Color(0xFF9AA4B2),
                   fontSize: 13,
@@ -165,26 +165,29 @@ class _SearchAndFilters extends GetView<ObReportsController> {
           SizedBox(
             height: 38,
             child: Obx(
-              () => ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) {
-                  final filter = const [
-                    'Semua',
-                    'Proses',
-                    'Selesai',
-                    'Tertolak',
-                    'Pending',
-                  ][index];
-                  final active = controller.selectedFilter.value == filter;
-                  return _FilterChip(
-                    label: filter,
-                    active: active,
-                    onTap: () => controller.setFilter(filter),
-                  );
-                },
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemCount: 5,
-              ),
+              () {
+                final selectedFilter = controller.selectedFilter.value;
+
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, index) {
+                    final filter = const [
+                      'Semua',
+                      'Proses',
+                      'Selesai',
+                      'Tertolak',
+                      'Pending',
+                    ][index];
+                    return _FilterChip(
+                      label: filter,
+                      active: selectedFilter == filter,
+                      onTap: () => controller.setFilter(filter),
+                    );
+                  },
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemCount: 5,
+                );
+              },
             ),
           ),
         ],
@@ -232,7 +235,7 @@ class _FilterChip extends StatelessWidget {
           ),
         ),
         child: Text(
-          label,
+          label.tr,
           style: TextStyle(
             color: fg,
             fontSize: 12,
@@ -259,16 +262,14 @@ class _IncomingReportCard extends StatelessWidget {
     final cardColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
     final borderColor = isDark ? AppDarkColors.border : const Color(0xFFD1D9E5);
 
-    return Obx(() {
-      final priority = _priorityStyle(report.priority);
-      final status = _statusStyle(report.status.value);
+    final priority = _priorityStyle(report.priority);
 
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
             decoration: BoxDecoration(
               color: cardColor,
               borderRadius: BorderRadius.circular(8),
@@ -298,12 +299,16 @@ class _IncomingReportCard extends StatelessWidget {
                             children: [
                               _ReportPill(style: priority),
                               const Spacer(),
-                              _ReportPill(style: status),
+                              Obx(
+                                () => _ReportPill(
+                                  style: _statusStyle(report.status.value),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            report.title,
+                            report.title.tr,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -323,7 +328,7 @@ class _IncomingReportCard extends StatelessWidget {
                               ),
                               Expanded(
                                 child: Text(
-                                  report.location,
+                                  report.location.tr,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -337,7 +342,7 @@ class _IncomingReportCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            report.description,
+                            report.description.tr,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -387,7 +392,6 @@ class _IncomingReportCard extends StatelessWidget {
           ),
         ),
       );
-    });
   }
 }
 

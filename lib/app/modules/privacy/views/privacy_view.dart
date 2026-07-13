@@ -33,8 +33,8 @@ class PrivacyView extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Kebijakan Privasi',
+                          const _TrText(
+                            text: 'Kebijakan Privasi',
                             style: TextStyle(
                               color: _navy,
                               fontSize: 28,
@@ -42,8 +42,8 @@ class PrivacyView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'Terakhir diperbarui: 7 Juli 2026',
+                          const _TrText(
+                            text: 'Terakhir diperbarui: 7 Juli 2026',
                             style: TextStyle(
                               color: _bodyText,
                               fontSize: 16,
@@ -60,8 +60,8 @@ class PrivacyView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 58),
-                          const Text(
-                            'Melindungi Data Anda di\nLapor-OB',
+                          const _TrText(
+                            text: 'Melindungi Data Anda di\nLapor-OB',
                             style: TextStyle(
                               color: _navy,
                               fontSize: 29,
@@ -70,8 +70,8 @@ class PrivacyView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 18),
-                          const Text(
-                            'Privasi Anda adalah prioritas kami. Dokumen ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi Anda saat menggunakan platform manajemen Office Boy kami.',
+                          const _TrText(
+                            text: 'Privasi Anda adalah prioritas kami. Dokumen ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi Anda saat menggunakan platform manajemen Office Boy kami.',
                             style: TextStyle(
                               color: _bodyText,
                               fontSize: 16,
@@ -95,8 +95,8 @@ class PrivacyView extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: const [
-                                Text(
-                                  'Kami mengumpulkan informasi untuk memberikan layanan yang lebih baik kepada semua pengguna kami. Hal ini mencakup:',
+                                _TrText(
+                                  text: 'Kami mengumpulkan informasi untuk memberikan layanan yang lebih baik kepada semua pengguna kami. Hal ini mencakup:',
                                   style: _PrivacyTextStyles.body,
                                 ),
                                 SizedBox(height: 14),
@@ -122,8 +122,8 @@ class PrivacyView extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: const [
-                                Text(
-                                  'Informasi yang kami kumpulkan digunakan untuk mengoperasikan, memelihara, dan menyediakan fitur layanan Lapor-OB, termasuk:',
+                                _TrText(
+                                  text: 'Informasi yang kami kumpulkan digunakan untuk mengoperasikan, memelihara, dan menyediakan fitur layanan Lapor-OB, termasuk:',
                                   style: _PrivacyTextStyles.body,
                                 ),
                                 SizedBox(height: 15),
@@ -132,8 +132,8 @@ class PrivacyView extends StatelessWidget {
                                       '"Memantau kinerja operasional harian secara real-time untuk memastikan kebersihan gedung terjaga."',
                                 ),
                                 SizedBox(height: 11),
-                                Text(
-                                  'Kami juga menggunakan data untuk mengirimkan notifikasi tugas baru atau pembaruan status laporan langsung ke perangkat Anda.',
+                                _TrText(
+                                  text: 'Kami juga menggunakan data untuk mengirimkan notifikasi tugas baru atau pembaruan status laporan langsung ke perangkat Anda.',
                                   style: _PrivacyTextStyles.body,
                                 ),
                               ],
@@ -146,8 +146,8 @@ class PrivacyView extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: const [
-                                Text(
-                                  'Kami bekerja keras untuk melindungi Lapor-OB dan pengguna kami dari akses tanpa izin atau pengubahan, pengungkapan, maupun penghancuran informasi yang kami pegang secara tidak sah.',
+                                _TrText(
+                                  text: 'Kami bekerja keras untuk melindungi Lapor-OB dan pengguna kami dari akses tanpa izin atau pengubahan, pengungkapan, maupun penghancuran informasi yang kami pegang secara tidak sah.',
                                   style: _PrivacyTextStyles.body,
                                 ),
                                 SizedBox(height: 14),
@@ -162,8 +162,8 @@ class PrivacyView extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Text(
-                                  'Anda dapat meminta akses, koreksi, atau penghapusan data pribadi Anda kapan saja dengan menghubungi',
+                                const _TrText(
+                                  text: 'Anda dapat meminta akses, koreksi, atau penghapusan data pribadi Anda kapan saja dengan menghubungi',
                                   style: _PrivacyTextStyles.body,
                                 ),
                                 const SizedBox(height: 14),
@@ -175,7 +175,7 @@ class PrivacyView extends StatelessWidget {
                                       Icons.mail_outline_rounded,
                                       size: 20,
                                     ),
-                                    label: const Text('Hubungi Tim Privasi'),
+                                    label: Text('Hubungi Tim Privasi'.tr),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: _primaryBlue,
                                       foregroundColor: Colors.white,
@@ -199,7 +199,7 @@ class PrivacyView extends StatelessWidget {
                                       Icons.download_rounded,
                                       size: 20,
                                     ),
-                                    label: const Text('Unduh Salinan Data'),
+                                    label: Text('Unduh Salinan Data'.tr),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: _primaryBlue,
                                       side: const BorderSide(
@@ -271,8 +271,8 @@ class PrivacyView extends StatelessWidget {
             fit: BoxFit.contain,
           ),
           const SizedBox(width: 4),
-          const Text(
-            'Lapor OB',
+          const _TrText(
+            text: 'Lapor OB',
             style: TextStyle(
               color: Color(0xFF003366),
               fontSize: 12,
@@ -305,8 +305,8 @@ class PrivacyView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
-          Text(
-            'Poin Penting:',
+          const _TrText(
+            text: 'Poin Penting:',
             style: TextStyle(
               color: _primaryBlue,
               fontSize: 16,
@@ -350,8 +350,8 @@ class PrivacyView extends StatelessWidget {
                 fit: BoxFit.contain,
               ),
               const SizedBox(width: 4),
-              const Text(
-                'Lapor OB',
+              const _TrText(
+                text: 'Lapor OB',
                 style: TextStyle(
                   color: Color(0xFF003366),
                   fontSize: 12,
@@ -361,8 +361,8 @@ class PrivacyView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const Text(
-            '© 2026 Lapor-OB. Hak Cipta Dilindungi Undang-Undang.',
+          const _TrText(
+            text: '© 2026 Lapor-OB. Hak Cipta Dilindungi Undang-Undang.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Color(0xFF4B5563),
@@ -374,8 +374,8 @@ class PrivacyView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Kebijakan Privasi',
+              const _TrText(
+                text: 'Kebijakan Privasi',
                 style: TextStyle(
                   color: _primaryBlue,
                   fontSize: 16,
@@ -385,8 +385,8 @@ class PrivacyView extends StatelessWidget {
               const SizedBox(width: 16),
               GestureDetector(
                 onTap: () => Get.toNamed(Routes.TERMS),
-                child: const Text(
-                  'Syarat & Ketentuan',
+                child: const _TrText(
+                  text: 'Syarat & Ketentuan',
                   style: TextStyle(
                     color: Color(0xFF4B5563),
                     fontSize: 16,
@@ -424,7 +424,7 @@ class _ImportantItem extends StatelessWidget {
           const SizedBox(width: 13),
           Expanded(
             child: Text(
-              text,
+              text.tr,
               style: const TextStyle(
                 color: PrivacyView._navy,
                 fontSize: 16,
@@ -470,7 +470,7 @@ class _PrivacySection extends StatelessWidget {
             const SizedBox(width: 13),
             Expanded(
               child: Text(
-                title,
+                title.tr,
                 style: const TextStyle(
                   color: PrivacyView._navy,
                   fontSize: 26,
@@ -498,7 +498,7 @@ class _BoldParagraph extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 28, bottom: 10),
       child: Text(
-        text,
+        text.tr,
         style: const TextStyle(
           color: Color(0xFF374151),
           fontSize: 16,
@@ -526,7 +526,7 @@ class _QuoteBox extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE0E4F4)),
       ),
       child: Text(
-        text,
+        text.tr,
         style: const TextStyle(
           color: PrivacyView._navy,
           fontSize: 16,
@@ -576,8 +576,8 @@ class _SecurityBanner extends StatelessWidget {
             const Positioned(
               left: 20,
               top: 42,
-              child: Text(
-                'KEBIJAKAN PRIVASI\nDATA TERLINDUNG\nSECARA DIGITAL',
+              child: _TrText(
+                text: 'KEBIJAKAN PRIVASI\nDATA TERLINDUNG\nSECARA DIGITAL',
                 style: TextStyle(
                   color: PrivacyView._primaryBlue,
                   fontSize: 12,
@@ -608,8 +608,8 @@ class _SecurityBanner extends StatelessWidget {
             const Positioned(
               right: 18,
               bottom: 18,
-              child: Text(
-                'KEAMANAN\nTINGKAT LANJUT',
+              child: _TrText(
+                text: 'KEAMANAN\nTINGKAT LANJUT',
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   color: PrivacyView._primaryBlue,
@@ -697,8 +697,8 @@ class _HelpCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Punya Pertanyaan Lain?',
+          const _TrText(
+            text: 'Punya Pertanyaan Lain?',
             style: TextStyle(
               color: PrivacyView._navy,
               fontSize: 16,
@@ -706,8 +706,8 @@ class _HelpCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Silakan baca Syarat & Ketentuan kami atau hubungi pusat bantuan untuk klarifikasi lebih lanjut.',
+          const _TrText(
+            text: 'Silakan baca Syarat & Ketentuan kami atau hubungi pusat bantuan untuk klarifikasi lebih lanjut.',
             style: TextStyle(
               color: PrivacyView._bodyText,
               fontSize: 16,
@@ -718,8 +718,8 @@ class _HelpCard extends StatelessWidget {
           const SizedBox(height: 25),
           GestureDetector(
             onTap: () {},
-            child: const Text(
-              'Buka Pusat Bantuan',
+            child: const _TrText(
+              text: 'Buka Pusat Bantuan',
               style: TextStyle(
                 color: PrivacyView._primaryBlue,
                 fontSize: 16,
@@ -731,6 +731,27 @@ class _HelpCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TrText extends StatelessWidget {
+  const _TrText({
+    required this.text,
+    required this.style,
+    this.textAlign,
+  });
+
+  final String text;
+  final TextStyle style;
+  final TextAlign? textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.tr,
+      textAlign: textAlign,
+      style: style,
     );
   }
 }

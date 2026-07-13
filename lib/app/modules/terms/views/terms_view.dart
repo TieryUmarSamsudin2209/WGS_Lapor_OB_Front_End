@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../routes/app_pages.dart';
+import '../../../shared/widgets/contact_admin_dialog.dart';
 
 class TermsView extends StatelessWidget {
   const TermsView({super.key});
@@ -27,168 +28,172 @@ class TermsView extends StatelessWidget {
         backgroundColor: _pageBg,
         body: SafeArea(
           child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 30, 22, 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Syarat & Ketentuan',
-                            style: TextStyle(
-                              color: _navy,
-                              fontSize: 23,
-                              fontWeight: FontWeight.w900,
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(22, 30, 22, 18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _TrText(
+                              text: 'Syarat & Ketentuan',
+                              style: TextStyle(
+                                color: _navy,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Terakhir diperbarui: 7 Juli 2026',
-                            style: TextStyle(
-                              color: _bodyText,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                            const SizedBox(height: 8),
+                            const _TrText(
+                              text: 'Terakhir diperbarui: 7 Juli 2026',
+                              style: TextStyle(
+                                color: _bodyText,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 17),
-                          Container(
-                            width: 58,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF23A7FF),
-                              borderRadius: BorderRadius.circular(12),
+                            const SizedBox(height: 17),
+                            Container(
+                              width: 58,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF23A7FF),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 22),
-                      child: Column(
-                        children: [
-                          _SectionCard(
-                            icon: Icons.gavel_rounded,
-                            title: '1. Pendahuluan',
-                            child: const Text(
-                              'Selamat datang di Lapor-OB. Dengan mengakses dan menggunakan platform kami, Anda setuju untuk terikat oleh Syarat dan Ketentuan berikut. Layanan ini disediakan untuk memfasilitasi pelaporan dan manajemen fasilitas gedung.\n\nJika Anda tidak menyetujui bagian mana pun dari ketentuan ini, Anda disarankan untuk berhenti menggunakan layanan kami segera.',
-                              style: _TermsTextStyles.body,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 22),
+                        child: Column(
+                          children: [
+                            _SectionCard(
+                              icon: Icons.gavel_rounded,
+                              title: '1. Pendahuluan',
+                              child: const _TrText(
+                                text:
+                                    'Selamat datang di Lapor-OB. Dengan mengakses dan menggunakan platform kami, Anda setuju untuk terikat oleh Syarat dan Ketentuan berikut. Layanan ini disediakan untuk memfasilitasi pelaporan dan manajemen fasilitas gedung.\n\nJika Anda tidak menyetujui bagian mana pun dari ketentuan ini, Anda disarankan untuk berhenti menggunakan layanan kami segera.',
+                                style: _TermsTextStyles.body,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 15),
-                          _SectionCard(
-                            icon: Icons.person_outline_rounded,
-                            title: '2. Akun Pengguna',
-                            child: Column(
-                              children: const [
-                                _CheckItem(
-                                  text:
-                                      'Anda bertanggung jawab menjaga kerahasiaan kata sandi akun Anda.',
-                                ),
-                                _CheckItem(
-                                  text:
-                                      'Informasi yang diberikan saat pendaftaran harus akurat dan valid.',
-                                ),
-                                _CheckItem(
-                                  text:
-                                      'Satu akun hanya boleh digunakan oleh satu individu yang berwenang.',
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          _ServiceBanner(),
-                          const SizedBox(height: 15),
-                          _SectionCard(
-                            icon: Icons.report_problem_outlined,
-                            title: '3. Penggunaan Layanan',
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: const [
-                                Text(
-                                  'Lapor-OB digunakan untuk melaporkan kebutuhan kebersihan atau perbaikan di area kerja. Pengguna dilarang:',
-                                  style: _TermsTextStyles.body,
-                                ),
-                                SizedBox(height: 14),
-                                _RuleBox(
-                                  text:
-                                      'Mengirim laporan palsu atau menyesatkan.',
-                                ),
-                                _RuleBox(
-                                  text:
-                                      'Menggunakan bahasa yang kasar atau tidak pantas dalam deskripsi.',
-                                ),
-                                _RuleBox(
-                                  text:
-                                      'Melakukan spamming sistem dengan permintaan berulang tanpa alasan.',
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          _SectionCard(
-                            icon: Icons.shield_outlined,
-                            title: '4. Privasi & Data',
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Pengumpulan dan penggunaan data pribadi Anda diatur oleh Kebijakan Privasi kami. Dengan menyetujui Syarat & Ketentuan ini, Anda juga dianggap telah memahami Kebijakan Privasi.',
-                                  style: _TermsTextStyles.body,
-                                ),
-                                const SizedBox(height: 16),
-                                GestureDetector(
-                                  onTap: () => Get.toNamed(Routes.PRIVACY),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: const [
-                                      Text(
-                                        'Lihat Kebijakan Privasi',
-                                        style: TextStyle(
-                                          color: _primaryBlue,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      SizedBox(width: 6),
-                                      Icon(
-                                        Icons.open_in_new_rounded,
-                                        color: _primaryBlue,
-                                        size: 15,
-                                      ),
-                                    ],
+                            const SizedBox(height: 15),
+                            _SectionCard(
+                              icon: Icons.person_outline_rounded,
+                              title: '2. Akun Pengguna',
+                              child: Column(
+                                children: const [
+                                  _CheckItem(
+                                    text:
+                                        'Anda bertanggung jawab menjaga kerahasiaan kata sandi akun Anda.',
                                   ),
-                                ),
-                              ],
+                                  _CheckItem(
+                                    text:
+                                        'Informasi yang diberikan saat pendaftaran harus akurat dan valid.',
+                                  ),
+                                  _CheckItem(
+                                    text:
+                                        'Satu akun hanya boleh digunakan oleh satu individu yang berwenang.',
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 15),
-                          _SectionCard(
-                            icon: Icons.update_rounded,
-                            title: '5. Perubahan Ketentuan',
-                            child: const Text(
-                              'Kami berhak memperbarui Syarat & Ketentuan ini sewaktu-waktu. Perubahan akan segera efektif setelah dipublikasikan di halaman ini. Penggunaan berkelanjutan atas layanan setelah perubahan menandakan persetujuan Anda.',
-                              style: _TermsTextStyles.body,
+                            const SizedBox(height: 15),
+                            _ServiceBanner(),
+                            const SizedBox(height: 15),
+                            _SectionCard(
+                              icon: Icons.report_problem_outlined,
+                              title: '3. Penggunaan Layanan',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: const [
+                                  _TrText(
+                                    text:
+                                        'Lapor-OB digunakan untuk melaporkan kebutuhan kebersihan atau perbaikan di area kerja. Pengguna dilarang:',
+                                    style: _TermsTextStyles.body,
+                                  ),
+                                  SizedBox(height: 14),
+                                  _RuleBox(
+                                    text:
+                                        'Mengirim laporan palsu atau menyesatkan.',
+                                  ),
+                                  _RuleBox(
+                                    text:
+                                        'Menggunakan bahasa yang kasar atau tidak pantas dalam deskripsi.',
+                                  ),
+                                  _RuleBox(
+                                    text:
+                                        'Melakukan spamming sistem dengan permintaan berulang tanpa alasan.',
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 15),
-                          _ContactCard(),
-                        ],
+                            const SizedBox(height: 15),
+                            _SectionCard(
+                              icon: Icons.shield_outlined,
+                              title: '4. Privasi & Data',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const _TrText(
+                                    text:
+                                        'Pengumpulan dan penggunaan data pribadi Anda diatur oleh Kebijakan Privasi kami. Dengan menyetujui Syarat & Ketentuan ini, Anda juga dianggap telah memahami Kebijakan Privasi.',
+                                    style: _TermsTextStyles.body,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  GestureDetector(
+                                    onTap: () => Get.toNamed(Routes.PRIVACY),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        _TrText(
+                                          text: 'Lihat Kebijakan Privasi',
+                                          style: TextStyle(
+                                            color: _primaryBlue,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Icon(
+                                          Icons.open_in_new_rounded,
+                                          color: _primaryBlue,
+                                          size: 15,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            _SectionCard(
+                              icon: Icons.update_rounded,
+                              title: '5. Perubahan Ketentuan',
+                              child: const _TrText(
+                                text:
+                                    'Kami berhak memperbarui Syarat & Ketentuan ini sewaktu-waktu. Perubahan akan segera efektif setelah dipublikasikan di halaman ini. Penggunaan berkelanjutan atas layanan setelah perubahan menandakan persetujuan Anda.',
+                                style: _TermsTextStyles.body,
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            _ContactCard(),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 48),
-                    _buildFooter(),
-                  ],
+                      const SizedBox(height: 48),
+                      _buildFooter(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
           ),
         ),
       ),
@@ -249,8 +254,8 @@ class TermsView extends StatelessWidget {
             fit: BoxFit.contain,
           ),
           const SizedBox(width: 4),
-          const Text(
-            'Lapor OB',
+          const _TrText(
+            text: 'Lapor OB',
             style: TextStyle(
               color: Color(0xFF003366),
               fontSize: 12,
@@ -279,8 +284,8 @@ class TermsView extends StatelessWidget {
                 fit: BoxFit.contain,
               ),
               const SizedBox(width: 4),
-              const Text(
-                'Lapor OB',
+              const _TrText(
+                text: 'Lapor OB',
                 style: TextStyle(
                   color: Color(0xFF003366),
                   fontSize: 12,
@@ -290,8 +295,8 @@ class TermsView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          const Text(
-            '© 2026 Lapor-OB. Hak Cipta Dilindungi Undang-Undang.',
+          const _TrText(
+            text: '© 2026 Lapor-OB. Hak Cipta Dilindungi Undang-Undang.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Color(0xFF4B5563),
@@ -305,8 +310,8 @@ class TermsView extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () => Get.toNamed(Routes.PRIVACY),
-                child: const Text(
-                  'Kebijakan Privasi',
+                child: const _TrText(
+                  text: 'Kebijakan Privasi',
                   style: TextStyle(
                     color: Color(0xFF4B5563),
                     fontSize: 13,
@@ -315,8 +320,8 @@ class TermsView extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              const Text(
-                'Syarat & Ketentuan',
+              const _TrText(
+                text: 'Syarat & Ketentuan',
                 style: TextStyle(
                   color: _primaryBlue,
                   fontSize: 13,
@@ -376,7 +381,7 @@ class _SectionCard extends StatelessWidget {
               const SizedBox(width: 11),
               Expanded(
                 child: Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     color: TermsView._navy,
                     fontSize: 20,
@@ -412,7 +417,7 @@ class _CheckItem extends StatelessWidget {
             size: 16,
           ),
           const SizedBox(width: 11),
-          Expanded(child: Text(text, style: _TermsTextStyles.body)),
+          Expanded(child: Text(text.tr, style: _TermsTextStyles.body)),
         ],
       ),
     );
@@ -436,7 +441,7 @@ class _RuleBox extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE2E5F5)),
       ),
       child: Text(
-        text,
+        text.tr,
         style: const TextStyle(
           color: Color(0xFF4B5563),
           fontSize: 13,
@@ -486,8 +491,8 @@ class _ServiceBanner extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Standar Pelayanan',
+                  _TrText(
+                    text: 'Standar Pelayanan',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -495,8 +500,8 @@ class _ServiceBanner extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 2),
-                  Text(
-                    'Komitmen Kebersihan',
+                  _TrText(
+                    text: 'Komitmen Kebersihan',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -564,8 +569,8 @@ class _ContactCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Text(
-            'Punya Pertanyaan?',
+          const _TrText(
+            text: 'Punya Pertanyaan?',
             style: TextStyle(
               color: TermsView._primaryBlue,
               fontSize: 14,
@@ -573,8 +578,8 @@ class _ContactCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Tim admin kami siap membantu Anda memahami ketentuan ini.',
+          const _TrText(
+            text: 'Tim admin kami siap membantu Anda memahami ketentuan ini.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Color(0xFF4B5563),
@@ -587,7 +592,7 @@ class _ContactCard extends StatelessWidget {
           SizedBox(
             height: 35,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () => ContactAdminDialog.show(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: TermsView._primaryBlue,
                 foregroundColor: Colors.white,
@@ -597,8 +602,8 @@ class _ContactCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(22),
                 ),
               ),
-              child: const Text(
-                'Hubungi Admin',
+              child: Text(
+                'Hubungi Admin'.tr,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
               ),
             ),
@@ -606,6 +611,19 @@ class _ContactCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _TrText extends StatelessWidget {
+  const _TrText({required this.text, required this.style, this.textAlign});
+
+  final String text;
+  final TextStyle style;
+  final TextAlign? textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(text.tr, textAlign: textAlign, style: style);
   }
 }
 

@@ -23,6 +23,7 @@ import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
 import '../modules/privacy/views/privacy_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
+import '../modules/profile/views/employee_report_detail_view.dart';
 import '../modules/report/bindings/report_binding.dart';
 import '../modules/splash_screen/bindings/splash_screen_binding.dart';
 import '../modules/splash_screen/views/splash_screen_view.dart';
@@ -68,6 +69,12 @@ class AppPages {
         ProfileBinding(),
       ],
       transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 250),
+    ),
+    GetPage(
+      name: _Paths.REPORT_DETAIL,
+      page: () => const EmployeeReportDetailView(),
+      transition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 250),
     ),
     GetPage(

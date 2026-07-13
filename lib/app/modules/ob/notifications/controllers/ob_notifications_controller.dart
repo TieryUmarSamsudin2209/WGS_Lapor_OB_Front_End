@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/utils/checklist_translation_key.dart';
+import '../../../../shared/utils/report_translation_key.dart';
 
 class ObNotificationItem {
   const ObNotificationItem({
@@ -10,6 +12,8 @@ class ObNotificationItem {
     required this.section,
     required this.timeLabel,
     required this.createdAt,
+    this.titleParams = const {},
+    this.messageParams = const {},
     this.isUnread = true,
   });
 
@@ -19,6 +23,8 @@ class ObNotificationItem {
   final String section;
   final String timeLabel;
   final DateTime createdAt;
+  final Map<String, String> titleParams;
+  final Map<String, String> messageParams;
   final bool isUnread;
 }
 
@@ -68,7 +74,10 @@ class ObNotificationsController extends GetxController {
     notifications.value = [
       ObNotificationItem(
         type: 'task',
-        title: 'Tugas Baru: Bersihkan Ruang Meeting A',
+        title: 'Tugas Baru: @title',
+        titleParams: {
+          'title': checklistTranslationKey('Bersihkan Ruang Meeting A'),
+        },
         message: 'Admin baru saja menugaskan Anda.',
         section: 'HARI INI',
         timeLabel: '10 mnt',
@@ -77,8 +86,10 @@ class ObNotificationsController extends GetxController {
       ),
       ObNotificationItem(
         type: 'report',
-        title: 'Laporan Baru: AC Bocor di Pantry',
-        message: 'Karyawan (Asep) melaporkan masalah baru.',
+        title: 'Laporan Baru: @title',
+        titleParams: {'title': reportTranslationKey('AC Bocor di Pantry')},
+        message: '@reporter melaporkan masalah baru.',
+        messageParams: const {'reporter': 'Karyawan (Asep)'},
         section: 'HARI INI',
         timeLabel: '1 jam',
         createdAt: now.subtract(const Duration(hours: 1)),
@@ -87,7 +98,8 @@ class ObNotificationsController extends GetxController {
       ObNotificationItem(
         type: 'system',
         title: 'Pembaruan Sistem',
-        message: 'Versi aplikasi 2.4.1 tersedia.',
+        message: 'Versi aplikasi @version tersedia.',
+        messageParams: const {'version': '2.4.1'},
         section: 'HARI INI',
         timeLabel: '3 jam',
         createdAt: now.subtract(const Duration(hours: 3)),
@@ -95,8 +107,12 @@ class ObNotificationsController extends GetxController {
       ),
       ObNotificationItem(
         type: 'task',
-        title: 'Pengingat Tugas: Cek Toilet Lantai 2',
-        message: 'Tugas ini harus selesai dalam 30 menit.',
+        title: 'Pengingat Tugas: @title',
+        titleParams: {
+          'title': checklistTranslationKey('Cek Toilet Lantai 2'),
+        },
+        message: 'Tugas ini harus selesai dalam @duration.',
+        messageParams: const {'duration': '30 menit'},
         section: 'KEMARIN',
         timeLabel: 'Kemarin',
         createdAt: now.subtract(const Duration(days: 1)),
@@ -142,20 +158,22 @@ class ObNotificationsController extends GetxController {
           'date',
         ]),
       );
-      final title =
-          _firstValueFromSources([item, detail], [
-            'title',
-            'judul',
-            'nama',
-            'nama_checklist',
-            'nama_tugas',
-            'kegiatan',
-          ]) ??
-          'Tugas Harian';
+      final title = checklistTranslationKey(
+        _firstValueFromSources([item, detail], [
+              'title',
+              'judul',
+              'nama',
+              'nama_checklist',
+              'nama_tugas',
+              'kegiatan',
+            ]) ??
+            'Tugas Harian',
+      );
 
       return ObNotificationItem(
         type: 'task',
-        title: 'Tugas Baru: $title',
+        title: 'Tugas Baru: @title',
+        titleParams: {'title': title},
         message: 'Admin baru saja menugaskan Anda.',
         section: _sectionFromDate(createdAt),
         timeLabel: _timeAgo(createdAt),
@@ -185,16 +203,17 @@ class ObNotificationsController extends GetxController {
           'reported_at',
         ]),
       );
-      final title =
-          _firstValueFromSources([item, detail], [
-            'title',
-            'judul',
-            'nama_laporan',
-            'kategori',
-            'category',
-            'nama_kategori',
-          ]) ??
-          'Laporan Baru';
+      final title = reportTranslationKey(
+        _firstValueFromSources([item, detail], [
+              'title',
+              'judul',
+              'nama_laporan',
+              'kategori',
+              'category',
+              'nama_kategori',
+            ]) ??
+            'Laporan Baru',
+      );
       final reporter =
           _firstValueFromSources([item, detail], [
             'pelapor',
@@ -203,23 +222,29 @@ class ObNotificationsController extends GetxController {
             'reported_by',
           ]) ??
           'Karyawan';
-      final location =
-          _firstValueFromSources([item, detail], [
-            'location',
-            'lokasi',
-            'ruangan',
-            'area',
-            'detail_lokasi',
-            'alamat',
-            'lantai',
-          ]) ??
-          'lokasi terkait';
+      final location = reportTranslationKey(
+        _firstValueFromSources([item, detail], [
+              'location',
+              'lokasi',
+              'ruangan',
+              'area',
+              'detail_lokasi',
+              'alamat',
+              'lantai',
+            ]) ??
+            'lokasi terkait',
+      );
 
       return ObNotificationItem(
         type: 'report',
         title: 'Penugasan Baru',
         message:
-            'Ada tugas perbaikan $title di $location. Dilaporkan oleh $reporter.',
+            'Ada tugas perbaikan @title di @location. Dilaporkan oleh @reporter.',
+        messageParams: {
+          'title': title,
+          'location': location,
+          'reporter': reporter,
+        },
         section: _sectionFromDate(createdAt),
         timeLabel: _timeAgo(createdAt),
         createdAt: createdAt,

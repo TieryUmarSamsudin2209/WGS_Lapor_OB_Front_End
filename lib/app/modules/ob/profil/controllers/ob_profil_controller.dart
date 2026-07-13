@@ -3,6 +3,7 @@ import '../../../../routes/app_pages.dart';
 import '../../../../shared/controllers/auth_controller.dart';
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/translations/app_translations.dart';
+import '../../../../shared/utils/report_translation_key.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
 /// ================= MODEL =================
@@ -329,34 +330,40 @@ class ObProfilController extends GetxController {
               ]) ??
               'STANDARD')
           .toUpperCase(),
-      title: _firstValueFromSources(sources, [
-            'title',
-            'judul',
-            'nama_laporan',
-            'kategori',
-            'category',
-            'nama_kategori',
-          ]) ??
-          'Laporan',
-      location: _firstValueFromSources(sources, [
-            'location',
-            'lokasi',
-            'ruangan',
-            'area',
-            'detail_lokasi',
-            'alamat',
-            'lantai',
-          ]) ??
-          '-',
-      description: _firstValueFromSources(sources, [
-            'description',
-            'deskripsi',
-            'deskripsi_kendala',
-            'catatan',
-            'keluhan',
-            'keterangan',
-          ]) ??
-          '-',
+      title: reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'title',
+              'judul',
+              'nama_laporan',
+              'kategori',
+              'category',
+              'nama_kategori',
+            ]) ??
+            'Laporan',
+      ),
+      location: reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'location',
+              'lokasi',
+              'ruangan',
+              'area',
+              'detail_lokasi',
+              'alamat',
+              'lantai',
+            ]) ??
+            '-',
+      ),
+      description: reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'description',
+              'deskripsi',
+              'deskripsi_kendala',
+              'catatan',
+              'keluhan',
+              'keterangan',
+            ]) ??
+            '-',
+      ),
       date: _dateFromApi(
         _firstValueFromSources(sources, ['created_at', 'tanggal', 'date']),
       ),

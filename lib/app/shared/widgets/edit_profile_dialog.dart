@@ -41,7 +41,7 @@ class EditProfileDialog extends StatefulWidget {
     return showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Tutup',
+      barrierLabel: 'Tutup'.tr,
       barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (_, _, _) => const SizedBox.shrink(),

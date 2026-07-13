@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../theme/theme_controller.dart';
 
@@ -18,7 +19,7 @@ class LogoutConfirmationDialog extends StatelessWidget {
     return showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Batal',
+      barrierLabel: 'Batal'.tr,
       barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -102,7 +103,7 @@ class LogoutConfirmationDialogContent extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Konfirmasi Keluar',
+                'Konfirmasi Keluar'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: titleColor,
@@ -113,7 +114,7 @@ class LogoutConfirmationDialogContent extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Apakah Anda yakin ingin keluar?',
+                'Apakah Anda yakin ingin keluar?'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: messageColor,
@@ -124,7 +125,7 @@ class LogoutConfirmationDialogContent extends StatelessWidget {
               ),
               const SizedBox(height: 28),
               _DialogButton(
-                text: 'Ya, Keluar',
+                text: 'Ya, Keluar'.tr,
                 backgroundColor: LogoutConfirmationDialog._danger,
                 foregroundColor: Colors.white,
                 onPressed: () {
@@ -134,7 +135,7 @@ class LogoutConfirmationDialogContent extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _DialogButton(
-                text: 'Batal',
+                text: 'Batal'.tr,
                 backgroundColor: cancelBackground,
                 foregroundColor: cancelText,
                 borderColor: cancelBorder,

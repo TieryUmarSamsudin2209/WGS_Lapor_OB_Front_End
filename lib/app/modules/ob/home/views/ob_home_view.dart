@@ -107,7 +107,9 @@ class _HomeHeader extends StatelessWidget {
                 Expanded(
                   child: Obx(
                     () => Text(
-                      'Halo, ${_firstName(controller.name.value)}',
+                      'Halo, @name'.trParams({
+                        'name': _firstName(controller.name.value),
+                      }),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -120,7 +122,7 @@ class _HomeHeader extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Ubah tema',
+                  tooltip: 'Ubah tema'.tr,
                   onPressed: Get.find<ThemeController>().toggleTheme,
                   icon: Icon(
                     isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
@@ -129,7 +131,7 @@ class _HomeHeader extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Notifikasi',
+                  tooltip: 'Notifikasi'.tr,
                   onPressed: () => Get.toNamed(Routes.OB_NOTIFICATIONS),
                   icon: const Icon(
                     Icons.notifications_none_rounded,
@@ -140,9 +142,9 @@ class _HomeHeader extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Tetap semangat menjaga kebersihan hari ini!',
-              style: TextStyle(
+            Text(
+              'Tetap semangat menjaga kebersihan hari ini!'.tr,
+              style: const TextStyle(
                 color: Color(0xFFD8E9F6),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -170,7 +172,7 @@ class _HomeHeader extends StatelessWidget {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        controller.assignmentLabel,
+                        _translatedAssignmentLabel(controller.assignmentLabel),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -235,7 +237,7 @@ class _ProgressCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Progress Kerja Hari Ini',
+                        'Progress Kerja Hari Ini'.tr,
                         style: TextStyle(
                           color: isDark ? Colors.white : const Color(0xFF1D2A3A),
                           fontSize: 13,
@@ -255,7 +257,7 @@ class _ProgressCard extends StatelessWidget {
                               ),
                             ),
                             TextSpan(
-                              text: ' Tugas Selesai',
+                              text: ' ${'Tugas Selesai'.tr}',
                               style: TextStyle(
                                 color: isDark
                                     ? Colors.white
@@ -437,7 +439,7 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            title,
+            title.tr,
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF253044),
               fontSize: 14,
@@ -501,7 +503,7 @@ class _TaskCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      task.title,
+                      task.title.tr,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -513,7 +515,7 @@ class _TaskCard extends StatelessWidget {
                     ),
                   const SizedBox(height: 4),
                   Text(
-                    task.location,
+                    task.location.tr,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -597,7 +599,7 @@ class _HomeReportCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            report.title,
+                            report.title.tr,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -616,7 +618,7 @@ class _HomeReportCard extends StatelessWidget {
                               ),
                               Expanded(
                                 child: Text(
-                                  report.location,
+                                  report.location.tr,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -630,7 +632,7 @@ class _HomeReportCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            report.description,
+                            report.description.tr,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -713,7 +715,7 @@ class _TakeReportButton extends StatelessWidget {
                 ),
               )
             : const Icon(Icons.assignment_turned_in_outlined, size: 14),
-        label: Text(isLoading ? 'Mengambil' : 'Ambil'),
+        label: Text((isLoading ? 'Mengambil' : 'Ambil').tr),
         style: ElevatedButton.styleFrom(
           backgroundColor: OBHomeView._blue,
           foregroundColor: Colors.white,
@@ -744,7 +746,7 @@ class _DetailLink extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Lihat Detail',
+          'Lihat Detail'.tr,
           style: TextStyle(
             color: isDark ? Colors.white70 : const Color(0xFF1F2937),
             fontSize: 10,
@@ -804,7 +806,7 @@ class _EmptyCard extends StatelessWidget {
         ),
       ),
       child: Text(
-        message,
+        message.tr,
         textAlign: TextAlign.center,
         style: TextStyle(
           color: isDark ? Colors.white70 : const Color(0xFF6B7280),
@@ -832,7 +834,7 @@ class _TinyLabel extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          text,
+          text.tr,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
@@ -914,7 +916,7 @@ class _Pill extends StatelessWidget {
           Icon(style.icon, size: 10, color: style.foreground),
           const SizedBox(width: 4),
           Text(
-            style.label,
+            style.label.tr,
             style: TextStyle(
               color: style.foreground,
               fontSize: 10,
@@ -988,6 +990,16 @@ String _firstName(String value) {
   final text = value.trim();
   if (text.isEmpty) return 'OB';
   return text.split(RegExp(r'\s+')).first;
+}
+
+String _translatedAssignmentLabel(String value) {
+  const prefix = 'Penugasan: ';
+  if (value.startsWith(prefix)) {
+    return 'Penugasan: @assignment'.trParams({
+      'assignment': value.substring(prefix.length),
+    });
+  }
+  return value.tr;
 }
 
 class _FadeInSlideUp extends StatefulWidget {

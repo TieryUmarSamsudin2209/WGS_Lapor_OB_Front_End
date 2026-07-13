@@ -108,19 +108,172 @@ class AuthService extends GetxService {
   ];
 
   final List<Map<String, dynamic>> _dummyCategories = [
-    {'id': 'cat_1', 'nama': 'Kebersihan', 'name': 'Kebersihan'},
-    {'id': 'cat_2', 'nama': 'AC & Udara', 'name': 'AC & Udara'},
-    {'id': 'cat_3', 'nama': 'Air & Galon', 'name': 'Air & Galon'},
-    {'id': 'cat_4', 'nama': 'Kelistrikan', 'name': 'Kelistrikan'},
-    {'id': 'cat_5', 'nama': 'Meja & Kursi', 'name': 'Meja & Kursi'},
-    {'id': 'cat_6', 'nama': 'Lainnya', 'name': 'Lainnya'}
+    {
+      'id': 'ba7079f3-fc98-4be7-afe3-cc769ffa3458',
+      'kategori_id': 'ba7079f3-fc98-4be7-afe3-cc769ffa3458',
+      'nama': 'Kebersihan',
+      'name': 'Kebersihan',
+    },
+    {
+      'id': 'd2597de5-120f-47b0-878a-83a46c47db34',
+      'kategori_id': 'd2597de5-120f-47b0-878a-83a46c47db34',
+      'nama': 'Pengecekan',
+      'name': 'Pengecekan',
+    },
+    {
+      'id': '5dcba45c-b5de-437c-858b-50dbe7624f9b',
+      'kategori_id': '5dcba45c-b5de-437c-858b-50dbe7624f9b',
+      'nama': 'Peralatan',
+      'name': 'Peralatan',
+    },
   ];
 
   final List<Map<String, dynamic>> _dummyFloors = [
-    {'id': 'floor_1', 'nama': 'Lantai 1', 'name': 'Lantai 1'},
-    {'id': 'floor_2', 'nama': 'Lantai 2', 'name': 'Lantai 2'},
-    {'id': 'floor_3', 'nama': 'Lantai 3', 'name': 'Lantai 3'},
-    {'id': 'floor_4', 'nama': 'Lantai 4', 'name': 'Lantai 4'}
+    {
+      'id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+      'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+      'nama': 'Gedung A - Kantor Pusat - Lantai 1',
+      'name': 'Gedung A - Kantor Pusat - Lantai 1',
+    },
+    {
+      'id': '7249c72a-642d-4ceb-afbe-61396587e37e',
+      'lantai_id': '7249c72a-642d-4ceb-afbe-61396587e37e',
+      'nama': 'Gedung A - Kantor Pusat - Lantai 2',
+      'name': 'Gedung A - Kantor Pusat - Lantai 2',
+    },
+    {
+      'id': 'a67fbf59-44e4-4537-a9b8-5c5193958116',
+      'lantai_id': 'a67fbf59-44e4-4537-a9b8-5c5193958116',
+      'nama': 'Gedung A - Kantor Pusat - Lantai 3',
+      'name': 'Gedung A - Kantor Pusat - Lantai 3',
+    },
+    {
+      'id': '5970908a-117c-4ab9-95f6-065ed4d8b04c',
+      'lantai_id': '5970908a-117c-4ab9-95f6-065ed4d8b04c',
+      'nama': 'Gedung B - Kantor Cabang - Lantai 1',
+      'name': 'Gedung B - Kantor Cabang - Lantai 1',
+    },
+    {
+      'id': 'a75e15c3-5990-4936-af85-2848d12d1901',
+      'lantai_id': 'a75e15c3-5990-4936-af85-2848d12d1901',
+      'nama': 'Gedung B - Kantor Cabang - Lantai 2',
+      'name': 'Gedung B - Kantor Cabang - Lantai 2',
+    },
+  ];
+
+  final List<Map<String, dynamic>> _dummyRooms = [
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e01',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e01',
+      'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+      'nama': 'Lobby Gedung A',
+      'name': 'Lobby Gedung A',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e02',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e02',
+      'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+      'nama': 'Toilet Pria Lantai 1',
+      'name': 'Toilet Pria Lantai 1',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e03',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e03',
+      'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+      'nama': 'Toilet Wanita Lantai 1',
+      'name': 'Toilet Wanita Lantai 1',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e04',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e1e04',
+      'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+      'nama': 'Pantry Lantai 1',
+      'name': 'Pantry Lantai 1',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e2e01',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e2e01',
+      'lantai_id': '7249c72a-642d-4ceb-afbe-61396587e37e',
+      'nama': 'Ruang Kerja Utama A2',
+      'name': 'Ruang Kerja Utama A2',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e2e02',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e2e02',
+      'lantai_id': '7249c72a-642d-4ceb-afbe-61396587e37e',
+      'nama': 'Ruang Rapat Besar A2',
+      'name': 'Ruang Rapat Besar A2',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e2e03',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e2e03',
+      'lantai_id': '7249c72a-642d-4ceb-afbe-61396587e37e',
+      'nama': 'Toilet Lantai 2',
+      'name': 'Toilet Lantai 2',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e3e01',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e3e01',
+      'lantai_id': 'a67fbf59-44e4-4537-a9b8-5c5193958116',
+      'nama': 'Ruang Direksi',
+      'name': 'Ruang Direksi',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e3e02',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e3e02',
+      'lantai_id': 'a67fbf59-44e4-4537-a9b8-5c5193958116',
+      'nama': 'Ruang Server',
+      'name': 'Ruang Server',
+    },
+    {
+      'id': 'a8db3d11-447a-4c28-98e3-b0fc844e3e03',
+      'ruangan_id': 'a8db3d11-447a-4c28-98e3-b0fc844e3e03',
+      'lantai_id': 'a67fbf59-44e4-4537-a9b8-5c5193958116',
+      'nama': 'Toilet Lantai 3',
+      'name': 'Toilet Lantai 3',
+    },
+    {
+      'id': 'b8db3d11-447a-4c28-98e3-b0fc844e1e01',
+      'ruangan_id': 'b8db3d11-447a-4c28-98e3-b0fc844e1e01',
+      'lantai_id': '5970908a-117c-4ab9-95f6-065ed4d8b04c',
+      'nama': 'Lobby Gedung B',
+      'name': 'Lobby Gedung B',
+    },
+    {
+      'id': 'b8db3d11-447a-4c28-98e3-b0fc844e1e02',
+      'ruangan_id': 'b8db3d11-447a-4c28-98e3-b0fc844e1e02',
+      'lantai_id': '5970908a-117c-4ab9-95f6-065ed4d8b04c',
+      'nama': 'Ruang Kerja Utama B1',
+      'name': 'Ruang Kerja Utama B1',
+    },
+    {
+      'id': 'b8db3d11-447a-4c28-98e3-b0fc844e1e03',
+      'ruangan_id': 'b8db3d11-447a-4c28-98e3-b0fc844e1e03',
+      'lantai_id': '5970908a-117c-4ab9-95f6-065ed4d8b04c',
+      'nama': 'Toilet Lantai 1',
+      'name': 'Toilet Lantai 1',
+    },
+    {
+      'id': 'b8db3d11-447a-4c28-98e3-b0fc844e2e01',
+      'ruangan_id': 'b8db3d11-447a-4c28-98e3-b0fc844e2e01',
+      'lantai_id': 'a75e15c3-5990-4936-af85-2848d12d1901',
+      'nama': 'Ruang Rapat B2',
+      'name': 'Ruang Rapat B2',
+    },
+    {
+      'id': 'b8db3d11-447a-4c28-98e3-b0fc844e2e02',
+      'ruangan_id': 'b8db3d11-447a-4c28-98e3-b0fc844e2e02',
+      'lantai_id': 'a75e15c3-5990-4936-af85-2848d12d1901',
+      'nama': 'Pantry Lantai 2',
+      'name': 'Pantry Lantai 2',
+    },
+    {
+      'id': 'b8db3d11-447a-4c28-98e3-b0fc844e2e03',
+      'ruangan_id': 'b8db3d11-447a-4c28-98e3-b0fc844e2e03',
+      'lantai_id': 'a75e15c3-5990-4936-af85-2848d12d1901',
+      'nama': 'Toilet Lantai 2',
+      'name': 'Toilet Lantai 2',
+    },
   ];
 
   bool _isOfflineResponse(Response response) {
@@ -388,7 +541,7 @@ class AuthService extends GetxService {
         _profileFromResponse(body) ??
         <String, dynamic>{
           'nama': fullName,
-          'profile_picture': ?localAvatarPath,
+          'profile_picture': localAvatarPath ?? avatarPath?.trim() ?? '',
         };
 
     await mergeUserData(updatedProfile);
@@ -471,11 +624,23 @@ class AuthService extends GetxService {
   Future<List<Map<String, dynamic>>> getReportCategories() async {
     final liveOptions = await _fetchOptionList(
       endpoints: const [
+        '/api/karyawan/laporan/form',
+        '/api/karyawan/laporan/form-data',
+        '/api/karyawan/laporan/options',
+        '/api/karyawan/laporan/create',
         '/api/karyawan/kategori-laporan',
         '/api/kategori-laporan',
         '/api/kategori',
       ],
-      listKeys: const ['kategori', 'kategori_laporan', 'categories', 'items'],
+      listKeys: const [
+        'kategori',
+        'kategori_laporan',
+        'kategoriLaporan',
+        'categories',
+        'categoryOptions',
+        'kategoriOptions',
+        'items',
+      ],
     );
 
     if (liveOptions.isNotEmpty) {
@@ -487,17 +652,60 @@ class AuthService extends GetxService {
   Future<List<Map<String, dynamic>>> getReportFloors() async {
     final liveOptions = await _fetchOptionList(
       endpoints: const [
+        '/api/karyawan/laporan/form',
+        '/api/karyawan/laporan/form-data',
+        '/api/karyawan/laporan/options',
+        '/api/karyawan/laporan/create',
         '/api/karyawan/lantai',
         '/api/lantai',
         '/api/gedung/lantai',
       ],
-      listKeys: const ['lantai', 'floors', 'items'],
+      listKeys: const [
+        'lantai',
+        'lantai_gedung',
+        'lantaiGedung',
+        'floors',
+        'floorOptions',
+        'lantaiOptions',
+        'items',
+      ],
     );
 
     if (liveOptions.isNotEmpty) {
       return liveOptions;
     }
     return _dummyFloors;
+  }
+
+  Future<List<Map<String, dynamic>>> getReportRooms() async {
+    final liveOptions = await _fetchOptionList(
+      endpoints: const [
+        '/api/karyawan/laporan/form',
+        '/api/karyawan/laporan/form-data',
+        '/api/karyawan/laporan/options',
+        '/api/karyawan/laporan/create',
+        '/api/karyawan/ruangan',
+        '/api/ruangan',
+        '/api/gedung/ruangan',
+      ],
+      listKeys: const [
+        'ruangan',
+        'ruangan_lantai',
+        'ruanganLantai',
+        'rooms',
+        'roomOptions',
+        'ruanganOptions',
+        'lokasi',
+        'locations',
+        'locationOptions',
+        'items',
+      ],
+    );
+
+    if (liveOptions.isNotEmpty) {
+      return liveOptions;
+    }
+    return _dummyRooms;
   }
 
   Future<Map<String, dynamic>?> getEmployeeReports({
@@ -537,8 +745,184 @@ class AuthService extends GetxService {
     };
   }
 
+  Future<Map<String, dynamic>?> getNotifications() async {
+    try {
+      final response = await _client.get(
+        '/api/notifikasi',
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            _asMap(response.body);
+      }
+
+      if (_isOfflineResponse(response)) {
+        return _getNotificationsOffline();
+      }
+
+      debugPrint(
+        'Gagal ambil notifikasi: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error ambil notifikasi: $e');
+      return _getNotificationsOffline();
+    }
+  }
+
+  Future<int> getUnreadNotificationCount() async {
+    try {
+      final response = await _client.get(
+        '/api/notifikasi/unread-count',
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        final body =
+            _responseBodyAsMap(response.body, response.bodyString) ??
+            _asMap(response.body);
+        final data = body?['data'];
+        if (data is num) return data.toInt();
+        return int.tryParse(data?.toString() ?? '') ?? 0;
+      }
+
+      if (_isOfflineResponse(response)) {
+        return _offlineNotifications().where((item) {
+          return _isTruthy(item['is_read']) == false;
+        }).length;
+      }
+    } catch (e) {
+      debugPrint('Error ambil jumlah notifikasi belum dibaca: $e');
+    }
+
+    return 0;
+  }
+
+  bool _isTruthy(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    if (value is String) {
+      final v = value.toLowerCase().trim();
+      return v == 'true' || v == '1' || v == 'yes';
+    }
+
+    return false;
+  }
+
+  Future<bool> markAllNotificationsRead() async {
+    try {
+      final response = await _client.patch(
+        '/api/notifikasi/read-all',
+        null,
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) return true;
+      if (_isOfflineResponse(response)) return true;
+
+      debugPrint(
+        'Gagal tandai semua notifikasi: ${response.bodyString ?? response.body}',
+      );
+    } catch (e) {
+      debugPrint('Error tandai semua notifikasi: $e');
+      return isOfflineMode;
+    }
+
+    return false;
+  }
+
+  Future<bool> markNotificationRead(String notificationId) async {
+    if (notificationId.trim().isEmpty) return false;
+
+    try {
+      final response = await _client.patch(
+        '/api/notifikasi/$notificationId/read',
+        null,
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) return true;
+      if (_isOfflineResponse(response)) return true;
+
+      debugPrint(
+        'Gagal tandai notifikasi: ${response.bodyString ?? response.body}',
+      );
+    } catch (e) {
+      debugPrint('Error tandai notifikasi: $e');
+      return isOfflineMode;
+    }
+
+    return false;
+  }
+
+  Uri notificationWebSocketUri() {
+    final apiUri = Uri.parse(baseUrl);
+    final currentToken = token.value ?? '';
+    return apiUri.replace(
+      scheme: apiUri.scheme == 'https' ? 'wss' : 'ws',
+      path: '/ws',
+      query: null,
+      queryParameters: {'token': currentToken},
+    );
+  }
+
+  Map<String, dynamic> _getNotificationsOffline() {
+    final now = DateTime.now();
+    final items = _offlineNotifications();
+
+    return {
+      'success': true,
+      'message': 'Offline notifications',
+      'data': {
+        'hari_ini': items.where((item) {
+          final date = DateTime.tryParse(item['created_at']?.toString() ?? '');
+          return date != null &&
+              date.year == now.year &&
+              date.month == now.month &&
+              date.day == now.day;
+        }).toList(),
+        'kemarin': items.where((item) {
+          final date = DateTime.tryParse(item['created_at']?.toString() ?? '');
+          final yesterday = now.subtract(const Duration(days: 1));
+          return date != null &&
+              date.year == yesterday.year &&
+              date.month == yesterday.month &&
+              date.day == yesterday.day;
+        }).toList(),
+      },
+    };
+  }
+
+  List<Map<String, dynamic>> _offlineNotifications() {
+    final now = DateTime.now();
+    return [
+      {
+        'id': 'notif_offline_1',
+        'tipe': 'LAPORAN_BARU',
+        'judul': 'Laporan Baru',
+        'pesan': 'Ada laporan baru yang perlu ditindaklanjuti.',
+        'is_read': false,
+        'created_at': now.subtract(const Duration(minutes: 8)).toIso8601String(),
+        'penerima': {'nama_lengkap': user.value?['name'] ?? 'User'},
+      },
+      {
+        'id': 'notif_offline_2',
+        'tipe': 'INFO',
+        'judul': 'Pembaruan Sistem',
+        'pesan': 'Notifikasi akan tersinkron saat server kembali online.',
+        'is_read': true,
+        'created_at': now.subtract(const Duration(days: 1)).toIso8601String(),
+        'penerima': {'nama_lengkap': user.value?['name'] ?? 'User'},
+      },
+    ];
+  }
+
   Future<Map<String, dynamic>?> createEmployeeReport({
     required String floorId,
+    required String roomId,
     required String categoryId,
     required String description,
     required String priority,
@@ -555,6 +939,7 @@ class AuthService extends GetxService {
 
       final payload = <String, dynamic>{
         'lantai_id': floorId,
+        'ruangan_id': roomId,
         'kategori_id': categoryId,
         'deskripsi_kendala': description.trim(),
         'prioritas': priority.trim().toUpperCase(),
@@ -570,7 +955,7 @@ class AuthService extends GetxService {
               ),
             )
             .toList();
-        payload['foto_masalah'] = photos.length == 1 ? photos.first : photos;
+        payload['foto_masalah'] = photos;
       }
 
       final response = await _client.post(
@@ -583,6 +968,7 @@ class AuthService extends GetxService {
       if (_isOfflineResponse(response)) {
         return _createEmployeeReportOffline(
           floorId: floorId,
+          roomId: roomId,
           categoryId: categoryId,
           description: description,
           priority: priority,
@@ -605,6 +991,7 @@ class AuthService extends GetxService {
       debugPrint('Error kirim laporan: $e');
       return _createEmployeeReportOffline(
         floorId: floorId,
+        roomId: roomId,
         categoryId: categoryId,
         description: description,
         priority: priority,
@@ -615,6 +1002,7 @@ class AuthService extends GetxService {
 
   Map<String, dynamic> _createEmployeeReportOffline({
     required String floorId,
+    required String roomId,
     required String categoryId,
     required String description,
     required String priority,
@@ -629,18 +1017,23 @@ class AuthService extends GetxService {
       (f) => f['id'] == floorId,
       orElse: () => {'nama': 'Lantai $floorId'},
     )['nama'];
+    final roomName = _dummyRooms.firstWhere(
+      (r) => r['id'] == roomId || r['ruangan_id'] == roomId,
+      orElse: () => {'nama': 'Ruangan $roomId'},
+    )['nama'];
 
     final nextId = (DateTime.now().millisecondsSinceEpoch).toString();
     final newReport = {
       'id': nextId,
       'laporan_id': nextId,
       'title': categoryName,
-      'location': 'HQ Tower A, $floorName',
+      'location': 'HQ Tower A, $floorName - $roomName',
       'description': description,
       'priority': priority.toUpperCase(),
       'status': 'pending',
       'kolaborasi': false,
       'category': categoryName,
+      'ruangan_id': roomId,
       'created_at': DateTime.now().toIso8601String(),
       'photos': photoPaths,
       'reporter': user.value?['name'] ?? 'Karyawan',

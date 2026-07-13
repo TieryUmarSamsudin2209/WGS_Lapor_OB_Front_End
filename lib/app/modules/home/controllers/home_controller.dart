@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
+import '../../../routes/app_pages.dart';
 import '../../../shared/services/auth_service.dart';
+import '../../../shared/utils/report_translation_key.dart';
 
 class HomeController extends GetxController {
   final AuthService _authService = Get.isRegistered<AuthService>()
@@ -80,16 +82,7 @@ class HomeController extends GetxController {
   }
 
   Future<void> openReport(Map<String, dynamic> report) async {
-    final id = report['raw_id']?.toString() ?? report['id']?.toString();
-    if (id == null || id.isEmpty) return;
-
-    final detail = await _authService.getUserReportDetail(id);
-    final message =
-        _asMap(detail?['data'])?['description']?.toString() ??
-        _asMap(detail?['data'])?['deskripsi']?.toString() ??
-        _asMap(detail?['data'])?['deskripsi_kendala']?.toString() ??
-        'Detail laporan berhasil dimuat';
-    Get.snackbar('Detail laporan', message);
+    Get.toNamed(Routes.REPORT_DETAIL, arguments: report);
   }
 
   void increment() => count.value++;
@@ -97,6 +90,7 @@ class HomeController extends GetxController {
   Map<String, dynamic> _reportFromApi(Map<String, dynamic> item) {
     final detail = _asMap(item['laporan']) ?? _asMap(item['report']) ?? item;
     final sources = [item, detail];
+    final photos = _photosFromApi(item);
     final rawId =
         _firstValueFromSources(sources, ['id', 'laporan_id', 'report_id']) ??
             '';
@@ -105,12 +99,14 @@ class HomeController extends GetxController {
     return {
       'raw_id': rawId,
       'id': displayId,
-      'category': _firstValueFromSources(sources, [
-            'category',
-            'kategori',
-            'nama_kategori',
-          ]) ??
-          '-',
+      'category': reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'category',
+              'kategori',
+              'nama_kategori',
+            ]) ??
+            '-',
+      ),
       'priority': (_firstValueFromSources(sources, [
                 'priority',
                 'prioritas',
@@ -123,34 +119,63 @@ class HomeController extends GetxController {
         _firstValueFromSources(sources, ['status', 'status_laporan']) ??
             'Pending',
       ),
-      'title': _firstValueFromSources(sources, [
-            'title',
-            'judul',
-            'nama_laporan',
-            'nama_kategori',
-            'kategori',
-            'category',
+      'title': reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'title',
+              'judul',
+              'nama_laporan',
+              'nama_kategori',
+              'kategori',
+              'category',
+            ]) ??
+            'Laporan',
+      ),
+      'location': reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'location',
+              'lokasi',
+              'ruangan',
+              'area',
+              'detail_lokasi',
+              'alamat',
+              'lantai',
+            ]) ??
+            '-',
+      ),
+      'description': reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'description',
+              'deskripsi',
+              'deskripsi_kendala',
+              'catatan',
+              'keluhan',
+              'keterangan',
+            ]) ??
+            '-',
+      ),
+      'reporter': _firstValueFromSources(sources, [
+            'nama_pelapor',
+            'pelapor',
+            'reporter',
+            'reported_by',
+            'reportedBy',
+            'karyawan',
+            'pegawai',
+            'user',
           ]) ??
-          'Laporan',
-      'location': _firstValueFromSources(sources, [
-            'location',
-            'lokasi',
-            'ruangan',
-            'area',
-            'detail_lokasi',
-            'alamat',
-            'lantai',
-          ]) ??
-          '-',
-      'description': _firstValueFromSources(sources, [
-            'description',
-            'deskripsi',
-            'deskripsi_kendala',
-            'catatan',
-            'keluhan',
-            'keterangan',
-          ]) ??
-          '-',
+          name.value,
+      'categoryName': reportTranslationKey(
+        _firstValueFromSources(sources, [
+              'nama_kategori_laporan',
+              'nama_kategori',
+              'kategori_laporan',
+              'kategori',
+              'category',
+            ]) ??
+            'Laporan',
+      ),
+      'photos': photos.isNotEmpty ? photos : _photosFromApi(detail),
+      'raw': item,
       'created_at': _firstValueFromSources(sources, [
         'created_at',
         'createdAt',
@@ -281,5 +306,51 @@ class HomeController extends GetxController {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
     return null;
+  }
+
+  List<String> _photosFromApi(Map<String, dynamic> source) {
+    final photos = <String>[];
+    for (final key in const [
+      'photos',
+      'foto',
+      'foto_laporan',
+      'foto_masalah',
+      'bukti_foto',
+      'gambar',
+      'images',
+    ]) {
+      final value = source[key];
+      final list = value is List ? value : null;
+      if (list != null) {
+        photos.addAll(list.map(_photoValue).whereType<String>());
+      } else {
+        final photo = _photoValue(value);
+        if (photo != null) photos.add(photo);
+      }
+    }
+
+    return photos
+        .map(AuthService.resolveMediaUrl)
+        .where((item) => item.trim().isNotEmpty)
+        .toSet()
+        .toList();
+  }
+
+  String? _photoValue(Object? value) {
+    if (value == null) return null;
+    final map = _asMap(value);
+    if (map != null) {
+      return _firstValue(map, const [
+        'url',
+        'path',
+        'file',
+        'filename',
+        'foto',
+        'image',
+        'name',
+      ]);
+    }
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 }

@@ -90,9 +90,9 @@ class ObChecklistView extends GetView<ObChecklistController> {
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-          child: const Text(
-            'Daftar Tugas',
-            style: TextStyle(
+          child: Text(
+            'Daftar Tugas'.tr,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.w900,
@@ -159,7 +159,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
             Padding(
               padding: const EdgeInsets.only(bottom: 14, left: 2),
               child: Text(
-                section.title,
+                section.title.tr,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
@@ -216,7 +216,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.title,
+                        item.title.tr,
                         style: TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.bold,
@@ -231,7 +231,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        item.description,
+                        item.description.tr,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -258,7 +258,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
                               Icon(style.icon, size: 11, color: style.color),
                               const SizedBox(width: 4),
                               Text(
-                                style.label,
+                                style.label.tr,
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
@@ -288,7 +288,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Dismiss',
+      barrierLabel: 'Dismiss'.tr,
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 350),
       pageBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -333,10 +333,16 @@ class _ChecklistEmptyState extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('Belum ada checklist', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          SizedBox(height: 6),
-          Text('Tidak ada item untuk ditampilkan saat ini.', style: TextStyle(fontSize: 13)),
+        children: [
+          Text(
+            'Belum ada checklist'.tr,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tidak ada item untuk ditampilkan saat ini.'.tr,
+            style: const TextStyle(fontSize: 13),
+          ),
         ],
       ),
     );
@@ -388,7 +394,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.title,
+                        item.title.tr,
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
@@ -397,7 +403,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        item.description,
+                        item.description.tr,
                         style: TextStyle(
                           fontSize: 13,
                           color: bodyColor,
@@ -439,7 +445,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
             // ── Catatan Label ────────────────────────────────────
             RichText(
               text: TextSpan(
-                text: 'Catatan',
+                text: 'Catatan'.tr,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -467,7 +473,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
                 maxLines: 3,
                 style: TextStyle(color: titleColor, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Tambahkan catatan',
+                  hintText: 'Tambahkan catatan'.tr,
                   hintStyle: TextStyle(
                     color: isDark ? Colors.white38 : Colors.grey.shade400,
                     fontSize: 13,
@@ -483,7 +489,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
 
             // ── Bukti Foto Label ─────────────────────────────────
             Text(
-              'Bukti Foto',
+              'Bukti Foto'.tr,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -510,9 +516,9 @@ class _ChecklistDetailPopup extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Kirim',
-                  style: TextStyle(
+                child: Text(
+                  'Kirim'.tr,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -547,7 +553,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
       _showAutoDismissAlert(
         Get.overlayContext ?? Get.context,
         isSuccess: false,
-        description: 'Terjadi kesalahan. Silakan coba lagi',
+        description: 'Terjadi kesalahan. Silakan coba lagi'.tr,
       );
     }
   }
@@ -556,7 +562,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
     _showAutoDismissAlert(
       Get.overlayContext ?? Get.context,
       isSuccess: false,
-      description: 'Mohon isi catatan dan bukti foto',
+      description: 'Mohon isi catatan dan bukti foto'.tr,
     );
   }
 
@@ -611,7 +617,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                style.label,
+                style.label.tr,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
@@ -723,9 +729,9 @@ class _ChecklistDetailPopup extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Pilih Sumber Foto',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              'Pilih Sumber Foto'.tr,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             ListTile(
@@ -737,7 +743,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
                 ),
                 child: const Icon(Icons.camera_alt, color: Colors.blue),
               ),
-              title: const Text('Kamera'),
+              title: Text('Kamera'.tr),
               onTap: () {
                 Get.back();
                 controller.pickItemPhoto(item, ImageSource.camera);
@@ -752,7 +758,7 @@ class _ChecklistDetailPopup extends StatelessWidget {
                 ),
                 child: const Icon(Icons.photo_library, color: Colors.purple),
               ),
-              title: const Text('Galeri'),
+              title: Text('Galeri'.tr),
               onTap: () {
                 Get.back();
                 controller.pickItemPhoto(item, ImageSource.gallery);

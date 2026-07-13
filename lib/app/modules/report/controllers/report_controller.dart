@@ -6,10 +6,11 @@ import '../../profile/controllers/profile_controllers.dart';
 import '../../../shared/services/auth_service.dart';
 
 class ReportOption {
-  const ReportOption({required this.id, required this.label});
+  const ReportOption({required this.id, required this.label, this.parentId});
 
   final String id;
   final String label;
+  final String? parentId;
 }
 
 class ReportController extends GetxController {
@@ -58,10 +59,11 @@ class ReportController extends GetxController {
 
   final categories = <ReportOption>[].obs;
   final floors = <ReportOption>[].obs;
+  final rooms = <ReportOption>[].obs;
   final selectedCategory = Rxn<ReportOption>();
   final selectedFloor = Rxn<ReportOption>();
+  final selectedRoom = Rxn<ReportOption>();
   final priorityLevel = 'STANDARD'.obs;
-  final floorRoomController = ''.obs;
   final descriptionController = ''.obs;
   final attachedPhotos = <String>[].obs;
   final isLoadingOptions = false.obs;
@@ -72,6 +74,15 @@ class ReportController extends GetxController {
       categories.isNotEmpty ? categories : _fallbackCategories;
   List<ReportOption> get floorOptions =>
       floors.isNotEmpty ? floors : _fallbackFloors;
+  List<ReportOption> get roomOptions {
+    final floorId = selectedFloor.value?.id;
+    if (rooms.isEmpty || floorId == null) return rooms;
+
+    final filtered = rooms
+        .where((option) => option.parentId == null || option.parentId == floorId)
+        .toList();
+    return filtered.isEmpty ? rooms : filtered;
+  }
 
   @override
   void onInit() {
@@ -88,21 +99,16 @@ class ReportController extends GetxController {
       final results = await Future.wait([
         _authService.getReportCategories(),
         _authService.getReportFloors(),
+        _authService.getReportRooms(),
       ]);
 
-      categories.assignAll(
-        results[0]
-            .map((item) => _optionFromApi(item, isFloor: false))
-            .whereType<ReportOption>(),
-      );
-      floors.assignAll(
-        results[1]
-            .map((item) => _optionFromApi(item, isFloor: true))
-            .whereType<ReportOption>(),
-      );
+      categories.assignAll(_optionsFromApi(results[0], isFloor: false));
+      floors.assignAll(_optionsFromApi(results[1], isFloor: true));
+      rooms.assignAll(_roomOptionsFromApi(results[2]));
 
       _replaceSelectionWithApiOption(selectedCategory, categoryOptions);
       _replaceSelectionWithApiOption(selectedFloor, floorOptions);
+      _replaceSelectionWithApiOption(selectedRoom, roomOptions);
     } finally {
       isLoadingOptions.value = false;
     }
@@ -114,6 +120,15 @@ class ReportController extends GetxController {
 
   void setFloorById(String? floorId) {
     selectedFloor.value = _optionById(floorOptions, floorId);
+
+    final room = selectedRoom.value;
+    if (room?.parentId != null && room!.parentId != floorId) {
+      selectedRoom.value = null;
+    }
+  }
+
+  void setRoomById(String? roomId) {
+    selectedRoom.value = _optionById(roomOptions, roomId);
   }
 
   void setPriority(String priority) {
@@ -125,12 +140,12 @@ class ReportController extends GetxController {
       final image = await _picker.pickImage(source: source, imageQuality: 70);
 
       if (image != null) {
-        if (attachedPhotos.length < 3) {
+        if (attachedPhotos.length < 5) {
           attachedPhotos.add(image.path);
         } else {
           Get.snackbar(
             'Batas Maksimal'.tr,
-            'Anda hanya dapat mengunggah maksimal 3 foto.'.tr,
+            'Anda hanya dapat mengunggah maksimal 5 foto.'.tr,
             snackPosition: SnackPosition.BOTTOM,
             margin: const EdgeInsets.all(16),
           );
@@ -150,8 +165,8 @@ class ReportController extends GetxController {
 
     final category = selectedCategory.value;
     final floor = selectedFloor.value;
+    final room = selectedRoom.value;
     final description = descriptionController.value.trim();
-    final locationDetail = floorRoomController.value.trim();
 
     if (!_authService.isLoggedIn) {
       Get.snackbar(
@@ -179,6 +194,19 @@ class ReportController extends GetxController {
       Get.snackbar(
         'Peringatan'.tr,
         'Harap pilih lokasi gedung terlebih dahulu.'.tr,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+      return false;
+    }
+
+    if (room == null) {
+      Get.snackbar(
+        'Peringatan'.tr,
+        'Harap pilih ruangan terlebih dahulu.'.tr,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -216,16 +244,11 @@ class ReportController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      final completeDescription = [
-        description,
-        if (locationDetail.isNotEmpty)
-          'Lokasi detail: @location'.trParams({'location': locationDetail}),
-      ].join('\n\n');
-
       final response = await _authService.createEmployeeReport(
         floorId: floor.id,
+        roomId: room.id,
         categoryId: category.id,
-        description: completeDescription,
+        description: description,
         priority: priorityLevel.value,
         photoPaths: attachedPhotos.toList(),
       );
@@ -239,7 +262,7 @@ class ReportController extends GetxController {
 
       submitFailureMessage.value =
           _authService.lastRequestError ??
-          'Laporan belum terkirim. Periksa koneksi, sesi login, atau data kategori/lokasi.'.tr;
+          'Laporan belum terkirim. Periksa koneksi, sesi login, atau data kategori/lokasi/ruangan.'.tr;
       return false;
     } finally {
       isSubmitting.value = false;
@@ -249,8 +272,8 @@ class ReportController extends GetxController {
   void clearForm() {
     selectedCategory.value = null;
     selectedFloor.value = null;
+    selectedRoom.value = null;
     priorityLevel.value = 'STANDARD';
-    floorRoomController.value = '';
     descriptionController.value = '';
     attachedPhotos.clear();
   }
@@ -270,20 +293,64 @@ class ReportController extends GetxController {
     Map<String, dynamic> item, {
     required bool isFloor,
   }) {
-    final id = _firstText(
-      item,
+    final sources = _optionSources(item, isFloor: isFloor);
+    final id = _firstTextFromSources(
+      sources,
       isFloor
-          ? const ['id', 'lantai_id', 'floor_id', 'uuid', 'value']
-          : const ['id', 'kategori_id', 'category_id', 'uuid', 'value'],
+          ? const [
+              'id',
+              'lantai_id',
+              'lantaiId',
+              'floor_id',
+              'floorId',
+              'id_lantai',
+              'idLantai',
+              'uuid',
+              'value',
+              'key',
+            ]
+          : const [
+              'id',
+              'kategori_id',
+              'kategoriId',
+              'category_id',
+              'categoryId',
+              'kategori_laporan_id',
+              'kategoriLaporanId',
+              'id_kategori',
+              'idKategori',
+              'uuid',
+              'value',
+              'key',
+            ],
     );
 
-    final label = _firstText(
-      item,
+    final label = _firstTextFromSources(
+      sources,
       isFloor
-          ? const ['nama_lantai', 'lantai', 'nama', 'name', 'label', 'title']
+          ? const [
+              'nama_lantai',
+              'namaLantai',
+              'nomor_lantai',
+              'nomorLantai',
+              'lantai',
+              'floor',
+              'nama',
+              'name',
+              'label',
+              'title',
+              'lokasi',
+              'location',
+            ]
           : const [
+              'nama_kategori_laporan',
+              'namaKategoriLaporan',
               'nama_kategori',
+              'namaKategori',
+              'kategori_laporan',
+              'kategoriLaporan',
               'kategori',
+              'category',
               'nama',
               'name',
               'label',
@@ -293,14 +360,83 @@ class ReportController extends GetxController {
 
     if (id == null || label == null) return null;
 
-    final building = isFloor
-        ? _firstText(item, const ['gedung', 'nama_gedung', 'building'])
-        : null;
-    final displayLabel = building != null && !label.contains(building)
-        ? '$building - $label'
-        : label;
+    final normalizedLabel = isFloor ? _floorLabel(label) : label;
+    final building = isFloor ? _buildingLabel(sources) : null;
+    final displayLabel =
+        building != null && !normalizedLabel.contains(building)
+        ? '$building - $normalizedLabel'
+        : normalizedLabel;
 
     return ReportOption(id: id, label: displayLabel);
+  }
+
+  List<ReportOption> _optionsFromApi(
+    Iterable<Map<String, dynamic>> items, {
+    required bool isFloor,
+  }) {
+    final options = <ReportOption>[];
+    final seenIds = <String>{};
+
+    for (final item in items) {
+      final option = _optionFromApi(item, isFloor: isFloor);
+      if (option == null || !seenIds.add(option.id)) continue;
+      options.add(option);
+    }
+
+    return options;
+  }
+
+  List<ReportOption> _roomOptionsFromApi(
+    Iterable<Map<String, dynamic>> items,
+  ) {
+    final options = <ReportOption>[];
+    final seenIds = <String>{};
+
+    for (final item in items) {
+      final option = _roomOptionFromApi(item);
+      if (option == null || !seenIds.add(option.id)) continue;
+      options.add(option);
+    }
+
+    return options;
+  }
+
+  ReportOption? _roomOptionFromApi(Map<String, dynamic> item) {
+    final sources = _roomSources(item);
+    final id = _firstTextFromSources(sources, const [
+      'id',
+      'ruangan_id',
+      'ruanganId',
+      'room_id',
+      'roomId',
+      'id_ruangan',
+      'idRuangan',
+      'uuid',
+      'value',
+      'key',
+    ]);
+    final label = _firstTextFromSources(sources, const [
+      'nama_ruangan',
+      'namaRuangan',
+      'ruangan',
+      'room',
+      'lokasi',
+      'location',
+      'kode_ruangan',
+      'kodeRuangan',
+      'nama',
+      'name',
+      'label',
+      'title',
+    ]);
+
+    if (id == null || label == null) return null;
+
+    return ReportOption(
+      id: id,
+      label: label,
+      parentId: _roomParentId(item, sources),
+    );
   }
 
   ReportOption? _optionById(List<ReportOption> options, String? id) {
@@ -324,13 +460,135 @@ class ReportController extends GetxController {
     if (replacement != null) selected.value = replacement;
   }
 
+  List<Map<String, dynamic>> _optionSources(
+    Map<String, dynamic> item, {
+    required bool isFloor,
+  }) {
+    final nestedKeys = isFloor
+        ? const [
+            'lantai',
+            'floor',
+            'lokasi',
+            'location',
+            'gedung_lantai',
+            'gedungLantai',
+          ]
+        : const [
+            'kategori',
+            'category',
+            'kategori_laporan',
+            'kategoriLaporan',
+          ];
+
+    return [
+      item,
+      for (final key in nestedKeys)
+        if (_asMap(item[key]) != null) _asMap(item[key])!,
+    ];
+  }
+
+  List<Map<String, dynamic>> _roomSources(Map<String, dynamic> item) {
+    return [
+      item,
+      for (final key in const ['ruangan', 'room', 'lokasi', 'location'])
+        if (_asMap(item[key]) != null) _asMap(item[key])!,
+    ];
+  }
+
+  String? _roomParentId(
+    Map<String, dynamic> item,
+    List<Map<String, dynamic>> sources,
+  ) {
+    final directParent = _firstTextFromSources(sources, const [
+      'lantai_id',
+      'lantaiId',
+      'floor_id',
+      'floorId',
+      'id_lantai',
+      'idLantai',
+    ]);
+    if (directParent != null) return directParent;
+
+    for (final source in [item, ...sources]) {
+      for (final key in const ['lantai', 'floor']) {
+        final nested = _asMap(source[key]);
+        if (nested == null) continue;
+
+        final nestedId = _firstText(nested, const [
+          'id',
+          'uuid',
+          'lantai_id',
+          'lantaiId',
+          'floor_id',
+          'floorId',
+        ]);
+        if (nestedId != null) return nestedId;
+      }
+    }
+
+    return null;
+  }
+
+  String? _firstTextFromSources(
+    List<Map<String, dynamic>> sources,
+    List<String> keys,
+  ) {
+    for (final source in sources) {
+      final value = _firstText(source, keys);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
   String? _firstText(Map<String, dynamic> source, List<String> keys) {
     for (final key in keys) {
       final value = source[key];
       if (value == null) continue;
 
+      if (value is Map) {
+        final nestedValue = _firstText(_asMap(value) ?? const {}, const [
+          'nama_kategori_laporan',
+          'nama_kategori',
+          'nama_lantai',
+          'nomor_lantai',
+          'nama_gedung',
+          'nama',
+          'name',
+          'label',
+          'title',
+        ]);
+        if (nestedValue != null) return nestedValue;
+        continue;
+      }
+
       final text = value.toString().trim();
       if (text.isNotEmpty) return text;
+    }
+    return null;
+  }
+
+  String? _buildingLabel(List<Map<String, dynamic>> sources) {
+    return _firstTextFromSources(sources, const [
+      'nama_gedung',
+      'namaGedung',
+      'gedung',
+      'building',
+      'building_name',
+      'buildingName',
+      'nama_bangunan',
+      'namaBangunan',
+    ]);
+  }
+
+  String _floorLabel(String label) {
+    final value = label.trim();
+    if (RegExp(r'^\d+$').hasMatch(value)) return 'Lantai $value';
+    return value;
+  }
+
+  Map<String, dynamic>? _asMap(Object? value) {
+    if (value is Map) {
+      return value.map((key, value) => MapEntry(key.toString(), value));
     }
     return null;
   }

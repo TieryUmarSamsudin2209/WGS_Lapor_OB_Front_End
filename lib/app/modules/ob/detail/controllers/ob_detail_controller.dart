@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/utils/report_translation_key.dart';
 import '../../../../shared/widgets/custom_alert.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
@@ -37,12 +38,14 @@ class ObDetailController extends GetxController {
     super.onInit();
     if (Get.arguments is HomeReport) {
       activeReport = Get.arguments as HomeReport;
-      title.value = activeReport!.title;
-      description.value = activeReport!.description;
+      title.value = reportTranslationKey(activeReport!.title);
+      description.value = reportTranslationKey(activeReport!.description);
       priority.value = activeReport!.priority;
-      location.value = activeReport!.location;
+      location.value = reportTranslationKey(activeReport!.location);
       reporterName.value = activeReport!.reporterName ?? '-';
-      categoryName.value = activeReport!.categoryName ?? activeReport!.title;
+      categoryName.value = reportTranslationKey(
+        activeReport!.categoryName ?? activeReport!.title,
+      );
       takenByName.value = activeReport!.assignedObName;
       reportPhotos.assignAll(activeReport!.photos);
       isNeedHelp.value = activeReport!.hasCollaboration.value;
@@ -65,7 +68,7 @@ class ObDetailController extends GetxController {
     if (isSubmitting.value) return;
     final reportId = _activeReportId;
     if (reportId == null) {
-      Get.snackbar('Error', 'ID laporan tidak ditemukan');
+      Get.snackbar('Error'.tr, 'ID laporan tidak ditemukan'.tr);
       return;
     }
 
@@ -75,7 +78,7 @@ class ObDetailController extends GetxController {
 
     if (response == null) {
       final message =
-          _authService.lastRequestError ?? 'Gagal mengambil laporan';
+          _authService.lastRequestError ?? 'Gagal mengambil laporan'.tr;
       if (_looksLikeAlreadyTaken(message)) {
         pageState.value = 'taken';
         activeReport?.status.value = 'Sedang Diproses';
@@ -87,10 +90,10 @@ class ObDetailController extends GetxController {
         await CustomAlert.show(
           ctx,
           isSuccess: false,
-          description: message,
+          description: message.tr,
         );
       } else {
-        Get.snackbar('Gagal', message);
+        Get.snackbar('Gagal'.tr, message.tr);
       }
       return;
     }
@@ -106,7 +109,8 @@ class ObDetailController extends GetxController {
       await CustomAlert.show(
         ctx,
         isSuccess: true,
-        description: _responseMessage(response) ?? 'Berhasil mengambil laporan.',
+        description:
+            _responseMessage(response)?.tr ?? 'Berhasil mengambil laporan.'.tr,
       );
     }
   }
@@ -130,15 +134,15 @@ class ObDetailController extends GetxController {
     final note = noteController.text.trim();
 
     if (reportId == null) {
-      Get.snackbar('Error', 'ID laporan tidak ditemukan');
+      Get.snackbar('Error'.tr, 'ID laporan tidak ditemukan'.tr);
       return;
     }
     if (note.isEmpty) {
-      Get.snackbar('Catatan wajib diisi', 'Mohon isi catatan pekerjaan');
+      Get.snackbar('Catatan wajib diisi'.tr, 'Mohon isi catatan pekerjaan'.tr);
       return;
     }
     if (actionPhotos.isEmpty) {
-      Get.snackbar('Foto wajib diisi', 'Mohon unggah bukti foto selesai');
+      Get.snackbar('Foto wajib diisi'.tr, 'Mohon unggah bukti foto selesai'.tr);
       return;
     }
 
@@ -153,11 +157,11 @@ class ObDetailController extends GetxController {
     if (response == null) {
       final ctx = Get.context;
       final message =
-          _authService.lastRequestError ?? 'Gagal menyelesaikan laporan';
+          _authService.lastRequestError ?? 'Gagal menyelesaikan laporan'.tr;
       if (ctx != null) {
-        await CustomAlert.show(ctx, isSuccess: false, description: message);
+        await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
       } else {
-        Get.snackbar('Error', message);
+        Get.snackbar('Error'.tr, message.tr);
       }
       return;
     }
@@ -180,11 +184,11 @@ class ObDetailController extends GetxController {
     final reason = noteController.text.trim();
 
     if (reportId == null) {
-      Get.snackbar('Error', 'ID laporan tidak ditemukan');
+      Get.snackbar('Error'.tr, 'ID laporan tidak ditemukan'.tr);
       return;
     }
     if (reason.isEmpty) {
-      Get.snackbar('Alasan wajib diisi', 'Mohon isi alasan menolak laporan');
+      Get.snackbar('Alasan wajib diisi'.tr, 'Mohon isi alasan menolak laporan'.tr);
       return;
     }
 
@@ -197,11 +201,11 @@ class ObDetailController extends GetxController {
 
     if (response == null) {
       final ctx = Get.context;
-      final message = _authService.lastRequestError ?? 'Gagal menolak laporan';
+      final message = _authService.lastRequestError ?? 'Gagal menolak laporan'.tr;
       if (ctx != null) {
-        await CustomAlert.show(ctx, isSuccess: false, description: message);
+        await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
       } else {
-        Get.snackbar('Error', message);
+        Get.snackbar('Error'.tr, message.tr);
       }
       return;
     }
@@ -227,12 +231,16 @@ class ObDetailController extends GetxController {
         if (actionPhotos.length < 3) {
           actionPhotos.add(image.path);
         } else {
-          Get.snackbar('Batas Maksimal',
-              'Anda hanya dapat mengunggah maksimal 3 foto.');
+          Get.snackbar(
+            'Batas Maksimal'.tr,
+            'Anda hanya dapat mengunggah maksimal 3 foto.'.tr,
+          );
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal mengambil foto: $e');
+      Get.snackbar('Error'.tr, 'Gagal mengambil foto: @error'.trParams({
+        'error': e.toString(),
+      }));
     }
   }
 

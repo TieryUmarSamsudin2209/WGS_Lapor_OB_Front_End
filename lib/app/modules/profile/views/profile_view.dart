@@ -569,7 +569,7 @@ class _HistoryPreviewSection extends StatelessWidget {
               for (var i = 0; i < reports.length; i++) ...[
                 _ReportCard(
                   report: reports[i],
-                  onTap: onOpenHistory,
+                  onTap: () => controller.openReport(reports[i]),
                 ),
                 if (i != reports.length - 1) const SizedBox(height: 9),
               ],
@@ -1083,7 +1083,7 @@ class _ReportCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 9),
                         Text(
-                          title,
+                          title.tr,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -1104,7 +1104,7 @@ class _ReportCard extends StatelessWidget {
                             const SizedBox(width: 2),
                             Expanded(
                               child: Text(
-                                location,
+                                location.tr,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -1119,7 +1119,7 @@ class _ReportCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          description,
+                          description.tr,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
