@@ -39,6 +39,27 @@ class ObNotificationsView extends GetView<ObNotificationsController> {
             fontWeight: FontWeight.w800,
           ),
         ),
+        actions: [
+          Obx(() {
+            final unreadCount = controller.unreadCount;
+            if (unreadCount == 0) return const SizedBox.shrink();
+            
+            return TextButton(
+              onPressed: controller.markAllAsRead,
+              style: TextButton.styleFrom(
+                foregroundColor: isDark ? Colors.white : _blue,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              child: Text(
+                'read_all'.tr,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            );
+          }),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -74,7 +95,13 @@ class ObNotificationsView extends GetView<ObNotificationsController> {
                   ...entry.value.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 14),
-                      child: _NotificationCard(item: item),
+                      child: GestureDetector(
+                        onTap: () {
+                          // Mark as read when tapped
+                          Get.find<ObNotificationsController>().markAsRead(item);
+                        },
+                        child: _NotificationCard(item: item),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

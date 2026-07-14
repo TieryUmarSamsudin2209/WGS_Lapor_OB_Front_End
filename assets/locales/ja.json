@@ -49,6 +49,9 @@
   "language_sheet_subtitle": "アプリの表示言語を変更します",
   "language_changed_title": "言語を変更しました",
   "language_changed_message": "アプリの言語を@languageに変更しました",
+  "read_all": "すべて既読にする",
+  "all_notifications_marked_read": "すべての通知を既読にしました",
+  "success": "成功",
   "catatan_hint": "作業メモを記入してください（最低5文字）"
   "Home": "ホーム",
   "Report": "報告",

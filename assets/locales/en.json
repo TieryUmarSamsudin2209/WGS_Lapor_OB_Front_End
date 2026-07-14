@@ -49,7 +49,10 @@
   "language_sheet_subtitle": "Change the app interface language",
   "language_changed_title": "Language Changed",
   "language_changed_message": "The app language has been changed to @language",
-  "catatan_hint": "Write work notes (minimum 5 characters)"
+  "read_all": "Mark All as Read",
+  "all_notifications_marked_read": "All notifications have been marked as read",
+  "success": "Success",
+  "catatan_hint": "Write work notes (minimum 5 characters)",
   "Home": "Home",
   "Report": "Report",
   "Profile": "Profile",

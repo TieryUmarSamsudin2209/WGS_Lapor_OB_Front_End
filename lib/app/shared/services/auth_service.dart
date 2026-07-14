@@ -360,16 +360,23 @@ class AuthService extends GetxService {
   ];
 
   bool _isOfflineResponse(Response response) {
+    // Only treat as offline if truly no network connection
     if (response.statusCode == null || response.statusCode == 0) return true;
-    if (response.statusCode == 502 || response.statusCode == 503 || response.statusCode == 504) return true;
+    
+    // Check for connection errors
     try {
       final status = response.status;
       if (status.connectionError) return true;
     } catch (_) {}
+    
+    // Check for ngrok tunnel errors
     final bodyStr = (response.bodyString ?? response.body ?? '').toString();
     if (bodyStr.contains('ERR_NGROK_') || bodyStr.contains('ngrok') || bodyStr.contains('Tunnel not found')) {
       return true;
     }
+    
+    // DO NOT treat 503/502/504 as offline - these are server errors, not network errors
+    // Let them be handled by normal error handling with informative messages
     return false;
   }
 
@@ -467,6 +474,25 @@ class AuthService extends GetxService {
           'ngrok-skip-browser-warning': 'true',
         },
       );
+
+      // Handle server errors with informative messages
+      if (response.statusCode == 503) {
+        debugPrint('❌ Backend server unavailable (503)');
+        _lastRequestError = 'Server sedang dalam pemeliharaan. Coba lagi beberapa saat.';
+        return false;
+      }
+      
+      if (response.statusCode == 502) {
+        debugPrint('❌ Bad Gateway (502)');
+        _lastRequestError = 'Server gateway error. Periksa koneksi ke backend.';
+        return false;
+      }
+      
+      if (response.statusCode == 504) {
+        debugPrint('❌ Gateway Timeout (504)');
+        _lastRequestError = 'Server timeout. Coba lagi beberapa saat.';
+        return false;
+      }
 
       if (_isOfflineResponse(response)) {
         return _loginOffline(identifier, password);

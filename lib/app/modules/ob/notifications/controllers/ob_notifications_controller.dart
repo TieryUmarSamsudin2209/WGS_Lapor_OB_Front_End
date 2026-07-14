@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/services/auth_service.dart';
@@ -36,6 +37,8 @@ class ObNotificationsController extends GetxController {
   final notifications = <ObNotificationItem>[].obs;
   final isLoading = false.obs;
 
+  int get unreadCount => notifications.where((n) => n.isUnread).length;
+
   @override
   void onInit() {
     super.onInit();
@@ -67,6 +70,62 @@ class ObNotificationsController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Mark single notification as read
+  void markAsRead(ObNotificationItem item) {
+    final index = notifications.indexWhere((n) => n == item);
+    if (index != -1 && notifications[index].isUnread) {
+      notifications[index] = ObNotificationItem(
+        type: item.type,
+        title: item.title,
+        message: item.message,
+        section: item.section,
+        timeLabel: item.timeLabel,
+        createdAt: item.createdAt,
+        titleParams: item.titleParams,
+        messageParams: item.messageParams,
+        isUnread: false,
+      );
+      notifications.refresh();
+      
+      // TODO: Call API to mark as read
+      // await _authService.markNotificationAsRead(item.id);
+    }
+  }
+
+  /// Mark all notifications as read
+  Future<void> markAllAsRead() async {
+    if (unreadCount == 0) return;
+    
+    // Update all notifications to read
+    notifications.value = notifications.map((item) {
+      return ObNotificationItem(
+        type: item.type,
+        title: item.title,
+        message: item.message,
+        section: item.section,
+        timeLabel: item.timeLabel,
+        createdAt: item.createdAt,
+        titleParams: item.titleParams,
+        messageParams: item.messageParams,
+        isUnread: false,
+      );
+    }).toList();
+    
+    Get.snackbar(
+      'success'.tr,
+      'all_notifications_marked_read'.tr,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: const Color(0xFF2BC36A),
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 2),
+    );
+    
+    // TODO: Call API to mark all as read
+    // await _authService.markAllNotificationsAsRead();
   }
 
   void _showDummyNotifications() {
