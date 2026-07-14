@@ -10,6 +10,8 @@ import '../modules/home/views/karyawan_main_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/ob/checklist/bindings/ob_checklist_binding.dart';
+import '../modules/ob/collaboration/bindings/ob_collaboration_binding.dart';
+import '../modules/ob/collaboration/views/ob_collaboration_view.dart';
 import '../modules/ob/detail/bindings/ob_detail_binding.dart';
 import '../modules/ob/detail/views/ob_detail_view.dart';
 import '../modules/ob/home/bindings/ob_home_binding.dart';
@@ -157,6 +159,13 @@ class AppPages {
       name: Routes.OB_REPORTS,
       page: () => const ObReportsView(),
       binding: ObReportsBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 250),
+    ),
+    GetPage(
+      name: Routes.OB_COLLABORATION,
+      page: () => const ObCollaborationView(),
+      binding: ObCollaborationBinding(),
       transition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 250),
     ),

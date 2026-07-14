@@ -654,25 +654,40 @@ class _HomeReportCard extends StatelessWidget {
                           const SizedBox(height: 5),
                           Row(
                             children: [
-                              if (report.hasCollaboration.value)
+                              if (report.hasCollaboration.value) ...[
                                 const _TinyLabel(text: 'Kolaborasi'),
-                              if (report.assignedObName != null &&
-                                  report.assignedObName!.trim().isNotEmpty)
-                                _TinyLabel(text: report.assignedObName!.trim()),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: report.status.value ==
-                                          'Belum Diproses'
-                                      ? _TakeReportButton(
-                                          isLoading:
-                                              controller.isTakingReport(report),
-                                          onPressed: () =>
-                                              controller.takeReport(report),
-                                        )
-                                      : _DetailLink(isDark: isDark),
+                                const SizedBox(width: 6),
+                              ],
+                              if (report.collaborators.isNotEmpty) ...[
+                                Expanded(
+                                  child: Obx(() => Text(
+                                        '+ ${report.collaborators.join(", ")}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white60
+                                              : const Color(0xFF6B7280),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      )),
                                 ),
+                              ] else if (report.assignedObName != null &&
+                                  report.assignedObName!.trim().isNotEmpty) ...[
+                                _TinyLabel(text: report.assignedObName!.trim()),
+                              ],
+                              const SizedBox(width: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: report.status.value == 'Belum Diproses'
+                                    ? _TakeReportButton(
+                                        isLoading:
+                                            controller.isTakingReport(report),
+                                        onPressed: () =>
+                                            controller.takeReport(report),
+                                      )
+                                    : _DetailLink(isDark: isDark),
                               ),
                             ],
                           ),
@@ -715,7 +730,7 @@ class _TakeReportButton extends StatelessWidget {
                 ),
               )
             : const Icon(Icons.assignment_turned_in_outlined, size: 14),
-        label: Text((isLoading ? 'Mengambil' : 'Ambil').tr),
+        label: Text((isLoading ? 'Mengambil' : 'Ambil & Kerjakan').tr),
         style: ElevatedButton.styleFrom(
           backgroundColor: OBHomeView._blue,
           foregroundColor: Colors.white,

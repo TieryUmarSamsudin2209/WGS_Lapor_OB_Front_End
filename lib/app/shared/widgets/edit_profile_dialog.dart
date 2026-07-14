@@ -181,140 +181,144 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 430),
+        constraints: const BoxConstraints(maxWidth: 430, maxHeight: 600),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(32, 26, 32, 34),
           decoration: BoxDecoration(
             color: dialogColor,
             borderRadius: BorderRadius.circular(10),
             border: isDark ? Border.all(color: AppDarkColors.border) : null,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(32, 26, 32, 34),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(width: 34),
-                  Expanded(
-                    child: Text(
-                      'Edit Profil'.tr,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: titleColor,
-                        fontSize: 20,
+                  Row(
+                    children: [
+                      const SizedBox(width: 34),
+                      Expanded(
+                        child: Text(
+                          'Edit Profil'.tr,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: titleColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _isSaving
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                        color: accentColor,
+                        iconSize: 32,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 34,
+                          minHeight: 34,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 34),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: _isSaving ? null : _showImageSourceSheet,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          _AvatarPreview(
+                            avatarUrl: widget.avatarUrl,
+                            selectedAvatarPath: _selectedAvatarPath,
+                          ),
+                          Container(
+                            width: 136,
+                            height: 136,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.34),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.add_photo_alternate_outlined,
+                            color: Colors.white,
+                            size: 42,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    onPressed: _isSaving ? null : _showImageSourceSheet,
+                    icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                    label: Text('Ganti foto'.tr),
+                    style: TextButton.styleFrom(
+                      foregroundColor: accentColor,
+                      textStyle: const TextStyle(
+                        fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: _isSaving
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                    color: accentColor,
-                    iconSize: 32,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 34,
-                      minHeight: 34,
+                  const SizedBox(height: 28),
+                  _EditField(
+                    label: 'Nama depan',
+                    isRequired: true,
+                    controller: widget._firstNameController,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 24),
+                  _EditField(
+                    label: 'Nama belakang(opsional)',
+                    controller: widget._lastNameController,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 42),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark
+                            ? const Color(0xFF052C58)
+                            : EditProfileDialog._navy,
+                        foregroundColor:
+                            isDark ? AppDarkColors.accent : Colors.white,
+                        elevation: 3,
+                        shadowColor:
+                            EditProfileDialog._navy.withValues(alpha: 0.35),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Simpan'.tr,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 34),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: _isSaving ? null : _showImageSourceSheet,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      _AvatarPreview(
-                        avatarUrl: widget.avatarUrl,
-                        selectedAvatarPath: _selectedAvatarPath,
-                      ),
-                      Container(
-                        width: 136,
-                        height: 136,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.34),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const Icon(
-                        Icons.add_photo_alternate_outlined,
-                        color: Colors.white,
-                        size: 42,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextButton.icon(
-                onPressed: _isSaving ? null : _showImageSourceSheet,
-                icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                label: Text('Ganti foto'.tr),
-                style: TextButton.styleFrom(
-                  foregroundColor: accentColor,
-                  textStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-              _EditField(
-                label: 'Nama depan',
-                isRequired: true,
-                controller: widget._firstNameController,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 24),
-              _EditField(
-                label: 'Nama belakang(opsional)',
-                controller: widget._lastNameController,
-                isDark: isDark,
-              ),
-              const SizedBox(height: 42),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark
-                        ? const Color(0xFF052C58)
-                        : EditProfileDialog._navy,
-                    foregroundColor:
-                        isDark ? AppDarkColors.accent : Colors.white,
-                    elevation: 3,
-                    shadowColor:
-                        EditProfileDialog._navy.withValues(alpha: 0.35),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          'Simpan'.tr,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/controllers/auth_controller.dart';
@@ -25,6 +26,18 @@ class ReportModel {
     required this.date,
     required this.status,
   });
+}
+
+class ActiveLocation {
+  final String id;
+  final String name;
+  final RxBool isActive;
+
+  ActiveLocation({
+    required this.id,
+    required this.name,
+    bool isActive = false,
+  }) : isActive = isActive.obs;
 }
 
 /// ================= ENUM =================
@@ -71,11 +84,14 @@ class ObProfilController extends GetxController {
   /// ---- State ----
   var isLoading = false.obs;
   final selectedLanguage = 'Indonesia'.obs;
+  var isEditingLocation = false.obs;
+  var isSavingLocation = false.obs;
 
   /// ---- Data ----
   var reports = <ReportModel>[].obs;
   var filteredReports = <ReportModel>[].obs;
   final completedTaskTotal = 0.obs;
+  var activeLocations = <ActiveLocation>[].obs;
 
   ReportStatus? currentFilter;
   String searchQuery = '';
@@ -90,9 +106,11 @@ class ObProfilController extends GetxController {
     super.onInit();
     selectedLanguage.value = AppTranslations.currentLanguageLabel();
     loadProfile();
+    loadActiveLocations();
   }
 
   Future<void> loadProfile() async {
+    debugPrint('🔄 Loading profile...');
     isLoading.value = true;
 
     final results = await Future.wait([
@@ -102,6 +120,8 @@ class ObProfilController extends GetxController {
     ]);
 
     final response = results[0];
+    debugPrint('📦 Profile response: ${response.toString().substring(0, response.toString().length > 300 ? 300 : response.toString().length)}');
+    
     final reportsResponse = results[1];
     final checklistResponse = results[2];
     final data = _asMap(response?['data']) ?? response;
@@ -109,6 +129,8 @@ class ObProfilController extends GetxController {
         _asMap(data?['profile']) ??
         _asMap(data?['data']) ??
         data;
+
+    debugPrint('📝 Extracted profile: ${profile.toString().substring(0, profile.toString().length > 300 ? 300 : profile.toString().length)}');
 
     _setProfile(profile);
 
@@ -125,6 +147,8 @@ class ObProfilController extends GetxController {
     completedTaskTotal.value = _completedTaskCount(checklistResponse);
     filteredReports.value = reports;
     isLoading.value = false;
+    
+    debugPrint('✅ Profile loaded: name=${name.value}, username=${username.value}');
   }
 
   /// ================= ACTION =================
@@ -154,6 +178,8 @@ class ObProfilController extends GetxController {
         .where((part) => part.isNotEmpty)
         .join(' ');
 
+    debugPrint('🔄 Updating profile: firstName=$sanitizedFirstName, lastName=$sanitizedLastName, avatarPath=$avatarPath');
+
     final response = await _authService.updateUserProfile(
       firstName: sanitizedFirstName,
       lastName: sanitizedLastName,
@@ -161,21 +187,32 @@ class ObProfilController extends GetxController {
     );
 
     if (response == null) {
-      Get.snackbar('Gagal', 'Profil belum berhasil disimpan');
+      final errorMsg = _authService.lastRequestError ?? 'Profil belum berhasil disimpan';
+      debugPrint('❌ Update profile failed: $errorMsg');
+      Get.snackbar('Gagal'.tr, errorMsg.tr);
       return false;
     }
 
+    debugPrint('✅ Profile update API success: ${response.toString().substring(0, response.toString().length > 200 ? 200 : response.toString().length)}');
+
     final profile = _profileFromResponse(response);
     if (profile != null) {
+      debugPrint('📦 Setting profile from response');
       _setProfile(profile);
     } else {
+      debugPrint('📝 Setting profile manually: name=$fullName');
       name.value = fullName;
       if (avatarPath != null && avatarPath.trim().isNotEmpty) {
         avatarUrl.value = avatarPath.trim();
       }
     }
 
-    Get.snackbar('Berhasil', 'Profil berhasil disimpan');
+    // Force refresh UI
+    name.refresh();
+    avatarUrl.refresh();
+    
+    debugPrint('✅ Profile updated successfully: name=${name.value}, avatar=${avatarUrl.value}');
+    Get.snackbar('Berhasil'.tr, 'Profil berhasil disimpan'.tr);
     return true;
   }
 
@@ -191,6 +228,144 @@ class ObProfilController extends GetxController {
         ? Get.find<AuthController>()
         : Get.put(AuthController(), permanent: true);
     await authController.logout();
+  }
+
+  /// ================= ACTIVE LOCATION =================
+
+  Future<void> loadActiveLocations() async {
+    try {
+      final response = await _authService.getObActiveLocations();
+      if (response == null) return;
+
+      final items = _extractLocationItems(response);
+      activeLocations.value = items
+          .whereType<Map>()
+          .map((item) => _locationFromApi(_asMap(item) ?? const {}))
+          .toList();
+    } catch (e) {
+      debugPrint('Error loading active locations: $e');
+    }
+  }
+
+  void toggleEditLocation() {
+    isEditingLocation.value = !isEditingLocation.value;
+  }
+
+  void toggleLocation(ActiveLocation location) {
+    location.isActive.value = !location.isActive.value;
+  }
+
+  Future<void> saveActiveLocations() async {
+    isSavingLocation.value = true;
+
+    try {
+      final activeLocationIds = activeLocations
+          .where((loc) => loc.isActive.value)
+          .map((loc) => loc.id)
+          .toList();
+
+      final response = await _authService.updateObActiveLocations(activeLocationIds);
+      
+      if (response == null) {
+        Get.snackbar(
+          'Gagal'.tr,
+          'Lokasi aktif belum berhasil disimpan'.tr,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      Get.snackbar(
+        'Berhasil'.tr,
+        'Lokasi aktif berhasil disimpan'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      isEditingLocation.value = false;
+    } catch (e) {
+      debugPrint('Error saving active locations: $e');
+      Get.snackbar(
+        'Gagal'.tr,
+        'Terjadi kesalahan saat menyimpan lokasi'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isSavingLocation.value = false;
+    }
+  }
+
+  ActiveLocation _locationFromApi(Map<String, dynamic> item) {
+    final id = _firstValue(item, [
+          'id',
+          'gedung_id',
+          'lokasi_id',
+          'location_id',
+          'uuid',
+        ]) ??
+        '';
+    
+    final name = _firstValue(item, [
+          'nama',
+          'name',
+          'nama_gedung',
+          'nama_lokasi',
+          'lokasi',
+          'location',
+        ]) ??
+        'Lokasi';
+
+    final isActive = _boolValue(item, [
+      'is_active',
+      'isActive',
+      'active',
+      'aktif',
+    ]);
+
+    return ActiveLocation(
+      id: id,
+      name: name,
+      isActive: isActive,
+    );
+  }
+
+  List<dynamic> _extractLocationItems(Map<String, dynamic>? response) {
+    final data = _asMap(response?['data']);
+    final nestedData = _asMap(data?['data']);
+    const keys = [
+      'lokasi',
+      'locations',
+      'gedung',
+      'buildings',
+      'lantai',
+      'floors',
+      'items',
+      'data',
+      'rows',
+      'results',
+    ];
+
+    for (final source in [nestedData, data, response]) {
+      if (source == null) continue;
+      for (final key in keys) {
+        final value = source[key];
+        if (value is List) return value;
+      }
+    }
+
+    return const [];
+  }
+
+  bool _boolValue(Map<String, dynamic> source, List<String> keys) {
+    for (final key in keys) {
+      final value = source[key];
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      final text = value?.toString().trim().toLowerCase();
+      if (text == null || text.isEmpty) continue;
+      if (['true', '1', 'yes', 'ya', 'y'].contains(text)) return true;
+      if (['false', '0', 'no', 'tidak', 'n'].contains(text)) return false;
+    }
+    return false;
   }
 
   Future<void> openReport(ReportModel report) async {
@@ -246,6 +421,8 @@ class ObProfilController extends GetxController {
   void _setProfile(Map<String, dynamic>? profile) {
     if (profile == null) return;
 
+    debugPrint('🎯 _setProfile called with: ${profile.toString().substring(0, profile.toString().length > 300 ? 300 : profile.toString().length)}');
+
     final displayName = _firstValue(profile, [
       'nama_lengkap',
       'nama',
@@ -261,6 +438,10 @@ class ObProfilController extends GetxController {
       'foto',
     ]);
 
+    debugPrint('  displayName: $displayName');
+    debugPrint('  userName: $userName');
+    debugPrint('  photo: $photo');
+
     if (displayName != null && displayName.isNotEmpty) {
       name.value = displayName;
     }
@@ -270,6 +451,8 @@ class ObProfilController extends GetxController {
     if (photo != null && photo.isNotEmpty) {
       avatarUrl.value = _profilePhotoUrl(photo);
     }
+    
+    debugPrint('✅ Profile set: name=${name.value}, username=${username.value}');
   }
 
   Map<String, dynamic>? _profileFromResponse(Map<String, dynamic> response) {

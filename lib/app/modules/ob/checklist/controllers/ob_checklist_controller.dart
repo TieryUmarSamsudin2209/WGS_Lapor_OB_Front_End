@@ -47,6 +47,12 @@ class ObChecklistController extends GetxController {
   final isLoading = false.obs;
   final ImagePicker _picker = ImagePicker();
 
+  // Filter state
+  final searchQuery = ''.obs;
+  final selectedLokasiId = RxnString();
+  final selectedLantaiId = RxnString();
+  final selectedStatus = RxnString();
+
   // Temporary controller for note text field inside popup
   final noteController = TextEditingController();
 
@@ -66,7 +72,12 @@ class ObChecklistController extends GetxController {
     isLoading.value = true;
 
     try {
-      final response = await _authService.getDailyChecklist();
+      final response = await _authService.getDailyChecklist(
+        search: searchQuery.value.isNotEmpty ? searchQuery.value : null,
+        lokasiId: selectedLokasiId.value,
+        lantaiId: selectedLantaiId.value,
+        status: selectedStatus.value,
+      );
       final checklistItems = _extractChecklistItems(response);
       sections.value = _sectionsFromApi(checklistItems);
     } catch (_) {
@@ -74,6 +85,29 @@ class ObChecklistController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Apply filters and reload checklist from API
+  void filterChecklist({
+    String? search,
+    String? lokasiId,
+    String? lantaiId,
+    String? status,
+  }) {
+    if (search != null) searchQuery.value = search;
+    if (lokasiId != null) selectedLokasiId.value = lokasiId.isEmpty ? null : lokasiId;
+    if (lantaiId != null) selectedLantaiId.value = lantaiId.isEmpty ? null : lantaiId;
+    if (status != null) selectedStatus.value = status.isEmpty ? null : status;
+    loadChecklist();
+  }
+
+  /// Reset all filters
+  void resetFilters() {
+    searchQuery.value = '';
+    selectedLokasiId.value = null;
+    selectedLantaiId.value = null;
+    selectedStatus.value = null;
+    loadChecklist();
   }
 
   /// Set status directly from popup

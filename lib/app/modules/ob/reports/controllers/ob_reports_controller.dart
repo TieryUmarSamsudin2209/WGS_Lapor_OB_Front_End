@@ -99,7 +99,7 @@ class ObReportsController extends GetxController {
   }
 
   HomeReport _reportFromApi(Map<String, dynamic> item) {
-    final detail = _asMap(item['laporan']) ?? _asMap(item['report']) ?? item;
+    final detail = _reportDetailFromApi(item);
     final photos = _photosFromApi(item);
 
     return HomeReport(
@@ -110,6 +110,8 @@ class ObReportsController extends GetxController {
           ]) ??
           _stringValue(detail, [
             'id',
+            'laporan_id',
+            'report_id',
             'uuid',
           ]) ??
           _stringValue(item, [
@@ -177,6 +179,10 @@ class ObReportsController extends GetxController {
         'reporter',
         'reported_by',
         'reportedBy',
+        'created_by',
+        'createdBy',
+        'submitted_by',
+        'submittedBy',
         'karyawan',
         'pegawai',
         'user',
@@ -232,6 +238,10 @@ class ObReportsController extends GetxController {
       'data',
       'rows',
       'results',
+      'laporan_karyawan',
+      'laporanKaryawan',
+      'employee_reports',
+      'employeeReports',
       'riwayat_laporan',
       'riwayatLaporan',
       'laporan_masuk',
@@ -391,6 +401,18 @@ class ObReportsController extends GetxController {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
     return null;
+  }
+
+  Map<String, dynamic> _reportDetailFromApi(Map<String, dynamic> item) {
+    return _asMap(item['laporan']) ??
+        _asMap(item['report']) ??
+        _asMap(item['laporan_karyawan']) ??
+        _asMap(item['laporanKaryawan']) ??
+        _asMap(item['employee_report']) ??
+        _asMap(item['employeeReport']) ??
+        _asMap(item['employee_reports']) ??
+        _asMap(item['employeeReports']) ??
+        item;
   }
 
   void _startReportPolling() {

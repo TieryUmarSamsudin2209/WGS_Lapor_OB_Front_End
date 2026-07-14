@@ -17,6 +17,7 @@ abstract class Routes {
   static const OB_CHECKLIST = _Paths.OB_CHECKLIST;
   static const OB_NOTIFICATIONS = _Paths.OB_NOTIFICATIONS;
   static const OB_REPORTS = _Paths.OB_REPORTS;
+  static const OB_COLLABORATION = _Paths.OB_COLLABORATION;
   static const TERMS = _Paths.TERMS;
   static const PRIVACY = _Paths.PRIVACY;
   static const NOTIFICATIONS = _Paths.NOTIFICATIONS;
@@ -38,6 +39,7 @@ abstract class _Paths {
   static const OB_CHECKLIST = '/ob-checklist';
   static const OB_NOTIFICATIONS = '/ob-notifications';
   static const OB_REPORTS = '/ob-reports';
+  static const OB_COLLABORATION = '/ob/collaboration';
   static const TERMS = '/terms';
   static const PRIVACY = '/privacy';
   static const NOTIFICATIONS = '/notifications';

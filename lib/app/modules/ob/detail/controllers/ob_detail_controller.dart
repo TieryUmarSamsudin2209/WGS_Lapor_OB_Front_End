@@ -98,9 +98,10 @@ class ObDetailController extends GetxController {
       return;
     }
 
+    // Success - set to working state (not initial/pending)
     pageState.value = 'working';
     isDetailExpanded.value = false;
-    activeReport?.status.value = 'Sedang Diproses';
+    activeReport?.status.value = 'Sedang Diproses'; // Always "Sedang Diproses", never "Belum Diproses"
     takenByName.value =
         _assignedObNameFromResponse(response) ?? _currentObName ?? 'Anda';
 
@@ -122,9 +123,97 @@ class ObDetailController extends GetxController {
     }
   }
 
-  void toggleNeedHelp() {
-    isNeedHelp.value = !isNeedHelp.value;
-    activeReport?.hasCollaboration.value = isNeedHelp.value;
+  Future<void> toggleNeedHelp() async {
+    if (isSubmitting.value) return;
+    final reportId = _activeReportId;
+    if (reportId == null) {
+      Get.snackbar('Error'.tr, 'ID laporan tidak ditemukan'.tr);
+      return;
+    }
+
+    // If turning ON collaboration, request it via API
+    if (!isNeedHelp.value) {
+      isSubmitting.value = true;
+      final response = await _authService.requestCollaboration(reportId);
+      isSubmitting.value = false;
+
+      if (response == null) {
+        final ctx = Get.context;
+        final message = _authService.lastRequestError ??
+            'Gagal meminta kolaborasi'.tr;
+        if (ctx != null) {
+          await CustomAlert.show(
+            ctx,
+            isSuccess: false,
+            description: message.tr,
+          );
+        } else {
+          Get.snackbar('Gagal'.tr, message.tr);
+        }
+        return;
+      }
+
+      // Success - update state
+      isNeedHelp.value = true;
+      activeReport?.hasCollaboration.value = true;
+
+      final ctx = Get.context;
+      if (ctx != null) {
+        await CustomAlert.show(
+          ctx,
+          isSuccess: true,
+          description:
+              'Permintaan kolaborasi terkirim ke semua OB'.tr,
+        );
+      }
+    } else {
+      // If turning OFF, cancel collaboration
+      isSubmitting.value = true;
+      final response = await _authService.cancelCollaboration(reportId);
+      isSubmitting.value = false;
+
+      if (response == null) {
+        final ctx = Get.context;
+        final message = _authService.lastRequestError ??
+            'Gagal membatalkan kolaborasi'.tr;
+        if (ctx != null) {
+          await CustomAlert.show(
+            ctx,
+            isSuccess: false,
+            description: message.tr,
+          );
+        } else {
+          Get.snackbar('Gagal'.tr, message.tr);
+        }
+        return;
+      }
+
+      // Success - update state
+      isNeedHelp.value = false;
+      activeReport?.hasCollaboration.value = false;
+
+      final ctx = Get.context;
+      if (ctx != null) {
+        await CustomAlert.show(
+          ctx,
+          isSuccess: true,
+          description: 'Kolaborasi dibatalkan'.tr,
+        );
+      }
+    }
+  }
+
+  void openCollaborationPage() {
+    if (activeReport == null) {
+      Get.snackbar('Error'.tr, 'Data laporan tidak ditemukan'.tr);
+      return;
+    }
+
+    // Navigate to collaboration page
+    Get.toNamed(
+      '/ob/collaboration',
+      arguments: activeReport,
+    );
   }
 
   // ── Selesaikan → alert berhasil lalu kembali ke screen sebelumnya ────────
@@ -139,6 +228,10 @@ class ObDetailController extends GetxController {
     }
     if (note.isEmpty) {
       Get.snackbar('Catatan wajib diisi'.tr, 'Mohon isi catatan pekerjaan'.tr);
+      return;
+    }
+    if (note.length < 5) {
+      Get.snackbar('Catatan terlalu pendek'.tr, 'Keterangan minimal 5 karakter'.tr);
       return;
     }
     if (actionPhotos.isEmpty) {
@@ -260,21 +353,37 @@ class ObDetailController extends GetxController {
   }
 
   bool _isTakenByAnotherOb(HomeReport report) {
+    // Check if report has assigned OB ID
     final assignedId = report.assignedObId?.trim();
     if (assignedId != null && assignedId.isNotEmpty) {
       final currentIds = _currentObIds;
-      return currentIds.isEmpty ||
-          !currentIds.contains(_normalizeIdentity(assignedId));
+      if (currentIds.isEmpty) {
+        // No current user ID available, assume not taken by this OB
+        return true;
+      }
+      // Check if assigned ID matches any of current OB IDs
+      final isTakenByMe = currentIds.contains(_normalizeIdentity(assignedId));
+      debugPrint('🔍 Check by ID: assignedId=$assignedId, currentIds=$currentIds, isTakenByMe=$isTakenByMe');
+      return !isTakenByMe; // Return true only if NOT taken by me
     }
 
+    // Fallback: Check by OB name
     final assignedName = report.assignedObName?.trim();
     if (assignedName != null && assignedName.isNotEmpty) {
       final currentName = _currentObName;
-      if (currentName == null || currentName.trim().isEmpty) return true;
-      return _normalizeIdentity(assignedName) != _normalizeIdentity(currentName);
+      if (currentName == null || currentName.trim().isEmpty) {
+        // No current user name available, assume not taken by this OB
+        return true;
+      }
+      final isTakenByMe = _normalizeIdentity(assignedName) == _normalizeIdentity(currentName);
+      debugPrint('🔍 Check by Name: assignedName=$assignedName, currentName=$currentName, isTakenByMe=$isTakenByMe');
+      return !isTakenByMe; // Return true only if NOT taken by me
     }
 
-    return report.status.value == 'Sedang Diproses';
+    // No assigned OB info available
+    // If status is "Sedang Diproses" but no OB assigned, assume it's available for this OB
+    debugPrint('🔍 No assigned OB info, status=${report.status.value}');
+    return false; // NOT locked - let current OB work on it
   }
 
   Set<String> get _currentObIds {

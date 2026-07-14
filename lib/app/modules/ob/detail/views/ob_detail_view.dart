@@ -49,7 +49,7 @@ class ObDetailView extends GetView<ObDetailController> {
               if (controller.pageState.value == 'working') {
                 return _buildActionForm(
                   titleText: 'Beri Catatan',
-                  hintText: 'Sudah saya perbaiki ya',
+                  hintText: 'catatan_hint',  // Translation key
                   photoLabel: 'Bukti Foto Selesai',
                 );
               } else if (controller.pageState.value == 'rejecting') {
@@ -573,11 +573,11 @@ class ObDetailView extends GetView<ObDetailController> {
               ),
               const SizedBox(height: 12),
               _buildOutlineButton(
-                'Butuh Bantuan',
-                () => controller.toggleNeedHelp(),
+                'Kolaborasi',
+                () => controller.openCollaborationPage(),
                 icon: controller.isNeedHelp.value
-                    ? Icons.help
-                    : Icons.help_outline,
+                    ? Icons.people
+                    : Icons.people_outline,
                 isActive: controller.isNeedHelp.value,
               ),
             ],

@@ -10,6 +10,7 @@ import 'app/shared/translations/app_translations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppTranslations.init();
 
   final authService = Get.put(AuthService(), permanent: true);
   await authService.loadSession();

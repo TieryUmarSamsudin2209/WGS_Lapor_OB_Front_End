@@ -1,10 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'en.dart';
-import 'id.dart';
-import 'ja.dart';
 
 class AppLanguage {
   const AppLanguage({
@@ -25,6 +23,8 @@ class AppTranslations extends Translations {
   static const Locale fallbackLocale = Locale('id');
   static final currentLocale = fallbackLocale.obs;
 
+  static final Map<String, Map<String, String>> _keys = {};
+
   static const List<AppLanguage> languages = [
     AppLanguage(
       code: 'id',
@@ -42,6 +42,19 @@ class AppTranslations extends Translations {
       nativeLabel: '日本語',
     ),
   ];
+
+  static Future<void> init() async {
+    for (final lang in languages) {
+      try {
+        final jsonString = await rootBundle.loadString('assets/locales/${lang.code}.json');
+        final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+        _keys[lang.code] = jsonMap.map((key, value) => MapEntry(key, value.toString()));
+      } catch (e) {
+        debugPrint('Error loading translation file for ${lang.code}: $e');
+        _keys[lang.code] = {};
+      }
+    }
+  }
 
   static Future<Locale> loadSavedLocale() async {
     final prefs = await SharedPreferences.getInstance();
@@ -83,9 +96,5 @@ class AppTranslations extends Translations {
   static String currentLanguageLabel() => currentLanguage().nativeLabel;
 
   @override
-  Map<String, Map<String, String>> get keys => {
-        'id': idTranslations,
-        'en': enTranslations,
-        'ja': jaTranslations,
-      };
+  Map<String, Map<String, String>> get keys => _keys;
 }

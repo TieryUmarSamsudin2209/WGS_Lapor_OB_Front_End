@@ -71,9 +71,17 @@ class ReportController extends GetxController {
   final submitFailureMessage = RxnString();
 
   List<ReportOption> get categoryOptions =>
-      categories.isNotEmpty ? categories : _fallbackCategories;
+      categories.isNotEmpty
+      ? categories
+      : _authService.isOfflineMode
+      ? _fallbackCategories
+      : const [];
   List<ReportOption> get floorOptions =>
-      floors.isNotEmpty ? floors : _fallbackFloors;
+      floors.isNotEmpty
+      ? floors
+      : _authService.isOfflineMode
+      ? _fallbackFloors
+      : const [];
   List<ReportOption> get roomOptions {
     final floorId = selectedFloor.value?.id;
     if (rooms.isEmpty || floorId == null) return rooms;
@@ -458,6 +466,7 @@ class ReportController extends GetxController {
     );
 
     if (replacement != null) selected.value = replacement;
+    if (replacement == null && options.isNotEmpty) selected.value = null;
   }
 
   List<Map<String, dynamic>> _optionSources(
