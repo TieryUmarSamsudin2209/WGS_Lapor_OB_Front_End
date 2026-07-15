@@ -133,10 +133,53 @@ class _HomeHeader extends StatelessWidget {
                 IconButton(
                   tooltip: 'Notifikasi'.tr,
                   onPressed: () => Get.toNamed(Routes.OB_NOTIFICATIONS),
-                  icon: const Icon(
-                    Icons.notifications_none_rounded,
-                    color: Colors.white,
-                    size: 27,
+                  icon: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(
+                        Icons.notifications_none_rounded,
+                        color: Colors.white,
+                        size: 27,
+                      ),
+                      // Unread badge
+                      Obx(() {
+                        final unreadCount = controller.unreadNotificationCount.value;
+                        if (unreadCount <= 0) return const SizedBox.shrink();
+                        
+                        return Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE53935),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color(0xFF1A73E8),
+                                width: 1.5,
+                              ),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Text(
+                              unreadCount > 99 ? '99+' : unreadCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
                   ),
                 ),
               ],
@@ -652,7 +695,7 @@ class _HomeReportCard extends StatelessWidget {
                                 : const Color(0xFFE7ECF3),
                           ),
                           const SizedBox(height: 5),
-                          Row(
+                          Obx(() => Row(
                             children: [
                               if (report.hasCollaboration.value) ...[
                                 const _TinyLabel(text: 'Kolaborasi'),
@@ -660,7 +703,7 @@ class _HomeReportCard extends StatelessWidget {
                               ],
                               if (report.collaborators.isNotEmpty) ...[
                                 Expanded(
-                                  child: Obx(() => Text(
+                                  child: Text(
                                         '+ ${report.collaborators.join(", ")}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -671,7 +714,7 @@ class _HomeReportCard extends StatelessWidget {
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
                                         ),
-                                      )),
+                                      ),
                                 ),
                               ] else if (report.assignedObName != null &&
                                   report.assignedObName!.trim().isNotEmpty) ...[
@@ -690,7 +733,7 @@ class _HomeReportCard extends StatelessWidget {
                                     : _DetailLink(isDark: isDark),
                               ),
                             ],
-                          ),
+                          )),
                         ],
                       ),
                     ),

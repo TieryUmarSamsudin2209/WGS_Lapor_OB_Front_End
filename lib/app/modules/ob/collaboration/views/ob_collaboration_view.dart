@@ -11,6 +11,130 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
   final Color urgentRed = const Color(0xFFC62828);
   final Color lightPurple = const Color(0xFFF3F5FF);
 
+  // Static method to show edit notes dialog
+  static void _showEditNotesDialog(ObCollaborationController controller) {
+    if (!controller.canEditNotes) {
+      Get.snackbar('Error'.tr, 'Hanya pemilik laporan yang dapat mengubah catatan'.tr);
+      return;
+    }
+
+    final notesController = TextEditingController(text: controller.currentNotes);
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  const Icon(Icons.edit_note, size: 24),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Tambahkan Catatan'.tr,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      notesController.dispose();
+                      Get.back();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              // Text field
+              TextField(
+                controller: notesController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText: 'Tolong bawakan sapu dan...'.tr,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.all(12),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      notesController.dispose();
+                      Get.back();
+                    },
+                    child: Text(
+                      'Batal'.tr,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Obx(() => ElevatedButton(
+                        onPressed: controller.isSubmitting.value
+                            ? null
+                            : () async {
+                                final newNotes = notesController.text.trim();
+                                notesController.dispose();
+                                Get.back();
+                                await controller.updateNotes(newNotes);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1689D8),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: controller.isSubmitting.value
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.check_circle, size: 18),
+                                  const SizedBox(width: 6),
+                                  Text('Simpan Catatan'.tr),
+                                ],
+                              ),
+                      )),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -257,7 +381,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
         children: [
           Row(
             children: [
-              Icon(Icons.image, size: 20, color: mutedColor),
+              Icon(Icons.edit_note, size: 20, color: mutedColor),
               const SizedBox(width: 8),
               Text(
                 'Catatan'.tr,
@@ -267,17 +391,82 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
                   color: titleColor,
                 ),
               ),
+              const Spacer(),
+              // Show edit button if owner
+              Obx(() {
+                if (!controller.isOwner.value) return const SizedBox.shrink();
+                return InkWell(
+                  onTap: () => _showEditNotesDialog(controller),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppDarkColors.surfaceVariant
+                          : const Color(0xFFF0F4F8),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: isDark ? Colors.white70 : mutedColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Edit'.tr,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : mutedColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            'Tolong bawakan siapa tau dak rokok'.tr,
-            style: TextStyle(
-              fontSize: 12,
-              color: mutedColor,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          Obx(() => GestureDetector(
+                onTap: controller.isOwner.value
+                    ? () => _showEditNotesDialog(controller)
+                    : null,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppDarkColors.surfaceVariant
+                        : const Color(0xFFF8FAFB),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark
+                          ? AppDarkColors.border
+                          : const Color(0xFFE5E9EE),
+                    ),
+                  ),
+                  child: Text(
+                    controller.notes.value.isEmpty
+                        ? 'Belum ada catatan. Tap untuk menambahkan.'.tr
+                        : controller.notes.value,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: controller.notes.value.isEmpty
+                          ? mutedColor.withValues(alpha: 0.6)
+                          : mutedColor,
+                      fontStyle: controller.notes.value.isEmpty
+                          ? FontStyle.italic
+                          : FontStyle.normal,
+                    ),
+                  ),
+                ),
+              )),
 
           const SizedBox(height: 20),
 
@@ -468,11 +657,24 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
   }
 
   Widget _buildOwnerButtons() {
-    return _buildSolidButton(
-      'Batalkan Kolaborasi',
-      urgentRed,
-      () => controller.cancelCollaboration(),
-      icon: Icons.close,
+    return Column(
+      children: [
+        // Tutup Kolaborasi button
+        _buildSolidButton(
+          'Tutup Kolaborasi',
+          const Color(0xFF1689D8), // Blue color
+          () => controller.closeCollaboration(),
+          icon: Icons.lock_outline,
+        ),
+        const SizedBox(height: 12),
+        // Batalkan Kolaborasi button
+        _buildSolidButton(
+          'Batalkan Kolaborasi',
+          urgentRed,
+          () => controller.cancelCollaboration(),
+          icon: Icons.close,
+        ),
+      ],
     );
   }
 

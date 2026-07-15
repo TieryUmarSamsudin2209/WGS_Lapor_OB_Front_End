@@ -32,9 +32,13 @@ class HomeReport {
   final List<String> photos;
   final String? reporterName;
   final String? categoryName;
-  String? assignedObId;
-  String? assignedObName;
+  final Rx<String?> obId; // Made reactive for dynamic updates
+  final Rx<String?> obName; // Made reactive for dynamic updates
   final RxList<String> collaborators; // List of collaborator names
+
+  // Convenience getters for backward compatibility
+  String? get assignedObId => obId.value;
+  String? get assignedObName => obName.value;
 
   HomeReport({
     required this.id,
@@ -47,11 +51,13 @@ class HomeReport {
     this.photos = const [],
     this.reporterName,
     this.categoryName,
-    this.assignedObId,
-    this.assignedObName,
+    String? assignedObId,
+    String? assignedObName,
     List<String> collaborators = const [],
   }) : status = status.obs,
        hasCollaboration = hasCollaboration.obs,
+       obId = Rx<String?>(assignedObId),
+       obName = Rx<String?>(assignedObName),
        collaborators = RxList<String>(collaborators);
 }
 
@@ -63,6 +69,7 @@ class ObHomeController extends GetxController {
   final name = 'OB'.obs;
   final isLoadingTasks = false.obs;
   final isLoadingReports = false.obs;
+  final unreadNotificationCount = 0.obs;
 
   // List of Daily Tasks
   final dailyTasks = <DailyTask>[].obs;
@@ -73,6 +80,7 @@ class ObHomeController extends GetxController {
   final _knownReportIds = <String>{};
 
   Timer? _reportPollingTimer;
+  Timer? _notificationPollingTimer;
   bool _hasLoadedReportsOnce = false;
 
   String get assignmentLabel {
@@ -310,6 +318,7 @@ class ObHomeController extends GetxController {
   @override
   void onClose() {
     _reportPollingTimer?.cancel();
+    _notificationPollingTimer?.cancel();
     super.onClose();
   }
 
@@ -319,6 +328,8 @@ class ObHomeController extends GetxController {
     _loadUser();
     loadHomeData();
     _startReportPolling();
+    _loadUnreadNotificationCount();
+    _startNotificationPolling();
   }
 
   void openReportDetail(HomeReport report) {
@@ -348,9 +359,9 @@ class ObHomeController extends GetxController {
       }
 
       // Success - update report status to "Sedang Diproses" (IN_PROGRESS)
-      report.assignedObName =
+      report.obName.value =
           _assignedObNameFromResponse(response) ?? _currentObName ?? 'Anda';
-      report.assignedObId = _assignedObIdFromResponse(response) ?? _currentObId;
+      report.obId.value = _assignedObIdFromResponse(response) ?? _currentObId;
       report.status.value = 'Sedang Diproses'; // Always "Sedang Diproses", never "Belum Diproses"
 
       Get.snackbar(
@@ -730,9 +741,10 @@ class ObHomeController extends GetxController {
               'pending',
         ),
         hasCollaboration: _boolValueFromSources([item, detail], [
+          'is_kolaborasi_open',  // Backend field (priority)
+          'kolaborasi',
           'has_collaboration',
           'hasCollaboration',
-          'kolaborasi',
           'butuh_bantuan',
           'need_help',
         ]),
@@ -872,6 +884,24 @@ class ObHomeController extends GetxController {
     _reportPollingTimer?.cancel();
     _reportPollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       loadReports(showNewReportAlert: true, silent: true);
+    });
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final count = await _authService.getUnreadNotificationCount();
+      unreadNotificationCount.value = count;
+      debugPrint('📬 [NOTIF-BADGE] Unread count: $count');
+    } catch (e) {
+      debugPrint('❌ [NOTIF-BADGE] Failed to load unread count: $e');
+    }
+  }
+
+  void _startNotificationPolling() {
+    _notificationPollingTimer?.cancel();
+    // Poll every 15 seconds for new notifications
+    _notificationPollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _loadUnreadNotificationCount();
     });
   }
 

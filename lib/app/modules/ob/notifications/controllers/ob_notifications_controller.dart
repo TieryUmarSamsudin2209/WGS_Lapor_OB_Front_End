@@ -7,6 +7,7 @@ import '../../../../shared/utils/report_translation_key.dart';
 
 class ObNotificationItem {
   const ObNotificationItem({
+    this.id,
     required this.type,
     required this.title,
     required this.message,
@@ -18,6 +19,7 @@ class ObNotificationItem {
     this.isUnread = true,
   });
 
+  final String? id;
   final String type;
   final String title;
   final String message;
@@ -49,34 +51,91 @@ class ObNotificationsController extends GetxController {
     isLoading.value = true;
 
     try {
-      if (_authService.isOfflineMode) {
+      debugPrint('📬 [NOTIF] Loading notifications for OB...');
+      
+      // Call real notification API
+      final response = await _authService.getNotifications();
+      
+      if (response == null) {
+        debugPrint('⚠️ [NOTIF] No response from API, using dummy data');
         _showDummyNotifications();
         return;
       }
-
-      final results = await Future.wait([
-        _authService.getDailyChecklist(limit: 20),
-        _authService.getObReports(limit: 20),
-      ]);
-
-      final items = <ObNotificationItem>[
-        ..._taskNotifications(results[0]),
-        ..._reportNotifications(results[1]),
-      ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
+      
+      debugPrint('✅ [NOTIF] Got notifications response');
+      
+      // Parse notifications from API response
+      final items = _parseNotificationsFromApi(response);
+      
+      if (items.isEmpty) {
+        debugPrint('ℹ️ [NOTIF] No notifications found');
+      } else {
+        debugPrint('📋 [NOTIF] Parsed ${items.length} notifications');
+      }
+      
       notifications.value = items;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('❌ [NOTIF] Error loading notifications: $e');
       _showDummyNotifications();
     } finally {
       isLoading.value = false;
     }
   }
 
+  List<ObNotificationItem> _parseNotificationsFromApi(Map<String, dynamic> response) {
+    // Extract notifications list from response
+    // Based on API doc: { success: true, data: { mari_list: [...] } }
+    final data = _asMap(response['data']);
+    final notifList = data?['mari_list'] as List? ?? 
+                     response['mari_list'] as List? ??
+                     data?['notifications'] as List? ??
+                     response['notifications'] as List? ??
+                     const [];
+    
+    debugPrint('📋 [NOTIF] Found ${notifList.length} raw notifications');
+    debugPrint('📋 [NOTIF] Response structure: ${response.keys.toList()}');
+    if (data != null) {
+      debugPrint('📋 [NOTIF] Data keys: ${data.keys.toList()}');
+    }
+    
+    return notifList.whereType<Map>().map((rawItem) {
+      final item = _asMap(rawItem) ?? const {};
+      
+      // Extract fields from notification API response
+      final id = item['id']?.toString() ?? '';
+      final type = item['tipe']?.toString() ?? item['type']?.toString() ?? 'system';
+      final title = item['judul']?.toString() ?? item['title']?.toString() ?? 'Notifikasi';
+      final message = item['pesan']?.toString() ?? item['message']?.toString() ?? 'Ada notifikasi baru';
+      final senderName = item['nama_lengkap']?.toString() ?? 'System';
+      final readAt = item['read_at'];
+      final createdAt = _dateFromApi(item['created_at']?.toString());
+      
+      // Check if unread: read_at is null or empty string
+      final isUnread = readAt == null || readAt.toString().isEmpty || readAt.toString() == 'null';
+      
+      debugPrint('  - ID: $id, Type: $type, Title: $title, Message: $message, Read: ${!isUnread}, Sender: $senderName');
+      
+      return ObNotificationItem(
+        id: id,
+        type: type,
+        title: title,
+        message: message,
+        section: _sectionFromDate(createdAt),
+        timeLabel: _timeAgo(createdAt),
+        createdAt: createdAt,
+        isUnread: isUnread,
+      );
+    }).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
   /// Mark single notification as read
-  void markAsRead(ObNotificationItem item) {
+  Future<void> markAsRead(ObNotificationItem item) async {
     final index = notifications.indexWhere((n) => n == item);
     if (index != -1 && notifications[index].isUnread) {
+      // Optimistically update UI
       notifications[index] = ObNotificationItem(
+        id: item.id,
         type: item.type,
         title: item.title,
         message: item.message,
@@ -89,8 +148,16 @@ class ObNotificationsController extends GetxController {
       );
       notifications.refresh();
       
-      // TODO: Call API to mark as read
-      // await _authService.markNotificationAsRead(item.id);
+      // Call API to mark as read
+      if (item.id != null && item.id!.isNotEmpty) {
+        debugPrint('📬 [NOTIF] Marking notification ${item.id} as read');
+        try {
+          await _authService.markNotificationRead(item.id!);
+          debugPrint('✅ [NOTIF] Notification marked as read');
+        } catch (e) {
+          debugPrint('❌ [NOTIF] Failed to mark as read: $e');
+        }
+      }
     }
   }
 
@@ -98,9 +165,12 @@ class ObNotificationsController extends GetxController {
   Future<void> markAllAsRead() async {
     if (unreadCount == 0) return;
     
+    debugPrint('📬 [NOTIF] Marking all notifications as read');
+    
     // Update all notifications to read
     notifications.value = notifications.map((item) {
       return ObNotificationItem(
+        id: item.id,
         type: item.type,
         title: item.title,
         message: item.message,
@@ -113,19 +183,32 @@ class ObNotificationsController extends GetxController {
       );
     }).toList();
     
-    Get.snackbar(
-      'success'.tr,
-      'all_notifications_marked_read'.tr,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF2BC36A),
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 2),
-    );
-    
-    // TODO: Call API to mark all as read
-    // await _authService.markAllNotificationsAsRead();
+    // Call API for each unread notification
+    try {
+      final unreadIds = notifications
+          .where((n) => n.id != null && n.id!.isNotEmpty)
+          .map((n) => n.id!)
+          .toList();
+      
+      for (final id in unreadIds) {
+        await _authService.markNotificationRead(id);
+      }
+      
+      debugPrint('✅ [NOTIF] All notifications marked as read');
+      
+      Get.snackbar(
+        'success'.tr,
+        'all_notifications_marked_read'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF2BC36A),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      debugPrint('❌ [NOTIF] Failed to mark all as read: $e');
+    }
   }
 
   void _showDummyNotifications() {

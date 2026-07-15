@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../../routes/app_pages.dart';
@@ -13,6 +16,9 @@ class HomeController extends GetxController {
   final name = 'Karyawan'.obs;
   final reports = <Map<String, dynamic>>[].obs;
   final isLoadingReports = false.obs;
+  final unreadNotificationCount = 0.obs;
+
+  Timer? _notificationPollingTimer;
 
   List<Map<String, dynamic>> get recentReports => reports.take(2).toList();
 
@@ -21,6 +27,14 @@ class HomeController extends GetxController {
     super.onInit();
     _loadUser();
     loadReports();
+    _loadUnreadNotificationCount();
+    _startNotificationPolling();
+  }
+
+  @override
+  void onClose() {
+    _notificationPollingTimer?.cancel();
+    super.onClose();
   }
 
   void _loadUser() {
@@ -352,5 +366,23 @@ class HomeController extends GetxController {
     }
     final text = value.toString().trim();
     return text.isEmpty ? null : text;
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final count = await _authService.getUnreadNotificationCount();
+      unreadNotificationCount.value = count;
+      debugPrint('📬 [NOTIF-BADGE-KARYAWAN] Unread count: $count');
+    } catch (e) {
+      debugPrint('❌ [NOTIF-BADGE-KARYAWAN] Failed to load unread count: $e');
+    }
+  }
+
+  void _startNotificationPolling() {
+    _notificationPollingTimer?.cancel();
+    // Poll every 15 seconds for new notifications
+    _notificationPollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      _loadUnreadNotificationCount();
+    });
   }
 }

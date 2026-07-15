@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/services/auth_service.dart';
@@ -12,6 +14,7 @@ class ObCollaborationController extends GetxController {
   var isLoading = false.obs;
   var isSubmitting = false.obs;
   final collaborators = <CollaboratorModel>[].obs;
+  final notes = ''.obs; // Catatan kolaborasi
 
   // Owner info
   var ownerName = 'Alex'.obs;
@@ -31,54 +34,186 @@ class ObCollaborationController extends GetxController {
     if (Get.arguments is HomeReport) {
       activeReport = Get.arguments as HomeReport;
       _initializeFromReport();
+      _loadCollaborators();
+    } else {
+      // No valid report data passed
+      Get.snackbar(
+        'Error'.tr,
+        'Data laporan tidak ditemukan'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      // Go back after delay
+      Future.delayed(const Duration(seconds: 2), () {
+        Get.back();
+      });
     }
-    _loadCollaborators();
   }
 
   void _initializeFromReport() {
-    if (activeReport == null) return;
+    if (activeReport == null) {
+      debugPrint('⚠️ activeReport is null in collaboration view');
+      return;
+    }
 
+    debugPrint('📋 Initializing collaboration view with real report data:');
+    debugPrint('   ID: ${activeReport!.id}');
+    debugPrint('   Title: ${activeReport!.title}');
+    debugPrint('   Priority: ${activeReport!.priority}');
+    debugPrint('   Location: ${activeReport!.location}');
+    
+    // Check reactive values
+    debugPrint('   Owner (reactive): ${activeReport!.obName.value}');
+    debugPrint('   Owner ID (reactive): ${activeReport!.obId.value}');
+    debugPrint('   Owner (getter): ${activeReport!.assignedObName}');
+    debugPrint('   Owner ID (getter): ${activeReport!.assignedObId}');
+    debugPrint('   Has Collaboration: ${activeReport!.hasCollaboration.value}');
+
+    // Set data dari activeReport (REAL DATA, bukan dummy)
     reportTitle.value = activeReport!.title;
     reportPriority.value = activeReport!.priority;
     reportLocation.value = activeReport!.location;
-    ownerName.value = activeReport!.assignedObName ?? 'OB';
+    
+    // Determine owner name - use reactive value directly
+    if (activeReport!.obName.value != null && activeReport!.obName.value!.isNotEmpty) {
+      ownerName.value = activeReport!.obName.value!;
+      debugPrint('   ✅ Owner name set from report: ${ownerName.value}');
+    } else {
+      // Fallback to current user name if OB took this report
+      final currentUserName = _authService.user.value?['nama_lengkap']?.toString() ??
+          _authService.user.value?['name']?.toString() ??
+          _authService.user.value?['username']?.toString() ??
+          'OB';
+      ownerName.value = currentUserName;
+      debugPrint('   ℹ️ Owner name set from current user: ${ownerName.value}');
+    }
 
-    // Check if current user is the owner
+    // Check ownership - Multiple ways to determine:
+    // 1. Check if obId (reactive) matches current user ID
+    // 2. If obId is null, check if current user took the report (status = in_progress)
     final currentUser = _authService.user.value;
     final currentObId = currentUser?['id']?.toString();
-    final reportObId = activeReport!.assignedObId?.toString();
+    final reportObId = activeReport!.obId.value?.toString(); // Use reactive value
 
-    if (currentObId != null && reportObId != null && currentObId == reportObId) {
+    debugPrint('   Current User ID: $currentObId');
+    debugPrint('   Report OB ID (reactive): $reportObId');
+    debugPrint('   Report Status: ${activeReport!.status.value}');
+
+    if (reportObId != null && reportObId.isNotEmpty && 
+        currentObId != null && currentObId == reportObId) {
+      // Clear owner match
       isOwner.value = true;
+      debugPrint('   ✅ Current user is OWNER (ID match)');
+    } else if ((reportObId == null || reportObId.isEmpty) && 
+               activeReport!.status.value == 'Sedang Diproses') {
+      // If no OB ID but status is in progress, assume current user is owner
+      isOwner.value = true;
+      debugPrint('   ✅ Current user is OWNER (status check - just took report)');
+      
+      // Set owner info AFTER build completes to avoid setState during build
+      if (currentObId != null) {
+        Future.microtask(() {
+          activeReport!.obId.value = currentObId;
+          activeReport!.obName.value = ownerName.value;
+          debugPrint('   📝 Set owner info locally: ${ownerName.value} (ID: $currentObId)');
+        });
+      }
+    } else {
+      isOwner.value = false;
+      debugPrint('   ℹ️ Current user is NOT owner');
     }
   }
 
   Future<void> _loadCollaborators() async {
-    if (activeReport == null) return;
+    if (activeReport == null) {
+      debugPrint('⚠️ Cannot load collaborators: activeReport is null');
+      return;
+    }
 
     final reportId = _activeReportId;
-    if (reportId == null) return;
+    if (reportId == null) {
+      debugPrint('⚠️ Cannot load collaborators: reportId is null');
+      return;
+    }
 
+    debugPrint('🔄 Loading collaborators for report: $reportId');
     isLoading.value = true;
+    
     final response = await _authService.getCollaborationRequests(reportId);
+    
     isLoading.value = false;
 
     if (response == null) {
-      final ctx = Get.context;
+      debugPrint('❌ Failed to load collaborators');
       final message = _authService.lastRequestError ??
           'Gagal memuat daftar permintaan kolaborasi'.tr;
-      if (ctx != null) {
-        await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
+      
+      // Only show error if not just empty list
+      if (_authService.lastRequestError != null) {
+        final ctx = Get.context;
+        if (ctx != null) {
+          await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
+        }
       }
       return;
     }
 
+    debugPrint('✅ Got collaboration response: ${response.keys.join(", ")}');
+
     // Extract collaborators from response
+    // Response format bisa:
+    // 1. { data: [...] }
+    // 2. { data: { hari_ini: [...], kemarin: [...] } }
     final data = response['data'];
+    
+    if (data == null) {
+      debugPrint('ℹ️ No collaborators data in response');
+      collaborators.clear();
+      return;
+    }
+
+    List<dynamic> items = [];
+    
     if (data is List) {
-      collaborators.assignAll(
-        data.map((item) => CollaboratorModel.fromJson(item)).toList(),
-      );
+      items = data;
+      debugPrint('📋 Found ${items.length} collaborators (direct list)');
+    } else if (data is Map) {
+      // Combine hari_ini and kemarin if available
+      final hariIni = data['hari_ini'];
+      final kemarin = data['kemarin'];
+      
+      if (hariIni is List) {
+        items.addAll(hariIni);
+      }
+      if (kemarin is List) {
+        items.addAll(kemarin);
+      }
+      
+      debugPrint('📋 Found ${items.length} collaborators (from grouped data)');
+    }
+
+    // Parse items to CollaboratorModel
+    final parsedCollaborators = items.map((item) {
+      if (item is Map<String, dynamic>) {
+        return CollaboratorModel.fromJson(item);
+      }
+      return null;
+    }).whereType<CollaboratorModel>().toList();
+
+    collaborators.assignAll(parsedCollaborators);
+    debugPrint('✅ Loaded ${collaborators.length} collaborators');
+    
+    // Extract notes if available
+    if (response['notes'] != null) {
+      notes.value = response['notes'].toString();
+      debugPrint('📝 Notes: ${notes.value}');
+    } else if (response['catatan'] != null) {
+      notes.value = response['catatan'].toString();
+      debugPrint('📝 Notes: ${notes.value}');
+    }
+    
+    // Debug print each collaborator
+    for (var collab in collaborators) {
+      debugPrint('   - ${collab.name} (${collab.role}) [${collab.status}]');
     }
   }
 
@@ -252,6 +387,134 @@ class ObCollaborationController extends GetxController {
     Get.back();
   }
 
+  /// Close collaboration (menutup kolaborasi)
+  /// Different from cancel - this closes an open collaboration
+  Future<void> closeCollaboration() async {
+    if (isSubmitting.value) return;
+    if (!isOwner.value) {
+      Get.snackbar('Error'.tr, 'Hanya pemilik laporan yang dapat menutup kolaborasi'.tr);
+      return;
+    }
+
+    final reportId = _activeReportId;
+    if (reportId == null) {
+      Get.snackbar('Error'.tr, 'ID laporan tidak ditemukan'.tr);
+      return;
+    }
+
+    // Confirm before closing
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text('Tutup Kolaborasi'.tr),
+        content: Text('Apakah Anda yakin ingin menutup kolaborasi? Permintaan gabung akan ditolak.'.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('Batal'.tr),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC62828)),
+            child: Text('Tutup'.tr),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    isSubmitting.value = true;
+    final response = await _authService.closeCollaboration(reportId);
+    isSubmitting.value = false;
+
+    if (response == null) {
+      final ctx = Get.context;
+      final message = _authService.lastRequestError ??
+          'Gagal menutup kolaborasi'.tr;
+      if (ctx != null) {
+        await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
+      } else {
+        Get.snackbar('Gagal'.tr, message.tr);
+      }
+      return;
+    }
+
+    // Success - update local state
+    if (activeReport != null) {
+      activeReport!.hasCollaboration.value = false;
+    }
+
+    final ctx = Get.context;
+    if (ctx != null) {
+      await CustomAlert.show(
+        ctx,
+        isSuccess: true,
+        description: 'Kolaborasi berhasil ditutup'.tr,
+      );
+    }
+
+    // Go back to detail page
+    Get.back();
+  }
+
+  Future<void> updateNotes(String newNotes) async {
+    if (isSubmitting.value) return;
+    if (!isOwner.value) {
+      Get.snackbar('Error'.tr, 'Hanya pemilik laporan yang dapat mengubah catatan'.tr);
+      return;
+    }
+
+    final reportId = _activeReportId;
+    if (reportId == null) {
+      Get.snackbar('Error'.tr, 'ID laporan tidak ditemukan'.tr);
+      return;
+    }
+
+    debugPrint('📝 Updating notes for report: $reportId');
+    debugPrint('   New notes: $newNotes');
+
+    isSubmitting.value = true;
+    
+    // Call API to update collaboration notes
+    final response = await _authService.updateCollaborationNotes(
+      reportId: reportId,
+      notes: newNotes,
+    );
+    
+    isSubmitting.value = false;
+
+    if (response == null) {
+      final ctx = Get.context;
+      final message = _authService.lastRequestError ??
+          'Gagal memperbarui catatan'.tr;
+      if (ctx != null) {
+        await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
+      } else {
+        Get.snackbar('Gagal'.tr, message.tr);
+      }
+      return;
+    }
+
+    // Success - update local notes
+    notes.value = newNotes;
+    debugPrint('✅ Notes updated successfully');
+
+    final ctx = Get.context;
+    if (ctx != null) {
+      await CustomAlert.show(
+        ctx,
+        isSuccess: true,
+        description: 'Catatan berhasil diperbarui'.tr,
+      );
+    } else {
+      Get.snackbar('Berhasil'.tr, 'Catatan berhasil diperbarui'.tr);
+    }
+  }
+
+  // Getters for notes editing
+  String get currentNotes => notes.value;
+  bool get canEditNotes => isOwner.value;
+
   String? get _activeReportId {
     final rawId = activeReport?.id.trim();
     if (rawId == null || rawId.isEmpty) return null;
@@ -264,31 +527,63 @@ class CollaboratorModel {
   final String id;
   final String name;
   final String role;
+  final String status; // PENDING, APPROVED, REJECTED
 
   CollaboratorModel({
     required this.id,
     required this.name,
-    this.role = 'Peminta Laporan',
+    this.role = 'Anggota',
+    this.status = 'PENDING',
   });
 
   factory CollaboratorModel.fromJson(Map<String, dynamic> json) {
+    // Extract ID from various possible keys
     final id = json['id']?.toString() ??
+        json['collaboration_id']?.toString() ??
+        json['kolaborasi_id']?.toString() ??
         json['ob_id']?.toString() ??
         json['user_id']?.toString() ??
         '';
 
-    final name = json['nama']?.toString() ??
-        json['nama_lengkap']?.toString() ??
-        json['name']?.toString() ??
-        json['username']?.toString() ??
-        'OB';
+    // Extract name from nested ob object or direct fields
+    String name = 'OB';
+    
+    // Try ob object first
+    final obData = json['ob'];
+    if (obData is Map) {
+      name = obData['nama_lengkap']?.toString() ??
+          obData['nama']?.toString() ??
+          obData['name']?.toString() ??
+          obData['username']?.toString() ??
+          name;
+    }
+    
+    // Fallback to direct fields
+    if (name == 'OB') {
+      name = json['nama_lengkap']?.toString() ??
+          json['nama_ob']?.toString() ??
+          json['nama']?.toString() ??
+          json['name']?.toString() ??
+          json['username']?.toString() ??
+          'OB';
+    }
 
-    final role = json['role']?.toString() ?? 'Peminta Laporan';
+    // Extract status
+    final status = (json['status']?.toString() ?? 'PENDING').toUpperCase();
+
+    // Extract role (if available)
+    final role = json['role']?.toString() ?? 
+        (status == 'APPROVED' ? 'Anggota' : 'Menunggu Persetujuan');
 
     return CollaboratorModel(
       id: id,
       name: name,
       role: role,
+      status: status,
     );
   }
+
+  bool get isPending => status == 'PENDING';
+  bool get isApproved => status == 'APPROVED';
+  bool get isRejected => status == 'REJECTED';
 }

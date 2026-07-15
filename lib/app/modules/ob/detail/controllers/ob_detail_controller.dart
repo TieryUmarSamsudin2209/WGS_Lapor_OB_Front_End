@@ -46,7 +46,12 @@ class ObDetailController extends GetxController {
       categoryName.value = reportTranslationKey(
         activeReport!.categoryName ?? activeReport!.title,
       );
-      takenByName.value = activeReport!.assignedObName;
+      
+      // Use reactive value for owner name
+      takenByName.value = activeReport!.obName.value ?? activeReport!.assignedObName;
+      debugPrint('📋 [DETAIL] Assigned OB: ${takenByName.value}');
+      debugPrint('📋 [DETAIL] OB ID: ${activeReport!.obId.value}');
+      
       reportPhotos.assignAll(activeReport!.photos);
       isNeedHelp.value = activeReport!.hasCollaboration.value;
 
@@ -102,8 +107,29 @@ class ObDetailController extends GetxController {
     pageState.value = 'working';
     isDetailExpanded.value = false;
     activeReport?.status.value = 'Sedang Diproses'; // Always "Sedang Diproses", never "Belum Diproses"
-    takenByName.value =
-        _assignedObNameFromResponse(response) ?? _currentObName ?? 'Anda';
+    
+    // Set owner info from response or current user
+    final obNameFromResponse = _assignedObNameFromResponse(response);
+    final currentUserId = _currentObIds.firstOrNull;
+    final currentUserName = _currentObName;
+    
+    // Update assigned OB info in activeReport
+    if (obNameFromResponse != null) {
+      takenByName.value = obNameFromResponse;
+      activeReport?.obName.value = obNameFromResponse;
+    } else if (currentUserName != null) {
+      takenByName.value = currentUserName;
+      activeReport?.obName.value = currentUserName;
+    } else {
+      takenByName.value = 'Anda';
+      activeReport?.obName.value = 'Anda';
+    }
+    
+    // Set assignedObId if available
+    if (currentUserId != null && activeReport != null) {
+      activeReport?.obId.value = currentUserId;
+      debugPrint('✅ Report taken by: $currentUserName (ID: $currentUserId)');
+    }
 
     final ctx = Get.context;
     if (ctx != null) {
@@ -131,85 +157,147 @@ class ObDetailController extends GetxController {
       return;
     }
 
-    // If turning ON collaboration, request it via API
-    if (!isNeedHelp.value) {
-      isSubmitting.value = true;
-      final response = await _authService.requestCollaboration(reportId);
-      isSubmitting.value = false;
+    // Toggle collaboration status using PATCH /kolaborasi endpoint
+    // This will:
+    // 1. Open/close collaboration on the report (owner only)
+    // 2. Send WebSocket notification to all OB accounts if opening
+    // 3. Update has_collaboration status
+    
+    debugPrint('🔄 [TOGGLE] Starting collaboration toggle for report: $reportId');
+    debugPrint('🔄 [TOGGLE] Current state - isNeedHelp: ${isNeedHelp.value}, hasCollaboration: ${activeReport?.hasCollaboration.value}');
+    
+    isSubmitting.value = true;
+    final response = await _authService.toggleCollaboration(reportId);
+    isSubmitting.value = false;
 
-      if (response == null) {
-        final ctx = Get.context;
-        final message = _authService.lastRequestError ??
-            'Gagal meminta kolaborasi'.tr;
-        if (ctx != null) {
-          await CustomAlert.show(
-            ctx,
-            isSuccess: false,
-            description: message.tr,
-          );
-        } else {
-          Get.snackbar('Gagal'.tr, message.tr);
-        }
-        return;
-      }
-
-      // Success - update state
-      isNeedHelp.value = true;
-      activeReport?.hasCollaboration.value = true;
-
-      final ctx = Get.context;
-      if (ctx != null) {
-        await CustomAlert.show(
-          ctx,
-          isSuccess: true,
-          description:
-              'Permintaan kolaborasi terkirim ke semua OB'.tr,
-        );
-      }
-    } else {
-      // If turning OFF, cancel collaboration
-      isSubmitting.value = true;
-      final response = await _authService.cancelCollaboration(reportId);
-      isSubmitting.value = false;
-
-      if (response == null) {
-        final ctx = Get.context;
-        final message = _authService.lastRequestError ??
-            'Gagal membatalkan kolaborasi'.tr;
-        if (ctx != null) {
-          await CustomAlert.show(
-            ctx,
-            isSuccess: false,
-            description: message.tr,
-          );
-        } else {
-          Get.snackbar('Gagal'.tr, message.tr);
-        }
-        return;
-      }
-
-      // Success - update state
-      isNeedHelp.value = false;
-      activeReport?.hasCollaboration.value = false;
-
-      final ctx = Get.context;
-      if (ctx != null) {
-        await CustomAlert.show(
-          ctx,
-          isSuccess: true,
-          description: 'Kolaborasi dibatalkan'.tr,
-        );
-      }
+    debugPrint('🔄 [TOGGLE] Response received: ${response != null ? "SUCCESS" : "FAILED"}');
+    if (response != null) {
+      debugPrint('🔄 [TOGGLE] Response keys: ${response.keys.join(", ")}');
+      debugPrint('🔄 [TOGGLE] Response data: $response');
     }
+
+    if (response == null) {
+      final ctx = Get.context;
+      final message = _authService.lastRequestError ??
+          'Gagal mengubah status kolaborasi'.tr;
+      debugPrint('❌ [TOGGLE] Failed with error: $message');
+      if (ctx != null) {
+        await CustomAlert.show(
+          ctx,
+          isSuccess: false,
+          description: message.tr,
+        );
+      } else {
+        Get.snackbar('Gagal'.tr, message.tr);
+      }
+      return;
+    }
+
+    // Success - update state from response
+    // Backend should return the new collaboration status
+    final responseData = response['data'];
+    debugPrint('🔍 [TOGGLE] Response data object: $responseData');
+    
+    final hasCollabFromResponse = responseData?['is_kolaborasi_open'] ??  // Backend field (priority)
+                                  responseData?['kolaborasi'] ?? 
+                                  responseData?['has_collaboration'] ??
+                                  response['is_kolaborasi_open'] ??
+                                  response['kolaborasi'] ??
+                                  response['has_collaboration'];
+    
+    debugPrint('🔍 [TOGGLE] Extracted hasCollab from response: $hasCollabFromResponse (type: ${hasCollabFromResponse.runtimeType})');
+    
+    // Use backend status if available, otherwise toggle local
+    final newStatus = hasCollabFromResponse ?? !isNeedHelp.value;
+    
+    debugPrint('✅ [TOGGLE] New collaboration status: $newStatus');
+    debugPrint('📝 [TOGGLE] Updating local state...');
+    
+    isNeedHelp.value = newStatus;
+    activeReport?.hasCollaboration.value = newStatus;
+    
+    debugPrint('✅ [TOGGLE] Local state updated - isNeedHelp: ${isNeedHelp.value}, hasCollaboration: ${activeReport?.hasCollaboration.value}');
+
+    // Trigger home reports refresh to show badge
+    debugPrint('🔄 [TOGGLE] Refreshing home reports...');
+    try {
+      final obHomeController = Get.find<ObHomeController>();
+      await obHomeController.loadReports(silent: true);
+      debugPrint('✅ [TOGGLE] Home reports refreshed successfully');
+    } catch (e) {
+      debugPrint('⚠️ [TOGGLE] Could not find ObHomeController: $e');
+    }
+
+    final ctx = Get.context;
+    if (ctx != null) {
+      await CustomAlert.show(
+        ctx,
+        isSuccess: true,
+        description: newStatus
+            ? 'Kolaborasi dibuka. Notifikasi terkirim ke semua OB.'.tr
+            : 'Kolaborasi ditutup.'.tr,
+      );
+    }
+    
+    debugPrint('🎉 [TOGGLE] Collaboration toggle completed!');
   }
 
-  void openCollaborationPage() {
+  Future<void> openCollaborationPage() async {
     if (activeReport == null) {
       Get.snackbar('Error'.tr, 'Data laporan tidak ditemukan'.tr);
       return;
     }
 
+    final reportId = activeReport!.id;
+    
+    // Check if collaboration is already open
+    final isCollabOpen = activeReport!.hasCollaboration.value;
+    
+    debugPrint('🚀 [COLLAB] Opening collaboration page');
+    debugPrint('🚀 [COLLAB] Current collaboration status: $isCollabOpen');
+    
+    // If collaboration not open yet, open it first
+    if (!isCollabOpen) {
+      debugPrint('🚀 [COLLAB] Collaboration not open, opening now...');
+      
+      // Call toggle API to open collaboration
+      final response = await _authService.toggleCollaboration(reportId);
+      
+      if (response != null) {
+        // Extract collaboration status from response
+        final responseData = response['data'];
+        final hasCollabFromResponse = responseData?['is_kolaborasi_open'] ??  // Backend field (priority)
+                                      responseData?['kolaborasi'] ?? 
+                                      responseData?['has_collaboration'] ??
+                                      response['is_kolaborasi_open'] ??
+                                      response['kolaborasi'] ??
+                                      response['has_collaboration'];
+        
+        // Update local state
+        final newStatus = hasCollabFromResponse ?? true; // Default to true if response doesn't specify
+        activeReport!.hasCollaboration.value = newStatus;
+        isNeedHelp.value = newStatus;
+        
+        debugPrint('✅ [COLLAB] Collaboration opened: $newStatus');
+        
+        // Refresh home to show badge
+        try {
+          final obHomeController = Get.find<ObHomeController>();
+          await obHomeController.loadReports(silent: true);
+        } catch (e) {
+          debugPrint('⚠️ [COLLAB] Could not refresh home: $e');
+        }
+      } else {
+        // Failed to open collaboration
+        final error = _authService.lastRequestError ?? 'Gagal membuka kolaborasi';
+        debugPrint('❌ [COLLAB] Failed to open collaboration: $error');
+        Get.snackbar('Gagal'.tr, error.tr);
+        return;
+      }
+    }
+
     // Navigate to collaboration page
+    debugPrint('📱 [COLLAB] Navigating to collaboration page');
     Get.toNamed(
       '/ob/collaboration',
       arguments: activeReport,
