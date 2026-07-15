@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
@@ -35,8 +36,20 @@ class NotificationSocketClient {
   }
 
   void dispose() {
-    unawaited(disconnect());
-    unawaited(_messages.close());
+    unawaited(_disconnectSafe());
+    unawaited(_closeStreamSafe());
+  }
+
+  Future<void> _disconnectSafe() async {
+    try {
+      await disconnect();
+    } catch (_) {}
+  }
+
+  Future<void> _closeStreamSafe() async {
+    try {
+      await _messages.close();
+    } catch (_) {}
   }
 
   void _handleMessage(dynamic rawMessage) {

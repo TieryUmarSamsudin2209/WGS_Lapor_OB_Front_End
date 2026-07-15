@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 /// ─── Public API ─────────────────────────────────────────────────────────────
 ///
@@ -61,7 +62,7 @@ class _AlertContent extends StatelessWidget {
 
     final primaryColor = isSuccess ? successColor : failColor;
     final textColor = isSuccess ? successTextColor : failTextColor;
-    final titleText = isSuccess ? 'Berhasil' : 'Gagal';
+    final titleText = isSuccess ? 'Berhasil'.tr : 'Gagal'.tr;
     final centerIcon =
         isSuccess ? Icons.check_rounded : Icons.close_rounded;
 

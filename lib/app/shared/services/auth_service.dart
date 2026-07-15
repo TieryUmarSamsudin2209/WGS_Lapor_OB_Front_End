@@ -6,8 +6,10 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
+import '../config/env_config.dart';
+
 class AuthService extends GetxService {
-  static const baseUrl = 'https://stylar-nonseverable-denver.ngrok-free.dev';
+  static String get baseUrl => EnvConfig.apiBaseUrl;
   static const _tokenKey = 'token';
   static const _userKey = 'user';
 
@@ -421,7 +423,7 @@ class AuthService extends GetxService {
   }
 
   bool get isLoggedIn => token.value != null && token.value!.isNotEmpty;
-  bool get isOfflineMode => token.value == 'dummy_token';
+  bool get isOfflineMode => token.value == 'dummy_token' && EnvConfig.useOfflineMode;
   String? get lastRequestError => _lastRequestError;
   String get normalizedRole =>
       _normalizeRole(role.value ?? user.value?['role']);
@@ -524,6 +526,7 @@ class AuthService extends GetxService {
   }
 
   Future<bool> _loginOffline(String identifier, String password) async {
+    if (!kDebugMode) return false;
     debugPrint('Server offline detected on login. Using dummy login...');
     
     // ✅ Match dengan seed.mjs users
@@ -699,6 +702,8 @@ class AuthService extends GetxService {
         }
       };
     }
+    
+    if (!kDebugMode) return {'success': false, 'data': null};
     
     // Default fallback user
     final fallbackUser = <String, dynamic>{
@@ -878,6 +883,7 @@ class AuthService extends GetxService {
   }
 
   Map<String, dynamic> _getDailyChecklistOffline() {
+    if (!kDebugMode) return {'success': false, 'data': <Map<String, dynamic>>[]};
     return {
       'success': true,
       'data': _dummyChecklist,
@@ -1163,6 +1169,7 @@ class AuthService extends GetxService {
   }
 
   Map<String, dynamic> _getReportsOffline() {
+    if (!kDebugMode) return {'success': false, 'data': <Map<String, dynamic>>[]};
     return {
       'success': true,
       'data': _dummyReports,
@@ -1294,6 +1301,7 @@ class AuthService extends GetxService {
   }
 
   Map<String, dynamic> _getNotificationsOffline() {
+    if (!kDebugMode) return {'success': false, 'data': <String, dynamic>{'hari_ini': <Map<String, dynamic>>[], 'kemarin': <Map<String, dynamic>>[]}};
     final now = DateTime.now();
     final items = _offlineNotifications();
 

@@ -26,8 +26,20 @@ class NotificationSocketClient {
   }
 
   void dispose() {
-    unawaited(disconnect());
-    unawaited(_messages.close());
+    unawaited(_disconnectSafe());
+    unawaited(_closeStreamSafe());
+  }
+
+  Future<void> _disconnectSafe() async {
+    try {
+      await disconnect();
+    } catch (_) {}
+  }
+
+  Future<void> _closeStreamSafe() async {
+    try {
+      await _messages.close();
+    } catch (_) {}
   }
 
   void _handleMessage(dynamic rawMessage) {
