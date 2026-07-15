@@ -805,7 +805,6 @@ class ReportPage extends StatelessWidget {
     );
   }
 
-  // Widget Dropdown Modern
   Widget _buildModernDropdown({
     required String? value,
     required String hint,
@@ -817,62 +816,14 @@ class ReportPage extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black87;
     final borderColor = isDark ? AppDarkColors.border : Colors.transparent;
 
-    final selectedValue = items.any((option) => option.id == value)
-        ? value
-        : null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: fieldColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.18)
-                : const Color.fromARGB(
-                    255,
-                    255,
-                    255,
-                    255,
-                  ).withValues(alpha: 0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: DropdownButtonFormField<String>(
-        initialValue: selectedValue,
-        icon: Icon(Icons.keyboard_arrow_down, color: textColor),
-        dropdownColor: fieldColor,
-        borderRadius: BorderRadius.circular(14),
-        style: TextStyle(
-          color: textColor,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          hintText: hint.tr,
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
-          fillColor: Colors.transparent,
-        ),
-        items: items.map((ReportOption option) {
-          return DropdownMenuItem<String>(
-            value: option.id,
-            child: Text(option.label.tr),
-          );
-        }).toList(),
-        onChanged: onChanged,
-      ),
+    return _CustomDropdown(
+      value: value,
+      hint: hint,
+      items: items,
+      onChanged: onChanged,
+      fieldColor: fieldColor,
+      textColor: textColor,
+      borderColor: borderColor,
     );
   }
 
@@ -969,5 +920,141 @@ class ReportPage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _CustomDropdown extends StatefulWidget {
+  final String? value;
+  final String hint;
+  final List<ReportOption> items;
+  final ValueChanged<String?> onChanged;
+  final Color fieldColor;
+  final Color textColor;
+  final Color borderColor;
+
+  const _CustomDropdown({
+    required this.value,
+    required this.hint,
+    required this.items,
+    required this.onChanged,
+    required this.fieldColor,
+    required this.textColor,
+    required this.borderColor,
+  });
+
+  @override
+  State<_CustomDropdown> createState() => _CustomDropdownState();
+}
+
+class _CustomDropdownState extends State<_CustomDropdown> {
+  final _key = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Get.isDarkMode;
+
+    final idx = widget.items.indexWhere((option) => option.id == widget.value);
+    final selectedLabel = idx != -1 ? widget.items[idx].label.tr : null;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.fieldColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: widget.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.18)
+                : const Color.fromARGB(
+                    255,
+                    255,
+                    255,
+                    255,
+                  ).withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        key: _key,
+        onTap: _showMenu,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14.5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  selectedLabel ?? widget.hint.tr,
+                  style: TextStyle(
+                    color:
+                        selectedLabel != null ? widget.textColor : Colors.grey[400],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.keyboard_arrow_down, color: widget.textColor),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMenu() async {
+    final renderBox =
+        _key.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return;
+
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    final result = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + size.height,
+        offset.dx + size.width,
+        offset.dy + size.height,
+      ),
+      color: widget.fieldColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      elevation: 8,
+      items: widget.items.map((option) {
+        final isSelected = option.id == widget.value;
+        return PopupMenuItem<String>(
+          value: option.id,
+          child: SizedBox(
+            width: size.width,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(
+                option.label.tr,
+                style: TextStyle(
+                  color: isSelected
+                      ? (Get.isDarkMode
+                          ? Colors.white
+                          : const Color(0xFF003366))
+                      : (Get.isDarkMode ? Colors.white70 : Colors.black87),
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+
+    if (result != null && mounted) {
+      widget.onChanged(result);
+    }
   }
 }
