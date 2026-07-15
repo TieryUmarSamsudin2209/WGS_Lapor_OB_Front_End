@@ -225,7 +225,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
                 ),
               ),
               Text(
-                '10 menit yang lalu'.tr,
+                controller.reportTimeAgo,
                 style: TextStyle(fontSize: 11, color: mutedColor),
               ),
             ],
@@ -274,7 +274,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
           _buildInfoRow(
             Icons.person_outline,
             'Dilaporkan Oleh',
-            controller.ownerName.value,
+            controller.reportReporter,
           ),
           const SizedBox(height: 12),
           _buildInfoRow(
@@ -286,7 +286,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
           _buildInfoRow(
             Icons.edit_outlined,
             'Kategori',
-            'Plumbing (Pipa)',
+            controller.reportCategory,
           ),
 
           const SizedBox(height: 25),
@@ -302,8 +302,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Pipa di bawah wastafel bocor parah, air meluas ke area borong utama. Segera perbaiki sebelum licin dan membahayakan karyawan yang lewat. Pastikan membawa kunci pipa dan selotip cadangan.'
-                .tr,
+            controller.reportDescription,
             style: TextStyle(
               fontSize: 13,
               color: titleColor,
@@ -323,41 +322,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
             ),
           ),
           const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            height: 150,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppDarkColors.surfaceVariant
-                  : const Color(0xFFF4F6FA),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isDark
-                    ? AppDarkColors.border
-                    : const Color(0xFFDDE4EE),
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.image_not_supported_outlined,
-                  size: 34,
-                  color: mutedColor,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Foto tidak ditampilkan di halaman kolaborasi'.tr,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: mutedColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildPhotoSection(isDark, mutedColor),
         ],
       ),
     );
@@ -808,6 +773,122 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoSection(bool isDark, Color mutedColor) {
+    // Get photos from activeReport
+    final photos = controller.activeReport?.photos ?? [];
+    
+    if (photos.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: 150,
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppDarkColors.surfaceVariant
+              : const Color(0xFFF4F6FA),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isDark
+                ? AppDarkColors.border
+                : const Color(0xFFDDE4EE),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image_not_supported_outlined,
+              size: 34,
+              color: mutedColor,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tidak ada foto',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: mutedColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show photos in a horizontal scrollable list
+    return SizedBox(
+      height: 150,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: photos.length,
+        itemBuilder: (context, index) {
+          final photoUrl = photos[index];
+          return Container(
+            width: 150,
+            margin: EdgeInsets.only(right: index < photos.length - 1 ? 12 : 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark
+                    ? AppDarkColors.border
+                    : const Color(0xFFDDE4EE),
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: isDark
+                        ? AppDarkColors.surfaceVariant
+                        : const Color(0xFFF4F6FA),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image_outlined,
+                          size: 34,
+                          color: mutedColor,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Gagal memuat foto',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: mutedColor,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: isDark
+                        ? AppDarkColors.surfaceVariant
+                        : const Color(0xFFF4F6FA),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -17,6 +17,9 @@ class ObNotificationItem {
     this.titleParams = const {},
     this.messageParams = const {},
     this.isUnread = true,
+    this.reportId,
+    this.laporanId,
+    this.data,
   });
 
   final String? id;
@@ -29,6 +32,9 @@ class ObNotificationItem {
   final Map<String, String> titleParams;
   final Map<String, String> messageParams;
   final bool isUnread;
+  final String? reportId;
+  final String? laporanId;
+  final Map<String, dynamic>? data; // Store raw notification data
 }
 
 class ObNotificationsController extends GetxController {
@@ -86,19 +92,41 @@ class ObNotificationsController extends GetxController {
     // Extract notifications list from response
     // Based on API doc: { success: true, data: { mari_list: [...] } }
     final data = _asMap(response['data']);
-    final notifList = data?['mari_list'] as List? ?? 
-                     response['mari_list'] as List? ??
-                     data?['notifications'] as List? ??
-                     response['notifications'] as List? ??
-                     const [];
     
-    debugPrint('📋 [NOTIF] Found ${notifList.length} raw notifications');
     debugPrint('📋 [NOTIF] Response structure: ${response.keys.toList()}');
     if (data != null) {
       debugPrint('📋 [NOTIF] Data keys: ${data.keys.toList()}');
     }
     
-    return notifList.whereType<Map>().map((rawItem) {
+    // Collect all notifications from different time sections
+    final List<dynamic> allNotifications = [];
+    
+    if (data != null) {
+      // Extract from hari_ini
+      final hariIni = data['hari_ini'];
+      if (hariIni is List) {
+        debugPrint('📋 [NOTIF] Found ${hariIni.length} notifications in hari_ini');
+        allNotifications.addAll(hariIni);
+      }
+      
+      // Extract from kemarin
+      final kemarin = data['kemarin'];
+      if (kemarin is List) {
+        debugPrint('📋 [NOTIF] Found ${kemarin.length} notifications in kemarin');
+        allNotifications.addAll(kemarin);
+      }
+      
+      // Extract from sebelumnya if exists
+      final sebelumnya = data['sebelumnya'];
+      if (sebelumnya is List) {
+        debugPrint('📋 [NOTIF] Found ${sebelumnya.length} notifications in sebelumnya');
+        allNotifications.addAll(sebelumnya);
+      }
+    }
+    
+    debugPrint('📋 [NOTIF] Found ${allNotifications.length} raw notifications');
+    
+    return allNotifications.whereType<Map>().map((rawItem) {
       final item = _asMap(rawItem) ?? const {};
       
       // Extract fields from notification API response
@@ -110,10 +138,21 @@ class ObNotificationsController extends GetxController {
       final readAt = item['read_at'];
       final createdAt = _dateFromApi(item['created_at']?.toString());
       
+      // Debug: Print all keys in notification item
+      debugPrint('  📋 [NOTIF] Notification keys: ${item.keys.toList()}');
+      
+      // Extract report/laporan ID - try multiple possible keys
+      final reportId = item['laporan_id']?.toString() ?? 
+                      item['report_id']?.toString() ??
+                      item['id_laporan']?.toString() ??
+                      item['laporanId']?.toString() ??
+                      item['reportId']?.toString();
+      final laporanId = item['laporan_id']?.toString();
+      
       // Check if unread: read_at is null or empty string
       final isUnread = readAt == null || readAt.toString().isEmpty || readAt.toString() == 'null';
       
-      debugPrint('  - ID: $id, Type: $type, Title: $title, Message: $message, Read: ${!isUnread}, Sender: $senderName');
+      debugPrint('  - ID: $id, Type: $type, Title: $title, Message: $message, Read: ${!isUnread}, ReportID: $reportId');
       
       return ObNotificationItem(
         id: id,
@@ -124,6 +163,9 @@ class ObNotificationsController extends GetxController {
         timeLabel: _timeAgo(createdAt),
         createdAt: createdAt,
         isUnread: isUnread,
+        reportId: reportId,
+        laporanId: laporanId,
+        data: item, // Store raw data
       );
     }).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -145,6 +187,9 @@ class ObNotificationsController extends GetxController {
         titleParams: item.titleParams,
         messageParams: item.messageParams,
         isUnread: false,
+        reportId: item.reportId,
+        laporanId: item.laporanId,
+        data: item.data,
       );
       notifications.refresh();
       
@@ -161,53 +206,146 @@ class ObNotificationsController extends GetxController {
     }
   }
 
+  /// Handle notification tap - mark as read and navigate
+  Future<void> handleNotificationTap(ObNotificationItem item) async {
+    // Mark as read first
+    await markAsRead(item);
+    
+    // Navigate based on notification type
+    await _navigateBasedOnType(item);
+  }
+
+  Future<void> _navigateBasedOnType(ObNotificationItem item) async {
+    debugPrint('📱 [NOTIF] Handling navigation for type: ${item.type}');
+    
+    final type = item.type.toUpperCase();
+    
+    // Collaboration-related notifications
+    if (type.contains('KOLABORASI') || type.contains('COLLABORATION')) {
+      debugPrint('📱 [NOTIF] Opening collaboration page');
+      await _openCollaborationPage(item);
+      return;
+    }
+    
+    // Report-related notifications
+    if (type.contains('LAPORAN') || type.contains('REPORT')) {
+      debugPrint('📱 [NOTIF] Opening report detail page');
+      await _openReportDetailPage(item);
+      return;
+    }
+    
+    // Task-related notifications
+    if (type.contains('TUGAS') || type.contains('TASK') || type.contains('CHECKLIST')) {
+      debugPrint('📱 [NOTIF] Opening tasks/checklist page');
+      // Navigate to home/tasks tab
+      Get.back(); // Close notification page
+      return;
+    }
+    
+    debugPrint('📱 [NOTIF] No specific navigation for type: ${item.type}');
+  }
+
+  Future<void> _openCollaborationPage(ObNotificationItem item) async {
+    debugPrint('📱 [NOTIF] Opening collaboration - raw data: ${item.data}');
+    debugPrint('   Available data keys: ${item.data?.keys.toList()}');
+    
+    // Since notification doesn't include laporan_id, we need to handle this differently
+    // Options:
+    // 1. Go back to home and let user see reports with collaboration badge
+    // 2. Fetch all reports and find the one with open collaboration
+    
+    Get.back(); // Close notification page
+    
+    // Show info to user
+    Get.snackbar(
+      'Kolaborasi Dibuka',
+      'Silakan cek daftar laporan untuk melihat laporan dengan kolaborasi aktif',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: const Color(0xFF1689D8),
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 3),
+      icon: const Icon(Icons.people, color: Colors.white),
+    );
+    
+    // Optionally refresh reports to show latest data
+    try {
+      final homeController = Get.find<ObHomeController>();
+      await homeController.loadReports();
+      debugPrint('✅ [NOTIF] Reports refreshed after collaboration notification');
+    } catch (e) {
+      debugPrint('⚠️ [NOTIF] Could not refresh reports: $e');
+    }
+  }
+
+  Future<void> _openReportDetailPage(ObNotificationItem item) async {
+    // Try to extract report ID from notification data
+    Get.back(); // Go back to home
+    
+    // TODO: Extract reportId and navigate to detail page
+    // Example: Get.toNamed(Routes.OB_DETAIL, arguments: reportData);
+    
+    debugPrint('ℹ️ [NOTIF] Report detail navigation - need report ID from notification data');
+  }
+
   /// Mark all notifications as read
   Future<void> markAllAsRead() async {
     if (unreadCount == 0) return;
     
     debugPrint('📬 [NOTIF] Marking all notifications as read');
     
-    // Update all notifications to read
-    notifications.value = notifications.map((item) {
-      return ObNotificationItem(
-        id: item.id,
-        type: item.type,
-        title: item.title,
-        message: item.message,
-        section: item.section,
-        timeLabel: item.timeLabel,
-        createdAt: item.createdAt,
-        titleParams: item.titleParams,
-        messageParams: item.messageParams,
-        isUnread: false,
-      );
-    }).toList();
-    
-    // Call API for each unread notification
+    // Call API to mark all as read
     try {
-      final unreadIds = notifications
-          .where((n) => n.id != null && n.id!.isNotEmpty)
-          .map((n) => n.id!)
-          .toList();
+      final success = await _authService.markAllNotificationsRead();
       
-      for (final id in unreadIds) {
-        await _authService.markNotificationRead(id);
+      if (success) {
+        // Update all notifications to read
+        notifications.value = notifications.map((item) {
+          return ObNotificationItem(
+            id: item.id,
+            type: item.type,
+            title: item.title,
+            message: item.message,
+            section: item.section,
+            timeLabel: item.timeLabel,
+            createdAt: item.createdAt,
+            titleParams: item.titleParams,
+            messageParams: item.messageParams,
+            isUnread: false,
+            reportId: item.reportId,
+            laporanId: item.laporanId,
+            data: item.data,
+          );
+        }).toList();
+        
+        debugPrint('✅ [NOTIF] All notifications marked as read');
+        
+        Get.snackbar(
+          'Berhasil',
+          'Semua notifikasi telah ditandai sudah dibaca',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF2BC36A),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          duration: const Duration(seconds: 2),
+        );
+      } else {
+        throw Exception('API returned false');
       }
-      
-      debugPrint('✅ [NOTIF] All notifications marked as read');
-      
+    } catch (e) {
+      debugPrint('❌ [NOTIF] Failed to mark all as read: $e');
       Get.snackbar(
-        'success'.tr,
-        'all_notifications_marked_read'.tr,
+        'Gagal',
+        'Tidak dapat menandai semua notifikasi',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF2BC36A),
+        backgroundColor: Colors.red,
         colorText: Colors.white,
         margin: const EdgeInsets.all(16),
         borderRadius: 12,
         duration: const Duration(seconds: 2),
       );
-    } catch (e) {
-      debugPrint('❌ [NOTIF] Failed to mark all as read: $e');
     }
   }
 

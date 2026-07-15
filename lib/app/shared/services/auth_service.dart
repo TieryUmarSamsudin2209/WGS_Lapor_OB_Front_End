@@ -2716,19 +2716,23 @@ class AuthService extends GetxService {
 
   /// Toggle collaboration status for a report (OB owner only)
   /// API: PATCH /api/ob/laporan/{laporan_id}/kolaborasi
-  /// This opens or closes collaboration on the report
+  /// Request body: {"is_open": true} to open, {"is_open": false} to close
   /// When opened, sends notification to all OB accounts
   /// WebSocket: LAPORAN_DIBUKA_KOLABORASI (when opened)
-  Future<Map<String, dynamic>?> toggleCollaboration(String reportId) async {
+  Future<Map<String, dynamic>?> toggleCollaboration(
+    String reportId, {
+    required bool isOpen,
+  }) async {
     _lastRequestError = null;
 
     try {
       debugPrint('🔄 [API] Toggling collaboration for report: $reportId');
+      debugPrint('🔄 [API] Setting is_open to: $isOpen');
       debugPrint('🔄 [API] Endpoint: PATCH /api/ob/laporan/$reportId/kolaborasi');
       
       final response = await _client.patch(
         '/api/ob/laporan/$reportId/kolaborasi',
-        <String, dynamic>{}, // Empty body
+        jsonEncode({'is_open': isOpen}),
         headers: authHeaders(),
       );
 
@@ -2898,6 +2902,77 @@ class AuthService extends GetxService {
         'message': 'Kolaborasi ditutup (offline mode)',
         'data': {
           'is_kolaborasi_open': false,
+        }
+      };
+    }
+    return {'success': false, 'message': 'Report not found offline'};
+  }
+
+  /// Open collaboration for a report (OB owner only)
+  /// Based on API doc: PATCH /api/ob/laporan/{laporan_id}/kolaborasi
+  /// Request body: {"is_open": true}
+  /// This opens collaboration on the report and sends notification to all OB accounts
+  Future<Map<String, dynamic>?> openCollaboration(String reportId) async {
+    _lastRequestError = null;
+
+    try {
+      debugPrint('🔓 Opening collaboration for report: $reportId');
+      
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/kolaborasi',
+        jsonEncode({'is_open': true}),
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Collaboration opened successfully');
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            {'success': true, 'message': 'Kolaborasi berhasil dibuka'};
+      }
+
+      if (_canUseOfflineFallback(response)) {
+        debugPrint('📴 Using offline fallback for open collaboration');
+        return _openCollaborationOffline(reportId);
+      }
+
+      // Handle error responses
+      if (response.statusCode == 403) {
+        _lastRequestError = 'Hanya OB pemilik laporan yang bisa membuka kolaborasi';
+      } else if (response.statusCode == 404) {
+        _lastRequestError = 'Laporan tidak ditemukan';
+      } else {
+        _lastRequestError = _extractErrorMessage(response.bodyString ?? '')
+            ?? 'Gagal membuka kolaborasi';
+      }
+      
+      debugPrint('❌ Failed to open collaboration: $_lastRequestError');
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint('💥 Exception opening collaboration: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (isOfflineMode) return _openCollaborationOffline(reportId);
+      _lastRequestError = 'Tidak dapat menghubungi server untuk membuka kolaborasi';
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _openCollaborationOffline(String reportId) {
+    debugPrint('Offline: Simulating open collaboration...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index != -1) {
+      final updated = Map<String, dynamic>.from(_dummyReports[index]);
+      updated['kolaborasi'] = true;
+      updated['has_collaboration'] = true;
+      updated['is_kolaborasi_open'] = true;
+      _dummyReports[index] = updated;
+      
+      return {
+        'success': true,
+        'message': 'Kolaborasi dibuka (offline mode)',
+        'data': {
+          'is_kolaborasi_open': true,
         }
       };
     }

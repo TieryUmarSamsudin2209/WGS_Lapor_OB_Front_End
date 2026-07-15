@@ -166,8 +166,14 @@ class ObDetailController extends GetxController {
     debugPrint('🔄 [TOGGLE] Starting collaboration toggle for report: $reportId');
     debugPrint('🔄 [TOGGLE] Current state - isNeedHelp: ${isNeedHelp.value}, hasCollaboration: ${activeReport?.hasCollaboration.value}');
     
+    // Determine current status and what to do
+    final currentlyOpen = activeReport?.hasCollaboration.value == true;
+    final shouldOpen = !currentlyOpen;
+    
+    debugPrint('🔄 [TOGGLE] Current collaboration status: $currentlyOpen, will set to: $shouldOpen');
+    
     isSubmitting.value = true;
-    final response = await _authService.toggleCollaboration(reportId);
+    final response = await _authService.toggleCollaboration(reportId, isOpen: shouldOpen);
     isSubmitting.value = false;
 
     debugPrint('🔄 [TOGGLE] Response received: ${response != null ? "SUCCESS" : "FAILED"}');
@@ -260,8 +266,8 @@ class ObDetailController extends GetxController {
     if (!isCollabOpen) {
       debugPrint('🚀 [COLLAB] Collaboration not open, opening now...');
       
-      // Call toggle API to open collaboration
-      final response = await _authService.toggleCollaboration(reportId);
+      // Call openCollaboration API to open collaboration
+      final response = await _authService.openCollaboration(reportId);
       
       if (response != null) {
         // Extract collaboration status from response

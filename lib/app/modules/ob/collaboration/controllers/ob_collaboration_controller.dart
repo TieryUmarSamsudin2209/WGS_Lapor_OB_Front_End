@@ -515,6 +515,20 @@ class ObCollaborationController extends GetxController {
   String get currentNotes => notes.value;
   bool get canEditNotes => isOwner.value;
 
+  // Getters for report data
+  String get reportDescription => activeReport?.description ?? 'Tidak ada deskripsi';
+  
+  String get reportCategory => activeReport?.categoryName ?? 'Tidak ada kategori';
+  
+  String get reportReporter => activeReport?.reporterName ?? ownerName.value;
+  
+  List<String> get reportPhotos => activeReport?.photos ?? [];
+  
+  String get reportTimeAgo {
+    // Since HomeReport doesn't have createdAt, return default
+    return 'Baru saja';
+  }
+
   String? get _activeReportId {
     final rawId = activeReport?.id.trim();
     if (rawId == null || rawId.isEmpty) return null;
