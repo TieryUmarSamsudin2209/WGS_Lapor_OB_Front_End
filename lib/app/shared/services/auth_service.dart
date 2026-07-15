@@ -2315,10 +2315,51 @@ class AuthService extends GetxService {
     debugPrint('Fetching OB reports: page=$page, limit=$limit');
 
     try {
-      // Based on API doc: GET /api/ob/dashboard returns checklist and laporan
-      debugPrint('Trying endpoint: /api/ob/dashboard');
+      // Try dedicated reports endpoint first for more complete data including reporter details
+      debugPrint('Trying endpoint: /api/ob/laporan');
       
-      final response = await _client.get(
+      var response = await _client.get(
+        '/api/ob/laporan',
+        query: {'page': page.toString(), 'limit': limit.toString()},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ /api/ob/laporan returned ${response.statusCode}');
+        final body = _responseBodyAsMap(response.body, response.bodyString) ?? _asMap(response.body);
+        
+        if (body != null) {
+          debugPrint('Response keys: ${body.keys.join(", ")}');
+          
+          // Extract data object
+          final data = _asMap(body['data']) ?? body;
+          debugPrint('Data keys: ${data.keys.join(", ")}');
+          
+          // Try to extract laporan from various possible locations
+          final laporan = _extractList(data, const [
+            'laporan',
+            'laporans', 
+            'reports',
+            'items',
+            'data',
+          ]);
+          
+          if (laporan != null && laporan.isNotEmpty) {
+            debugPrint('📦 Found ${laporan.length} laporan from dedicated endpoint');
+            return <String, dynamic>{
+              'success': true,
+              'data': laporan,
+            };
+          }
+        }
+      } else {
+        debugPrint('⚠️ /api/ob/laporan returned ${response.statusCode}, falling back to dashboard');
+      }
+
+      // Fallback to dashboard endpoint
+      debugPrint('Trying fallback endpoint: /api/ob/dashboard');
+      
+      response = await _client.get(
         '/api/ob/dashboard',
         headers: authHeaders(),
       );

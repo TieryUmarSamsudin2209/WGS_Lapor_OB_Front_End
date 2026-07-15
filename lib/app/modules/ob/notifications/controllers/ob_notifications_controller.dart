@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/utils/checklist_translation_key.dart';
 import '../../../../shared/utils/report_translation_key.dart';
+import '../../home/controllers/ob_home_controller.dart';
 
 class ObNotificationItem {
   const ObNotificationItem({

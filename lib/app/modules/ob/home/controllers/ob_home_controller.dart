@@ -722,6 +722,31 @@ class ObHomeController extends GetxController {
         return null;
       }
 
+      // Debug reporter extraction
+      final reporterName = _stringValueFromSources([item, detail], [
+        'nama_pelapor',
+        'pelapor', 
+        'reporter',
+        'reported_by',
+        'reportedBy',
+        'created_by',
+        'createdBy',
+        'submitted_by',
+        'submittedBy',
+        'karyawan',
+        'pegawai',
+        'user',
+        'karyawan_name',
+        'pegawai_name',
+        'user_name',
+      ]) ?? _extractReporterFromNestedObjects([item, detail]);
+      
+      debugPrint('📋 [REPORT-$id] Reporter: ${reporterName ?? "NOT FOUND"}');
+      debugPrint('📋 [REPORT-$id] Available keys: ${item.keys.join(", ")}');
+      if (detail != item) {
+        debugPrint('📋 [REPORT-$id] Detail keys: ${detail.keys.join(", ")}');
+      }
+
       return HomeReport(
         id: id,
         title: reportTranslationKey(title),
@@ -748,20 +773,7 @@ class ObHomeController extends GetxController {
           'butuh_bantuan',
           'need_help',
         ]),
-        reporterName: _stringValueFromSources([item, detail], [
-          'nama_pelapor',
-          'pelapor',
-          'reporter',
-          'reported_by',
-          'reportedBy',
-          'created_by',
-          'createdBy',
-          'submitted_by',
-          'submittedBy',
-          'karyawan',
-          'pegawai',
-          'user',
-        ]),
+        reporterName: reporterName,
         categoryName: _translatedValueOrNull(
           _stringValueFromSources([item, detail], [
             'nama_kategori',
@@ -954,6 +966,77 @@ class ObHomeController extends GetxController {
       return 'resolved';
     }
     return 'pending';
+  }
+
+  String? _extractReporterFromNestedObjects(List<Map<String, dynamic>> sources) {
+    for (final source in sources) {
+      // Try to extract from nested karyawan object
+      final karyawan = _asMap(source['karyawan']);
+      if (karyawan != null) {
+        final name = _stringValue(karyawan, [
+          'nama_lengkap',
+          'nama',
+          'name',
+          'username',
+          'email',
+        ]);
+        if (name != null) {
+          debugPrint('📋 [REPORTER] Found reporter in karyawan object: $name');
+          return name;
+        }
+      }
+      
+      // Try to extract from nested user object
+      final user = _asMap(source['user']);
+      if (user != null) {
+        final name = _stringValue(user, [
+          'nama_lengkap',
+          'nama',
+          'name',
+          'username',
+          'email',
+        ]);
+        if (name != null) {
+          debugPrint('📋 [REPORTER] Found reporter in user object: $name');
+          return name;
+        }
+      }
+      
+      // Try to extract from nested pelapor object
+      final pelapor = _asMap(source['pelapor']);
+      if (pelapor != null) {
+        final name = _stringValue(pelapor, [
+          'nama_lengkap',
+          'nama',
+          'name',
+          'username',
+          'email',
+        ]);
+        if (name != null) {
+          debugPrint('📋 [REPORTER] Found reporter in pelapor object: $name');
+          return name;
+        }
+      }
+      
+      // Try to extract from nested reported_by object
+      final reportedBy = _asMap(source['reported_by']);
+      if (reportedBy != null) {
+        final name = _stringValue(reportedBy, [
+          'nama_lengkap',
+          'nama',
+          'name',
+          'username',
+          'email',
+        ]);
+        if (name != null) {
+          debugPrint('📋 [REPORTER] Found reporter in reported_by object: $name');
+          return name;
+        }
+      }
+    }
+    
+    debugPrint('📋 [REPORTER] No reporter found in nested objects');
+    return null;
   }
 
   String? _translatedValueOrNull(String? value) {

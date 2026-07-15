@@ -45,7 +45,7 @@ class _EmployeeReportDetailViewState extends State<EmployeeReportDetailView> {
     final detailMap = _asMap(response?['data']) ?? response;
     setState(() {
       _detail = _ReportDetailData.fromMaps([
-        if (detailMap != null) detailMap,
+        ?detailMap,
         initial,
       ]);
       _isLoading = false;

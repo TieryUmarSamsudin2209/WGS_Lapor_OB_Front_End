@@ -305,7 +305,7 @@ class PrivacyView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
-          const _TrText(
+          _TrText(
             text: 'Poin Penting:',
             style: TextStyle(
               color: _primaryBlue,
