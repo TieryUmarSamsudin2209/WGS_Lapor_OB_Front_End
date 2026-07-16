@@ -941,26 +941,30 @@ class _SearchAndFilters extends StatelessWidget {
           SizedBox(
             height: 36,
             child: Obx(
-              () => ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) {
-                  const filters = [
-                    'Semua',
-                    'Proses',
-                    'Selesai',
-                    'Tertolak',
-                    'Pending',
-                  ];
-                  final filter = filters[index];
-                  return _FilterChip(
-                    label: filter,
-                    active: controller.selectedFilter.value == filter,
-                    onTap: () => controller.setFilter(filter),
-                  );
-                },
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemCount: 5,
-              ),
+              () {
+                final selectedFilter = controller.selectedFilter.value;
+                
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemBuilder: (context, index) {
+                    const filters = [
+                      'Semua',
+                      'Proses',
+                      'Selesai',
+                      'Tertolak',
+                      'Pending',
+                    ];
+                    final filter = filters[index];
+                    return _FilterChip(
+                      label: filter,
+                      active: selectedFilter == filter,
+                      onTap: () => controller.setFilter(filter),
+                    );
+                  },
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemCount: 5,
+                );
+              },
             ),
           ),
         ],
