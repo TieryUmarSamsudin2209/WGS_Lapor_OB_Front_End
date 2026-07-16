@@ -30,38 +30,26 @@ class ObProfilView extends GetView<ObProfilController> {
       backgroundColor: isDark ? AppDarkColors.background : _pageBg,
       body: Stack(
         children: [
-          // Navy blue background for top section
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 200,
-            child: Container(
-              color: isDark ? AppDarkColors.header : _blue,
-            ),
-          ),
-          // Scrollable content
-          SafeArea(
-            child: RefreshIndicator(
-              onRefresh: controller.loadProfile,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
-                padding: const EdgeInsets.only(bottom: _bottomScrollSpace),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // Progress Card
-                      _ProgressCard(controller: controller),
-                      const SizedBox(height: 16),
-                      // Main Content Card
-                      _MainContentCard(controller: controller),
-                    ],
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final minPanelHeight =
+                    constraints.maxHeight - _panelTop - _bottomScrollSpace;
+
+                return RefreshIndicator(
+                  onRefresh: controller.loadProfile,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.only(bottom: _bottomScrollSpace),
+                    child: _ProfileScrollContent(
+                      controller: controller,
+                      minHeight: minPanelHeight > 0 ? minPanelHeight : 0.0,
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
           if (!isNested)
@@ -71,168 +59,6 @@ class ObProfilView extends GetView<ObProfilController> {
               bottom: 0,
               child: ObBottomNav(activeItem: ObBottomNavItem.profile),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-// Progress Card Widget
-class _ProgressCard extends StatelessWidget {
-  const _ProgressCard({required this.controller});
-
-  final ObProfilController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            'Progress Kerja Hari Ini'.tr,
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF172033),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Obx(() {
-            final completed = controller.completedTaskTotal.value;
-            const total = 10; // You can make this dynamic
-            final percentage = (completed / total * 100).toInt();
-            
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Circular Progress
-                SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: CircularProgressIndicator(
-                          value: completed / total,
-                          strokeWidth: 8,
-                          backgroundColor: const Color(0xFFE5E9EE),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF14558B),
-                          ),
-                        ),
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '$percentage%',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF14558B),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 24),
-                // Text Info
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$completed/$total Tugas Selesai',
-                      style: TextStyle(
-                        color: isDark ? Colors.white : const Color(0xFF172033),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$percentage%',
-                      style: TextStyle(
-                        color: isDark ? Colors.white60 : const Color(0xFF8A94A4),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-// Main Content Card Widget
-class _MainContentCard extends StatelessWidget {
-  const _MainContentCard({required this.controller});
-
-  final ObProfilController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Lokasi Aktif Terkini
-          _ActiveLocationSection(controller: controller),
-          
-          const SizedBox(height: 24),
-          const Divider(thickness: 1, height: 1),
-          const SizedBox(height: 24),
-          
-          // Riwayat Laporan
-          _HistorySection(controller: controller),
-          
-          const SizedBox(height: 24),
-          const Divider(thickness: 1, height: 1),
-          const SizedBox(height: 24),
-          
-          // Pengaturan & Akun
-          _SettingsSection(controller: controller),
         ],
       ),
     );
@@ -985,15 +811,6 @@ class _SettingsSection extends StatelessWidget {
               onTap: () => Get.toNamed(Routes.PRIVACY),
             ),
             const Divider(height: 1),
-            _SettingsTile(
-              icon: Icons.email_outlined,
-              label: 'Kontak'.tr,
-              onTap: () {
-                // TODO: Add contact functionality
-                Get.snackbar('Info'.tr, 'Fitur kontak akan segera tersedia'.tr);
-              },
-            ),
-            const Divider(height: 1),
             Obx(() => _SettingsTile(
                   icon: Icons.translate_rounded,
                   label: 'Bahasa'.tr,
@@ -1002,7 +819,7 @@ class _SettingsSection extends StatelessWidget {
                 )),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           height: 50,
@@ -1011,20 +828,18 @@ class _SettingsSection extends StatelessWidget {
               context,
               onConfirm: controller.logout,
             ),
-            icon: const Icon(Icons.logout_rounded, size: 18),
+            icon: const Icon(Icons.logout_rounded, size: 17),
             label: Text('Keluar Sesi'.tr),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFE53935),
-              side: BorderSide(
-                color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
-              ),
-              backgroundColor: Colors.transparent,
+              side: const BorderSide(color: Color(0xFFE1E8F0)),
+              backgroundColor: isDark ? AppDarkColors.surface : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               textStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
