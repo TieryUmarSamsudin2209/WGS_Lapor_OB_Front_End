@@ -5,8 +5,6 @@ import 'package:get/get.dart';
 
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/notification_socket.dart';
-import '../../../../shared/utils/checklist_translation_key.dart';
-import '../../../../shared/utils/report_translation_key.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
 class ObNotificationItem {
@@ -90,21 +88,21 @@ class ObNotificationsController extends GetxController {
       final response = await _authService.getNotifications();
 
       if (response == null) {
-        _showDummyNotifications();
+        notifications.value = [];
         return;
       }
 
       final items = _parseNotificationsFromApi(response);
 
       if (items.isEmpty) {
-        _showDummyNotifications();
+        notifications.value = [];
         return;
       }
 
       notifications.value = items;
     } catch (_) {
       if (notifications.isEmpty) {
-        _showDummyNotifications();
+        notifications.value = [];
       }
     } finally {
       isLoading.value = false;
@@ -272,62 +270,6 @@ class ObNotificationsController extends GetxController {
         );
       }
     } catch (_) {}
-  }
-
-  void _showDummyNotifications() {
-    final now = DateTime.now();
-    notifications.value = [
-      ObNotificationItem(
-        id: 'ob_dummy_1',
-        type: 'task',
-        title: 'Tugas Baru: @title',
-        titleParams: {
-          'title': checklistTranslationKey('Bersihkan Ruang Meeting A'),
-        },
-        message: 'Admin baru saja menugaskan Anda.',
-        section: 'HARI INI',
-        timeLabel: '10 mnt',
-        createdAt: now.subtract(const Duration(minutes: 10)),
-        isUnread: true,
-      ),
-      ObNotificationItem(
-        id: 'ob_dummy_2',
-        type: 'report',
-        title: 'Laporan Baru: @title',
-        titleParams: {'title': reportTranslationKey('AC Bocor di Pantry')},
-        message: '@reporter melaporkan masalah baru.',
-        messageParams: const {'reporter': 'Karyawan (Asep)'},
-        section: 'HARI INI',
-        timeLabel: '1 jam',
-        createdAt: now.subtract(const Duration(hours: 1)),
-        isUnread: true,
-      ),
-      ObNotificationItem(
-        id: 'ob_dummy_3',
-        type: 'system',
-        title: 'Pembaruan Sistem',
-        message: 'Versi aplikasi @version tersedia.',
-        messageParams: const {'version': '2.4.1'},
-        section: 'HARI INI',
-        timeLabel: '3 jam',
-        createdAt: now.subtract(const Duration(hours: 3)),
-        isUnread: false,
-      ),
-      ObNotificationItem(
-        id: 'ob_dummy_4',
-        type: 'task',
-        title: 'Pengingat Tugas: @title',
-        titleParams: {
-          'title': checklistTranslationKey('Cek Toilet Lantai 2'),
-        },
-        message: 'Tugas ini harus selesai dalam @duration.',
-        messageParams: const {'duration': '30 menit'},
-        section: 'KEMARIN',
-        timeLabel: 'Kemarin',
-        createdAt: now.subtract(const Duration(days: 1)),
-        isUnread: false,
-      ),
-    ];
   }
 
   Map<String, List<ObNotificationItem>> get groupedNotifications {

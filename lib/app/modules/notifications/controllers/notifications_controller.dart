@@ -109,20 +109,20 @@ class NotificationsController extends GetxController {
       final response = await _authService.getNotifications();
 
       if (response == null) {
-        _showDummyNotifications();
+        notifications.value = [];
         return;
       }
 
       final items = _parseNotificationsFromApi(response);
 
       if (items.isEmpty) {
-        _showDummyNotifications();
+        notifications.value = [];
         return;
       }
 
       notifications.value = items;
     } catch (_) {
-      _showDummyNotifications();
+      notifications.value = [];
     } finally {
       isLoading.value = false;
     }
@@ -290,52 +290,6 @@ class NotificationsController extends GetxController {
         duration: const Duration(seconds: 2),
       );
     } catch (_) {}
-  }
-
-  void _showDummyNotifications() {
-    final now = DateTime.now();
-    notifications.value = [
-      NotificationItem(
-        id: 'dummy_1',
-        type: 'resolved',
-        title: 'Laporan Selesai',
-        message: 'Masalah "Tumpahan air di Lobby" telah diselesaikan oleh Janha (OB).',
-        section: 'TERBARU',
-        timeLabel: '2 mnt yang lalu',
-        createdAt: now.subtract(const Duration(minutes: 2)),
-        isUnread: true,
-      ),
-      NotificationItem(
-        id: 'dummy_2',
-        type: 'received',
-        title: 'Laporan Diterima',
-        message: 'Laporan Anda mengenai "AC Bocor di Ruang Meeting 4" telah diterima dan sedang diproses oleh tim teknisi.',
-        section: 'TERBARU',
-        timeLabel: '1 jam yang lalu',
-        createdAt: now.subtract(const Duration(hours: 1)),
-        isUnread: true,
-      ),
-      NotificationItem(
-        id: 'dummy_3',
-        type: 'status_update',
-        title: 'Pembaruan Status',
-        message: 'Status fasilitas Lift B2 telah diperbarui menjadi Beroperasi Normal setelah pemeliharaan rutin.',
-        section: 'SEBELUMNYA',
-        timeLabel: 'Kemarin',
-        createdAt: now.subtract(const Duration(days: 1)),
-        isUnread: false,
-      ),
-      NotificationItem(
-        id: 'dummy_4',
-        type: 'resolved',
-        title: 'Laporan Selesai',
-        message: 'Laporan "Kertas Habis di Printer Lt. 3" telah ditangani oleh Staff Layanan.',
-        section: 'SEBELUMNYA',
-        timeLabel: '2 hari yang lalu',
-        createdAt: now.subtract(const Duration(days: 2)),
-        isUnread: false,
-      ),
-    ];
   }
 
   List<NotificationItem> get filteredNotifications {

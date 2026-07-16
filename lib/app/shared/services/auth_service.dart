@@ -375,7 +375,7 @@ class AuthService extends GetxService {
     
     // Check for ngrok tunnel errors
     final bodyStr = (response.bodyString ?? response.body ?? '').toString();
-    if (bodyStr.contains('ERR_NGROK_') || bodyStr.contains('ngrok') || bodyStr.contains('Tunnel not found')) {
+    if (bodyStr.contains('ERR_NGROK_') || bodyStr.contains('Tunnel not found')) {
       return true;
     }
     
@@ -499,7 +499,9 @@ class AuthService extends GetxService {
       }
 
       if (_isOfflineResponse(response)) {
-        return _loginOffline(identifier, password);
+        debugPrint('❌ Server tidak merespon saat login');
+        _lastRequestError = 'Tidak dapat terhubung ke server. Periksa koneksi Anda.';
+        return false;
       }
 
       final body = _responseBodyAsMap(response.body, response.bodyString);
@@ -523,7 +525,8 @@ class AuthService extends GetxService {
       return false;
     } catch (e) {
       debugPrint('Error login: $e');
-      return _loginOffline(identifier, password);
+      _lastRequestError = 'Terjadi kesalahan saat login. Coba lagi.';
+      return false;
     }
   }
 
