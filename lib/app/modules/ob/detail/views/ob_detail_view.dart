@@ -56,7 +56,7 @@ class ObDetailView extends GetView<ObDetailController> {
                 return _buildActionForm(
                   titleText: 'Beri Alasan Menolak',
                   hintText: 'Tidak bisa diperbaiki, alat rusak total',
-                  photoLabel: 'Bukti Foto',
+                  photoLabel: 'Bukti Foto Pembatalan (Opsional)',
                 );
               }
               return const SizedBox.shrink(); // Kosong jika state awal
@@ -142,15 +142,7 @@ class ObDetailView extends GetView<ObDetailController> {
                                 size: 8,
                                 color: Color(0xFFF57C00),
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'BUTUH BANTUAN'.tr,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFF57C00),
-                                ),
-                              ),
+                              
                             ],
                           ),
                         );

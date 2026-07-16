@@ -100,6 +100,15 @@ class ObNotificationsController extends GetxController {
       }
 
       notifications.value = items;
+      
+      // Update badge count di home controller berdasarkan unread count
+      try {
+        final obHomeController = Get.find<ObHomeController>();
+        obHomeController.unreadNotificationCount.value = unreadCount;
+        debugPrint('✅ [BADGE] Updated badge count to $unreadCount');
+      } catch (e) {
+        debugPrint('⚠️ [BADGE] Could not find ObHomeController: $e');
+      }
     } catch (_) {
       if (notifications.isEmpty) {
         notifications.value = [];
@@ -182,6 +191,18 @@ class ObNotificationsController extends GetxController {
 
     if (item.id != null && item.id!.isNotEmpty) {
       await _authService.markNotificationRead(item.id!);
+      
+      // Update badge count di home controller
+      try {
+        final obHomeController = Get.find<ObHomeController>();
+        final currentCount = obHomeController.unreadNotificationCount.value;
+        if (currentCount > 0) {
+          obHomeController.unreadNotificationCount.value = currentCount - 1;
+          debugPrint('✅ [BADGE] Decreased badge count to ${currentCount - 1}');
+        }
+      } catch (e) {
+        debugPrint('⚠️ [BADGE] Could not find ObHomeController: $e');
+      }
     }
   }
 
@@ -210,24 +231,98 @@ class ObNotificationsController extends GetxController {
   }
 
   Future<void> _openCollaborationPage(ObNotificationItem item) async {
+    // Close notifications page first
     Get.back();
 
-    Get.snackbar(
-      'Kolaborasi Dibuka',
-      'Silakan cek daftar laporan untuk melihat laporan dengan kolaborasi aktif',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF1689D8),
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 3),
-      icon: const Icon(Icons.people, color: Colors.white),
-    );
+    // Extract report ID from notification data
+    String? reportId = item.reportId ?? item.laporanId;
+    
+    // Try to get report ID from notification data
+    if (reportId == null && item.data != null) {
+      final data = item.data!;
+      reportId = data['laporan_id']?.toString() ??
+                 data['report_id']?.toString() ??
+                 data['id_laporan']?.toString() ??
+                 data['ref_id']?.toString();
+    }
+
+    if (reportId == null || reportId.isEmpty) {
+      // No specific report ID, show generic message and redirect to home
+      Get.snackbar(
+        'Kolaborasi',
+        'Silakan cek daftar laporan untuk melihat laporan dengan kolaborasi aktif',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF1689D8),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 3),
+        icon: const Icon(Icons.people, color: Colors.white),
+      );
+
+      try {
+        final homeController = Get.find<ObHomeController>();
+        await homeController.loadReports();
+      } catch (_) {}
+      return;
+    }
 
     try {
+      // Try to get the HomeController first
       final homeController = Get.find<ObHomeController>();
       await homeController.loadReports();
-    } catch (_) {}
+      
+      // Find the report in the home controller
+      final reports = homeController.reports;
+      final targetReport = reports.firstWhereOrNull((report) => 
+        report.id == reportId || 
+        report.id.endsWith(reportId!) ||
+        reportId.endsWith(report.id)
+      );
+      
+      if (targetReport != null) {
+        // Navigate directly to collaboration page with the report data
+        Get.toNamed('/ob/collaboration', arguments: targetReport);
+      } else {
+        // Report not found, create a minimal report object for navigation
+        // This handles cases where the report might not be in current list
+        final mockReport = HomeReport(
+          id: reportId,
+          title: item.title.contains('Kolaborasi') ? 
+                 item.title.replaceAll('Kolaborasi:', '').trim() : 
+                 'Laporan Kolaborasi',
+          priority: 'MEDIUM',
+          status: 'Sedang Diproses',
+          location: 'Unknown Location',
+          description: item.message,
+          categoryName: 'Kolaborasi',
+          reporterName: 'System',
+          photos: <String>[],
+          hasCollaboration: true,
+          assignedObName: null,
+          assignedObId: null,
+          collaborators: <String>[],
+        );
+        
+        Get.toNamed('/ob/collaboration', arguments: mockReport);
+      }
+      
+    } catch (e) {
+      debugPrint('Error opening collaboration page: $e');
+      
+      // Fallback: show message and redirect to reports
+      Get.snackbar(
+        'Kolaborasi Dibuka',
+        'Menuju halaman kolaborasi...',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF1689D8),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 2),
+        icon: const Icon(Icons.people, color: Colors.white),
+      );
+    }
   }
 
   Future<void> _openReportDetailPage(ObNotificationItem item) async {
@@ -258,6 +353,15 @@ class ObNotificationsController extends GetxController {
     try {
       final success = await _authService.markAllNotificationsRead();
       if (success) {
+        // Update badge count di home controller
+        try {
+          final obHomeController = Get.find<ObHomeController>();
+          obHomeController.unreadNotificationCount.value = 0;
+          debugPrint('✅ [BADGE] Updated home badge count to 0');
+        } catch (e) {
+          debugPrint('⚠️ [BADGE] Could not find ObHomeController: $e');
+        }
+        
         Get.snackbar(
           'Berhasil',
           'Semua notifikasi telah ditandai sudah dibaca',

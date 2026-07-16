@@ -341,205 +341,323 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
         color: cardColor,
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.edit_note, size: 20, color: mutedColor),
-              const SizedBox(width: 8),
-              Text(
-                'Catatan'.tr,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: titleColor,
-                ),
+      child: Obx(() {
+        // Show different UI based on ownership
+        if (controller.isOwner.value) {
+          return _buildOwnerCollaborationView(isDark, titleColor, mutedColor, cardColor);
+        } else {
+          return _buildNonOwnerCollaborationView(isDark, titleColor, mutedColor, cardColor);
+        }
+      }),
+    );
+  }
+
+  // Owner view: Catatan (editable) + Tim (with approve/reject/remove)
+  Widget _buildOwnerCollaborationView(bool isDark, Color titleColor, Color mutedColor, Color cardColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Notes section (editable)
+        Row(
+          children: [
+            Icon(Icons.edit_note, size: 20, color: mutedColor),
+            const SizedBox(width: 8),
+            Text(
+              'Catatan'.tr,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: titleColor,
               ),
-              const Spacer(),
-              // Show edit button if owner
-              Obx(() {
-                if (!controller.isOwner.value) return const SizedBox.shrink();
-                return InkWell(
-                  onTap: () => _showEditNotesDialog(controller),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppDarkColors.surfaceVariant
-                          : const Color(0xFFF0F4F8),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.edit,
-                          size: 14,
-                          color: isDark ? Colors.white70 : mutedColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Edit'.tr,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : mutedColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Obx(() => GestureDetector(
-                onTap: controller.isOwner.value
-                    ? () => _showEditNotesDialog(controller)
-                    : null,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppDarkColors.surfaceVariant
-                        : const Color(0xFFF8FAFB),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isDark
-                          ? AppDarkColors.border
-                          : const Color(0xFFE5E9EE),
-                    ),
-                  ),
-                  child: Text(
-                    controller.notes.value.isEmpty
-                        ? 'Belum ada catatan. Tap untuk menambahkan.'.tr
-                        : controller.notes.value,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: controller.notes.value.isEmpty
-                          ? mutedColor.withValues(alpha: 0.6)
-                          : mutedColor,
-                      fontStyle: controller.notes.value.isEmpty
-                          ? FontStyle.italic
-                          : FontStyle.normal,
-                    ),
-                  ),
+            ),
+            const Spacer(),
+            InkWell(
+              onTap: () => _showEditNotesDialog(controller),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
                 ),
-              )),
-
-          const SizedBox(height: 20),
-
-          // Team Section
-          Row(
-            children: [
-              Icon(Icons.people_outline, size: 20, color: mutedColor),
-              const SizedBox(width: 8),
-              Text(
-                'Tim'.tr,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: titleColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Collaborators List
-          Obx(() {
-            if (controller.isLoading.value) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
-
-            if (controller.collaborators.isEmpty) {
-              return Container(
-                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: isDark
                       ? AppDarkColors.surfaceVariant
-                      : const Color(0xFFF4F6FA),
-                  borderRadius: BorderRadius.circular(10),
+                      : const Color(0xFFF0F4F8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Column(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.people_alt_outlined, size: 40, color: mutedColor),
-                    const SizedBox(height: 8),
+                    Icon(
+                      Icons.edit,
+                      size: 14,
+                      color: isDark ? Colors.white70 : mutedColor,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      'Belum ada OB yang bergabung'.tr,
+                      'Edit'.tr,
                       style: TextStyle(
-                        color: mutedColor,
-                        fontSize: 13,
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : mutedColor,
                       ),
                     ),
                   ],
                 ),
-              );
-            }
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showEditNotesDialog(controller),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppDarkColors.surfaceVariant
+                  : const Color(0xFFF8FAFB),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark
+                    ? AppDarkColors.border
+                    : const Color(0xFFE5E9EE),
+              ),
+            ),
+            child: Obx(() => Text(
+                  controller.notes.value.isEmpty
+                      ? 'Belum ada catatan. Tap untuk menambahkan.'.tr
+                      : controller.notes.value,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: controller.notes.value.isEmpty
+                        ? mutedColor.withValues(alpha: 0.6)
+                        : mutedColor,
+                    fontStyle: controller.notes.value.isEmpty
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                  ),
+                )),
+          ),
+        ),
 
-            return Column(
-              children: controller.collaborators
-                  .map((collaborator) => _buildCollaboratorItem(
-                        name: collaborator.name,
-                        role: collaborator.role,
-                        isOwner: controller.isOwner.value &&
-                            collaborator.id == controller.currentUserId,
-                      ))
-                  .toList(),
+        const SizedBox(height: 20),
+
+        // Team section with full list
+        Row(
+          children: [
+            Icon(Icons.people_outline, size: 20, color: mutedColor),
+            const SizedBox(width: 8),
+            Text(
+              'Tim'.tr,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: titleColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        Obx(() {
+          if (controller.isLoading.value) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(),
+              ),
             );
-          }),
-        ],
-      ),
+          }
+
+          if (controller.collaborators.isEmpty) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppDarkColors.surfaceVariant
+                    : const Color(0xFFF4F6FA),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.people_alt_outlined, size: 40, color: mutedColor),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Belum ada OB yang bergabung'.tr,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: mutedColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Column(
+            children: controller.collaborators.map((collaborator) {
+              return _buildCollaboratorItem(
+                collaborator.name,
+                collaborator.status == 'APPROVED' ? 'Anggota' : 'Menunggu',
+                collaborator.status == 'PENDING',
+                collaborator.id,
+                isDark,
+                titleColor,
+                mutedColor,
+              );
+            }).toList(),
+          );
+        }),
+      ],
     );
   }
 
-  Widget _buildCollaboratorItem({
-    required String name,
-    required String role,
-    bool isOwner = false,
-  }) {
-    final isDark = Get.isDarkMode;
-    final titleColor = isDark ? Colors.white : Colors.black87;
+  // Non-owner view: Catatan (read-only) + Tim (owner + current status)
+  Widget _buildNonOwnerCollaborationView(bool isDark, Color titleColor, Color mutedColor, Color cardColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Notes section (read-only)
+        Row(
+          children: [
+            Icon(Icons.edit_note, size: 20, color: mutedColor),
+            const SizedBox(width: 8),
+            Text(
+              'Catatan'.tr,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: titleColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppDarkColors.surfaceVariant
+                : const Color(0xFFF8FAFB),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isDark
+                  ? AppDarkColors.border
+                  : const Color(0xFFE5E9EE),
+            ),
+          ),
+          child: Obx(() => Text(
+                controller.notes.value.isEmpty
+                    ? 'Belum ada catatan.'.tr
+                    : controller.notes.value,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: controller.notes.value.isEmpty
+                      ? mutedColor.withValues(alpha: 0.6)
+                      : mutedColor,
+                  fontStyle: controller.notes.value.isEmpty
+                      ? FontStyle.italic
+                      : FontStyle.normal,
+                ),
+              )),
+        ),
 
+        const SizedBox(height: 20),
+
+        // Team section - show owner + self if joined
+        Row(
+          children: [
+            Icon(Icons.people_outline, size: 20, color: mutedColor),
+            const SizedBox(width: 8),
+            Text(
+              'Tim'.tr,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: titleColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Owner info
+        _buildTeamMemberCard(
+          controller.ownerName.value,
+          'Pemilik Laporan',
+          isDark,
+          titleColor,
+          mutedColor,
+        ),
+
+        // Show current user if already joined
+        Obx(() {
+          final currentUserId = controller.currentUserId;
+          final hasJoined = controller.collaborators.any(
+            (c) => c.id == currentUserId,
+          );
+
+          if (hasJoined) {
+            final currentUser = controller.collaborators.firstWhere(
+              (c) => c.id == currentUserId,
+            );
+            return Column(
+              children: [
+                const SizedBox(height: 12),
+                _buildTeamMemberCard(
+                  currentUser.name,
+                  'Anda',
+                  isDark,
+                  titleColor,
+                  mutedColor,
+                ),
+              ],
+            );
+          }
+
+          return const SizedBox.shrink();
+        }),
+      ],
+    );
+  }
+
+  // Team member card (simple, no action buttons)
+  Widget _buildTeamMemberCard(
+    String name,
+    String role,
+    bool isDark,
+    Color titleColor,
+    Color mutedColor,
+  ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppDarkColors.surfaceVariant
-            : const Color(0xFFF4F6FA),
+        color: isDark 
+            ? AppDarkColors.surfaceVariant 
+            : const Color(0xFFF8FAFB),
         borderRadius: BorderRadius.circular(10),
-        border: isOwner
-            ? Border.all(color: urgentRed, width: 2)
-            : null,
+        border: Border.all(
+          color: isDark 
+              ? AppDarkColors.border 
+              : const Color(0xFFE5E9EE),
+        ),
       ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: navyColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Icon(
-                Icons.person,
-                color: navyColor,
-                size: 20,
-              ),
+            child: Icon(
+              Icons.person,
+              color: navyColor,
+              size: 22,
             ),
           ),
           const SizedBox(width: 12),
@@ -548,7 +666,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name.tr,
+                  name,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -557,38 +675,150 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  role.tr,
+                  role,
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? Colors.white60 : Colors.grey,
+                    color: mutedColor,
                   ),
                 ),
               ],
             ),
           ),
-          if (isOwner)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: urgentRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.delete_outline, size: 14, color: urgentRed),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Hapus'.tr,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollaboratorItem(
+    String name, 
+    String role, 
+    bool isPending, 
+    String collaborationId,
+    bool isDark,
+    Color titleColor,
+    Color mutedColor,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark 
+            ? AppDarkColors.surfaceVariant 
+            : const Color(0xFFF8FAFB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark 
+              ? AppDarkColors.border 
+              : const Color(0xFFE5E9EE),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: navyColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person,
+              color: navyColor,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Name and Role
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: titleColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  role,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: mutedColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Action buttons for owner
+          Obx(() {
+            if (controller.isOwner.value) {
+              if (isPending) {
+                // Pending - show approve/reject buttons
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Approve button
+                    InkWell(
+                      onTap: () => controller.approveCollaborator(collaborationId),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2BC36A).withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          size: 16,
+                          color: Color(0xFF2BC36A),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Reject button
+                    InkWell(
+                      onTap: () => controller.rejectCollaborator(collaborationId),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: urgentRed.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: urgentRed,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              } else {
+                // Approved - show remove button (red icon)
+                return InkWell(
+                  onTap: () => controller.removeCollaborator(collaborationId),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: urgentRed.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.person_remove_outlined,
+                      size: 16,
                       color: urgentRed,
                     ),
                   ),
-                ],
-              ),
-            ),
+                );
+              }
+            } else {
+              // Non-owner - no action buttons
+              return const SizedBox.shrink();
+            }
+          }),
         ],
       ),
     );
@@ -624,20 +854,20 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
   Widget _buildOwnerButtons() {
     return Column(
       children: [
-        // Tutup Kolaborasi button
+        // Selesaikan Laporan button (biru)
         _buildSolidButton(
-          'Tutup Kolaborasi',
+          'Selesaikan Laporan',
           const Color(0xFF1689D8), // Blue color
-          () => controller.closeCollaboration(),
-          icon: Icons.lock_outline,
+          () => controller.completeReportFromCollaboration(),
+          icon: Icons.check_circle_outline,
         ),
         const SizedBox(height: 12),
-        // Batalkan Kolaborasi button
+        // Batalkan Kolaborasi button (merah)
         _buildSolidButton(
           'Batalkan Kolaborasi',
-          urgentRed,
-          () => controller.cancelCollaboration(),
-          icon: Icons.close,
+          urgentRed, // Red color
+          () => controller.closeCollaboration(),
+          icon: Icons.cancel_outlined,
         ),
       ],
     );
@@ -651,29 +881,49 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
     );
 
     if (hasJoined) {
-      return Column(
-        children: [
-          Icon(Icons.check_circle_outline, color: navyColor, size: 34),
-          const SizedBox(height: 10),
-          Text(
-            'Anda sudah bergabung ke kolaborasi ini'.tr,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Get.isDarkMode ? Colors.white : const Color(0xFF1F2937),
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
+      // User already joined - show "Keluar" button (red with exit icon)
+      return _buildSolidButton(
+        'Keluar',
+        urgentRed,
+        () => _showLeaveConfirmation(),
+        icon: Icons.logout,
       );
     }
 
+    // User not joined yet - show "Bergabung" button (navy with add icon)
     return _buildSolidButton(
       'Bergabung',
       navyColor,
       () => controller.joinCollaboration(),
-      icon: Icons.add,
+      icon: Icons.group_add,
     );
+  }
+
+  // Show confirmation dialog before leaving collaboration
+  Future<void> _showLeaveConfirmation() async {
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text('Keluar dari Kolaborasi'.tr),
+        content: Text('Apakah Anda yakin ingin keluar dari kolaborasi ini?'.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('Batal'.tr),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: urgentRed,
+            ),
+            child: Text('Keluar'.tr),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await controller.leaveCollaboration();
+    }
   }
 
   Widget _buildInfoRow(IconData icon, String title, String value) {

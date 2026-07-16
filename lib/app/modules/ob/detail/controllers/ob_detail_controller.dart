@@ -378,17 +378,31 @@ class ObDetailController extends GetxController {
       Get.snackbar('Alasan wajib diisi'.tr, 'Mohon isi alasan menolak laporan'.tr);
       return;
     }
+    if (reason.length < 3) {
+      Get.snackbar('Alasan terlalu pendek'.tr, 'Catatan pembatalan minimal 3 karakter'.tr);
+      return;
+    }
+    // Foto pembatalan OPSIONAL (tidak wajib)
+    // User dapat menolak dengan atau tanpa foto
 
     isSubmitting.value = true;
-    final response = await _authService.rejectObReport(
+    final response = await _authService.cancelObReport(
       reportId: reportId,
-      reason: reason,
+      catatan: reason,
+      fotoSelesai: actionPhotos.isNotEmpty ? actionPhotos.toList() : null,
     );
     isSubmitting.value = false;
 
     if (response == null) {
       final ctx = Get.context;
-      final message = _authService.lastRequestError ?? 'Gagal menolak laporan'.tr;
+      var message = _authService.lastRequestError ?? 'Gagal menolak laporan'.tr;
+      
+      // Jika backend masih memerlukan foto, berikan petunjuk yang jelas
+      if (message.toLowerCase().contains('foto') && 
+          message.toLowerCase().contains('wajib')) {
+        message = 'Foto bukti pembatalan diperlukan oleh sistem. Mohon unggah minimal 1 foto.'.tr;
+      }
+      
       if (ctx != null) {
         await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
       } else {
@@ -400,7 +414,11 @@ class ObDetailController extends GetxController {
     activeReport?.status.value = 'Ditolak';
     final ctx = Get.context;
     if (ctx != null) {
-      CustomAlert.show(ctx, isSuccess: false);
+      CustomAlert.show(
+        ctx,
+        isSuccess: true,
+        description: 'Berhasil batalkan laporan'.tr,
+      );
     }
     Future.delayed(const Duration(milliseconds: 1800), () {
       Get.back(); // Tutup Dialog Alert
