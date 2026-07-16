@@ -7,10 +7,11 @@ import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/services/notification_socket.dart';
 import '../../../../shared/utils/checklist_translation_key.dart';
 import '../../../../shared/utils/report_translation_key.dart';
+import '../../home/controllers/ob_home_controller.dart';
 
 class ObNotificationItem {
   const ObNotificationItem({
-    required this.id,
+    this.id,
     required this.type,
     required this.title,
     required this.message,
@@ -20,9 +21,12 @@ class ObNotificationItem {
     this.titleParams = const {},
     this.messageParams = const {},
     this.isUnread = true,
+    this.reportId,
+    this.laporanId,
+    this.data,
   });
 
-  final String id;
+  final String? id;
   final String type;
   final String title;
   final String message;
@@ -32,6 +36,9 @@ class ObNotificationItem {
   final Map<String, String> titleParams;
   final Map<String, String> messageParams;
   final bool isUnread;
+  final String? reportId;
+  final String? laporanId;
+  final Map<String, dynamic>? data;
 }
 
 class ObNotificationsController extends GetxController {
@@ -80,20 +87,19 @@ class ObNotificationsController extends GetxController {
     isLoading.value = true;
 
     try {
-      if (_authService.isOfflineMode) {
+      final response = await _authService.getNotifications();
+
+      if (response == null) {
         _showDummyNotifications();
         return;
       }
 
-      final results = await Future.wait([
-        _authService.getDailyChecklist(limit: 20),
-        _authService.getObReports(limit: 20),
-      ]);
+      final items = _parseNotificationsFromApi(response);
 
-      final items = <ObNotificationItem>[
-        ..._taskNotifications(results[0]),
-        ..._reportNotifications(results[1]),
-      ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      if (items.isEmpty) {
+        _showDummyNotifications();
+        return;
+      }
 
       notifications.value = items;
     } catch (_) {
@@ -105,8 +111,58 @@ class ObNotificationsController extends GetxController {
     }
   }
 
+  List<ObNotificationItem> _parseNotificationsFromApi(Map<String, dynamic> response) {
+    final data = _asMap(response['data']);
+    final List<dynamic> allNotifications = [];
+
+    if (data != null) {
+      final hariIni = data['hari_ini'];
+      if (hariIni is List) {
+        allNotifications.addAll(hariIni);
+      }
+      final kemarin = data['kemarin'];
+      if (kemarin is List) {
+        allNotifications.addAll(kemarin);
+      }
+      final sebelumnya = data['sebelumnya'];
+      if (sebelumnya is List) {
+        allNotifications.addAll(sebelumnya);
+      }
+    }
+
+    return allNotifications.whereType<Map>().map((rawItem) {
+      final item = _asMap(rawItem) ?? const {};
+      final id = item['id']?.toString() ?? '';
+      final type = item['tipe']?.toString() ?? item['type']?.toString() ?? 'system';
+      final title = item['judul']?.toString() ?? item['title']?.toString() ?? 'Notifikasi';
+      final message = item['pesan']?.toString() ?? item['message']?.toString() ?? '';
+      final readAt = item['read_at'];
+      final createdAt = _parseDate(item['created_at']?.toString());
+      final isUnread = readAt == null || readAt.toString().isEmpty || readAt.toString() == 'null';
+      final reportId = item['laporan_id']?.toString() ??
+                       item['report_id']?.toString() ??
+                       item['id_laporan']?.toString();
+      final laporanId = item['laporan_id']?.toString();
+
+      return ObNotificationItem(
+        id: id.isNotEmpty ? id : null,
+        type: type,
+        title: title,
+        message: message,
+        section: _sectionFromDate(createdAt),
+        timeLabel: _timeAgo(createdAt),
+        createdAt: createdAt,
+        isUnread: isUnread,
+        reportId: reportId,
+        laporanId: laporanId,
+        data: item,
+      );
+    }).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
   Future<void> markAsRead(ObNotificationItem item) async {
-    final index = notifications.indexWhere((n) => n.id == item.id);
+    final index = notifications.indexWhere((n) => n == item);
     if (index == -1 || !notifications[index].isUnread) return;
 
     notifications[index] = ObNotificationItem(
@@ -120,10 +176,64 @@ class ObNotificationsController extends GetxController {
       titleParams: item.titleParams,
       messageParams: item.messageParams,
       isUnread: false,
+      reportId: item.reportId,
+      laporanId: item.laporanId,
+      data: item.data,
     );
     notifications.refresh();
 
-    await _authService.markNotificationRead(item.id);
+    if (item.id != null && item.id!.isNotEmpty) {
+      await _authService.markNotificationRead(item.id!);
+    }
+  }
+
+  Future<void> handleNotificationTap(ObNotificationItem item) async {
+    await markAsRead(item);
+    await _navigateBasedOnType(item);
+  }
+
+  Future<void> _navigateBasedOnType(ObNotificationItem item) async {
+    final type = item.type.toUpperCase();
+
+    if (type.contains('KOLABORASI') || type.contains('COLLABORATION')) {
+      await _openCollaborationPage(item);
+      return;
+    }
+
+    if (type.contains('LAPORAN') || type.contains('REPORT')) {
+      await _openReportDetailPage(item);
+      return;
+    }
+
+    if (type.contains('TUGAS') || type.contains('TASK') || type.contains('CHECKLIST')) {
+      Get.back();
+      return;
+    }
+  }
+
+  Future<void> _openCollaborationPage(ObNotificationItem item) async {
+    Get.back();
+
+    Get.snackbar(
+      'Kolaborasi Dibuka',
+      'Silakan cek daftar laporan untuk melihat laporan dengan kolaborasi aktif',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: const Color(0xFF1689D8),
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+      duration: const Duration(seconds: 3),
+      icon: const Icon(Icons.people, color: Colors.white),
+    );
+
+    try {
+      final homeController = Get.find<ObHomeController>();
+      await homeController.loadReports();
+    } catch (_) {}
+  }
+
+  Future<void> _openReportDetailPage(ObNotificationItem item) async {
+    Get.back();
   }
 
   Future<void> markAllAsRead() async {
@@ -141,22 +251,27 @@ class ObNotificationsController extends GetxController {
         titleParams: item.titleParams,
         messageParams: item.messageParams,
         isUnread: false,
+        reportId: item.reportId,
+        laporanId: item.laporanId,
+        data: item.data,
       );
     }).toList();
 
-    final success = await _authService.markAllNotificationsRead();
-    if (success) {
-      Get.snackbar(
-        'success'.tr,
-        'all_notifications_marked_read'.tr,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF2BC36A),
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
-        duration: const Duration(seconds: 2),
-      );
-    }
+    try {
+      final success = await _authService.markAllNotificationsRead();
+      if (success) {
+        Get.snackbar(
+          'Berhasil',
+          'Semua notifikasi telah ditandai sudah dibaca',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF2BC36A),
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          duration: const Duration(seconds: 2),
+        );
+      }
+    } catch (_) {}
   }
 
   void _showDummyNotifications() {
@@ -223,174 +338,7 @@ class ObNotificationsController extends GetxController {
     return grouped;
   }
 
-  List<ObNotificationItem> _taskNotifications(Map<String, dynamic>? response) {
-    final items = _extractItems(response, const [
-      'data',
-      'checklist',
-      'checklists',
-      'checklist_harian',
-      'daily_checklists',
-      'items',
-      'tasks',
-      'tugas',
-      'rows',
-      'results',
-    ]);
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-
-    return items.whereType<Map>().take(8).map((rawItem) {
-      final item = _asMap(rawItem) ?? const {};
-      final detail =
-          _asMap(item['checklist']) ??
-          _asMap(item['checklist_harian']) ??
-          _asMap(item['tugas']) ??
-          item;
-      final createdAt = _dateFromApi(
-        _firstValueFromSources([item, detail], [
-          'created_at',
-          'assigned_at',
-          'tanggal',
-          'date',
-        ]),
-      );
-      final title = checklistTranslationKey(
-        _firstValueFromSources([item, detail], [
-              'title',
-              'judul',
-              'nama',
-              'nama_checklist',
-              'nama_tugas',
-              'kegiatan',
-            ]) ??
-            'Tugas Harian',
-      );
-
-      final day = DateTime(createdAt.year, createdAt.month, createdAt.day);
-      final isRecent = day == today || day == yesterday;
-      final isUnread = day == today;
-
-      return ObNotificationItem(
-        id: 'task_${title.hashCode}_${createdAt.millisecondsSinceEpoch}',
-        type: 'task',
-        title: isRecent ? 'Tugas Baru: @title' : 'Pengingat Tugas: @title',
-        titleParams: {'title': title},
-        message: isRecent ? 'Admin baru saja menugaskan Anda.' : 'Tugas ini harus selesai dalam @duration.',
-        messageParams: isRecent ? {} : const {'duration': '24 jam'},
-        section: _sectionFromDate(createdAt),
-        timeLabel: _timeAgo(createdAt),
-        createdAt: createdAt,
-        isUnread: isUnread,
-      );
-    }).toList();
-  }
-
-  List<ObNotificationItem> _reportNotifications(Map<String, dynamic>? response) {
-    final items = _extractItems(response, const [
-      'laporan',
-      'reports',
-      'items',
-      'data',
-      'rows',
-      'results',
-    ]);
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    return items.whereType<Map>().take(8).map((rawItem) {
-      final item = _asMap(rawItem) ?? const {};
-      final detail = _asMap(item['laporan']) ?? _asMap(item['report']) ?? item;
-      final createdAt = _dateFromApi(
-        _firstValueFromSources([item, detail], [
-          'created_at',
-          'tanggal',
-          'date',
-          'reported_at',
-        ]),
-      );
-      final title = reportTranslationKey(
-        _firstValueFromSources([item, detail], [
-              'title',
-              'judul',
-              'nama_laporan',
-              'kategori',
-              'category',
-              'nama_kategori',
-            ]) ??
-            'Laporan Baru',
-      );
-      final reporter =
-          _firstValueFromSources([item, detail], [
-            'pelapor',
-            'nama_pelapor',
-            'karyawan',
-            'reported_by',
-          ]) ??
-          'Karyawan';
-      final location = reportTranslationKey(
-        _firstValueFromSources([item, detail], [
-              'location',
-              'lokasi',
-              'ruangan',
-              'area',
-              'detail_lokasi',
-              'alamat',
-              'lantai',
-            ]) ??
-            'lokasi terkait',
-      );
-
-      final day = DateTime(createdAt.year, createdAt.month, createdAt.day);
-      final isUnread = day == today;
-
-      return ObNotificationItem(
-        id: 'report_${title.hashCode}_${createdAt.millisecondsSinceEpoch}',
-        type: 'report',
-        title: 'Penugasan Baru',
-        message:
-            'Ada tugas perbaikan @title di @location. Dilaporkan oleh @reporter.',
-        messageParams: {
-          'title': title,
-          'location': location,
-          'reporter': reporter,
-        },
-        section: _sectionFromDate(createdAt),
-        timeLabel: _timeAgo(createdAt),
-        createdAt: createdAt,
-        isUnread: isUnread,
-      );
-    }).toList();
-  }
-
-  List<dynamic> _extractItems(
-    Map<String, dynamic>? response,
-    List<String> keys,
-  ) {
-    final data = _asMap(response?['data']);
-    final nestedData = _asMap(data?['data']);
-
-    for (final source in [nestedData, data, response]) {
-      if (source == null) continue;
-      for (final key in keys) {
-        final value = source[key];
-        if (value is List) return value;
-
-        final nested = _asMap(value);
-        if (nested == null) continue;
-        for (final nestedKey in keys) {
-          final nestedValue = nested[nestedKey];
-          if (nestedValue is List) return nestedValue;
-        }
-      }
-    }
-
-    return const [];
-  }
-
-  DateTime _dateFromApi(String? value) {
+  DateTime _parseDate(String? value) {
     if (value == null || value.isEmpty) return DateTime.now();
     return DateTime.tryParse(value)?.toLocal() ?? DateTime.now();
   }
@@ -411,39 +359,6 @@ class ObNotificationsController extends GetxController {
     if (diff.inHours < 24) return '${diff.inHours} jam';
     if (diff.inDays == 1) return 'Kemarin';
     return '${diff.inDays} hari';
-  }
-
-  String? _firstValue(Map<String, dynamic> source, List<String> keys) {
-    for (final key in keys) {
-      final value = source[key];
-      if (value == null) continue;
-      if (value is Map) {
-        final nestedValue = _firstValue(_asMap(value) ?? const {}, [
-          'nama',
-          'name',
-          'title',
-          'judul',
-          'label',
-        ]);
-        if (nestedValue != null) return nestedValue;
-        continue;
-      }
-
-      final text = value.toString().trim();
-      if (text.isNotEmpty) return text;
-    }
-    return null;
-  }
-
-  String? _firstValueFromSources(
-    List<Map<String, dynamic>> sources,
-    List<String> keys,
-  ) {
-    for (final source in sources) {
-      final value = _firstValue(source, keys);
-      if (value != null) return value;
-    }
-    return null;
   }
 
   Map<String, dynamic>? _asMap(Object? value) {

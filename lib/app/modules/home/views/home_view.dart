@@ -104,6 +104,7 @@ class _HomeHeader extends StatelessWidget {
                 ),
                 _ThemeButton(isDark: isDark),
                 Stack(
+                  clipBehavior: Clip.none,
                   children: [
                     IconButton(
                       tooltip: 'Notifikasi'.tr,
@@ -116,26 +117,30 @@ class _HomeHeader extends StatelessWidget {
                     ),
                     Obx(() {
                       final count = controller.unreadNotificationCount.value;
-                      if (count == 0) return const SizedBox.shrink();
+                      if (count <= 0) return const SizedBox.shrink();
                       return Positioned(
-                        right: 4,
-                        top: 4,
+                        top: -2,
+                        right: -2,
                         child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE53935),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
+                            minWidth: 18,
+                            minHeight: 18,
                           ),
                           child: Text(
-                            count > 99 ? '99+' : '$count',
+                            count > 99 ? '99+' : count.toString(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              height: 1.2,
                             ),
                             textAlign: TextAlign.center,
                           ),

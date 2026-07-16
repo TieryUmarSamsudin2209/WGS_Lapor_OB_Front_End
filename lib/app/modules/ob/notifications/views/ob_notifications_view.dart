@@ -97,8 +97,8 @@ class ObNotificationsView extends GetView<ObNotificationsController> {
                       padding: const EdgeInsets.only(bottom: 14),
                       child: GestureDetector(
                         onTap: () {
-                          // Mark as read when tapped
-                          Get.find<ObNotificationsController>().markAsRead(item);
+                          // Mark as read and navigate
+                          Get.find<ObNotificationsController>().handleNotificationTap(item);
                         },
                         child: _NotificationCard(item: item),
                       ),

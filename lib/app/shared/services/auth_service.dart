@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' show basename;
 
 import '../config/env_config.dart';
 
@@ -1289,6 +1291,27 @@ class AuthService extends GetxService {
     return false;
   }
 
+  /// WebSocket URL for real-time notifications
+  /// Connect to: ws://hostname/ws?token=xxx
+  /// 
+  /// Format notifikasi real-time:
+  /// - LAPORAN_BARU, LAPORAN_DIKERJAKAN, LAPORAN_SELESAI
+  /// - GABUNG_LAPORAN, GABUNG_DISETUJUI, GABUNG_DIBATALKAN
+  /// - KELUAR_KOLABORASI, DIKELUARKAN_KOLABORASI
+  /// - LAPORAN_DIBATALKAN
+  String get webSocketUrl {
+    final tokenValue = token.value;
+    if (tokenValue == null || tokenValue.isEmpty) {
+      return '';
+    }
+    
+    // Convert http/https to ws/wss
+    final baseWsUrl = baseUrl
+        .replaceFirst('http://', 'ws://')
+        .replaceFirst('https://', 'wss://');
+    return '$baseWsUrl/ws?token=$tokenValue';
+  }
+
   Uri notificationWebSocketUri() {
     final apiUri = Uri.parse(baseUrl);
     final currentToken = token.value ?? '';
@@ -1715,86 +1738,57 @@ class AuthService extends GetxService {
       
       debugPrint('OB User ID: $obUserId, Name: $obUserName');
       
-      // Based on API doc: PATCH /api/ob/laporan/{laporan_id}
-      // Body: {status: "PENDING"} → backend side effect: status becomes IN_PROGRESS
-      // This is confusing but matches API doc behavior
+      // API Documentation: PATCH /api/ob/laporan/{laporan_id}
+      // Request body should be minimal - backend handles the state transition
+      // and sends WebSocket notification (LAPORAN_DIKERJAKAN)
       
-      final payloads = [
-        // Try with PENDING first (backend will convert to IN_PROGRESS)
-        {'status': 'PENDING'},
-        // Alternative: try IN_PROGRESS directly
-        {'status': 'IN_PROGRESS'},
-        // Try PROSES (Indonesian)
-        {'status': 'PROSES'},
-        // Try with ob_id included
-        {'status': 'PENDING', 'ob_id': obUserId},
-        // Try with dikerjakan_at
-        {
-          'status': 'PENDING',
-          'ob_id': obUserId,
-          'dikerjakan_at': DateTime.now().toIso8601String(),
-        },
-      ];
+      final payload = <String, dynamic>{};
+      
+      debugPrint('PATCH /api/ob/laporan/$reportId');
+      debugPrint('Payload: ${payload.isEmpty ? "empty body" : payload.keys.join(", ")}');
 
-      Response<dynamic>? lastResponse;
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId',
+        payload,
+        contentType: 'application/json',
+        headers: authHeaders(extra: const {'Content-Type': 'application/json'}),
+      );
 
-      for (var i = 0; i < payloads.length; i++) {
-        final payload = payloads[i];
-        debugPrint('Attempt ${i + 1}/${payloads.length}: PATCH /api/ob/laporan/$reportId');
-        debugPrint('Payload: ${payload.keys.join(", ")}');
-
-        final response = await _client.patch(
-          '/api/ob/laporan/$reportId',
-          payload,
-          contentType: 'application/json',
-          headers: authHeaders(extra: const {'Content-Type': 'application/json'}),
-        );
-
-        lastResponse = response;
-
-        if (_canUseOfflineFallback(response)) {
-          debugPrint('📴 Using offline fallback');
-          return _takeObReportOffline(reportId);
-        }
-
-        if (response.isOk || response.statusCode == 201) {
-          debugPrint('✅ Report taken successfully with payload ${i + 1}');
-          final body = _responseBodyAsMap(response.body, response.bodyString) ??
-              <String, dynamic>{'success': true};
-          
-          // Log the response for debugging
-          debugPrint('Response: ${response.bodyString?.substring(0, response.bodyString!.length > 200 ? 200 : response.bodyString!.length)}');
-          
-          return body;
-        }
-
-        // Log why this attempt failed
-        final statusCode = response.statusCode;
-        if (statusCode == 400) {
-          debugPrint('❌ Bad request (400) - trying next payload variant');
-          continue;
-        } else if (statusCode == 404) {
-          debugPrint('❌ Report not found (404)');
-          break;
-        } else if (statusCode == 403) {
-          debugPrint('🔒 Forbidden (403) - OB may not have permission');
-          break;
-        } else if (statusCode == 409) {
-          debugPrint('⚠️ Conflict (409) - Report may already be taken');
-          break;
-        } else {
-          debugPrint('❌ Failed with status $statusCode');
-        }
+      if (_canUseOfflineFallback(response)) {
+        debugPrint('📴 Using offline fallback');
+        return _takeObReportOffline(reportId);
       }
 
-      // All attempts failed, construct error message
-      final errorResponse = lastResponse!;
+      // Handle successful response (200 or 201)
+      if (response.isOk || response.statusCode == 201) {
+        debugPrint('✅ Report taken successfully');
+        final body = _responseBodyAsMap(response.body, response.bodyString) ??
+            <String, dynamic>{'success': true};
+        
+        // Log the response for debugging
+        final responsePreview = response.bodyString?.substring(
+          0, 
+          response.bodyString!.length > 200 ? 200 : response.bodyString!.length
+        );
+        debugPrint('Response: $responsePreview');
+        
+        return body;
+      }
+
+      // Handle error responses
+      final statusCode = response.statusCode;
       
-      if (errorResponse.statusCode == 404) {
+      if (statusCode == 404) {
+        debugPrint('❌ Report not found (404)');
         _lastRequestError = 'Laporan tidak ditemukan atau sudah dihapus.';
-      } else if (errorResponse.statusCode == 409) {
+      } else if (statusCode == 403) {
+        debugPrint('🔒 Forbidden (403) - OB may not have permission');
+        _lastRequestError = 'Anda tidak memiliki akses untuk mengambil laporan ini.';
+      } else if (statusCode == 409) {
+        debugPrint('⚠️ Conflict (409) - Report may already be taken');
+        
         // Extract who took the report
-        final body = _responseBodyAsMap(errorResponse.body, errorResponse.bodyString);
+        final body = _responseBodyAsMap(response.body, response.bodyString);
         final takenBy = _firstTextFromSources([
           body,
           _asMap(body?['data']),
@@ -1806,8 +1800,20 @@ class AuthService extends GetxService {
         _lastRequestError = takenBy != null
             ? 'Laporan ini sudah diambil oleh $takenBy.'
             : 'Laporan ini sudah diambil oleh OB lain.';
+      } else if (statusCode == 400) {
+        debugPrint('❌ Bad request (400)');
+        final body = _responseBodyAsMap(response.body, response.bodyString);
+        final errorMessage = _firstTextFromSources([
+          body,
+          _asMap(body?['errors']),
+        ], const ['message', 'error', 'detail']);
+        _lastRequestError = errorMessage ?? 'Format laporan_id tidak valid.';
+      } else if (statusCode == 401) {
+        debugPrint('🔐 Unauthorized (401)');
+        _lastRequestError = 'Sesi Anda telah berakhir. Silakan login kembali.';
       } else {
-        _lastRequestError = _takeReportErrorMessage(errorResponse) ??
+        debugPrint('❌ Failed with status $statusCode');
+        _lastRequestError = _takeReportErrorMessage(response) ??
             'Gagal mengambil laporan. Coba muat ulang daftar laporan.';
       }
 
@@ -1825,24 +1831,6 @@ class AuthService extends GetxService {
       _lastRequestError = 'Tidak dapat menghubungi server untuk mengambil laporan.';
       return null;
     }
-  }
-
-  bool _shouldTryNextTakeReportRequest(Response<dynamic> response) {
-    final statusCode = response.statusCode;
-    if (statusCode == 401 || statusCode == 403 || statusCode == 409) {
-      return false;
-    }
-    if (statusCode == 404 || statusCode == 405 || statusCode == 415) {
-      return true;
-    }
-
-    final message = _errorMessageFromResponse(response)?.toLowerCase() ?? '';
-    return message.contains('invalid data format') ||
-        message.contains('format data') ||
-        message.contains('validation') ||
-        message.contains('validasi') ||
-        message.contains('required') ||
-        message.contains('wajib');
   }
 
   Map<String, dynamic>? _takeObReportOffline(String reportId) {
@@ -1867,6 +1855,457 @@ class AuthService extends GetxService {
     };
   }
 
+  /// Cancel OB Report
+  /// API Documentation: POST /api/ob/laporan/{laporan_id}/batalkan
+  /// Parameters:
+  /// - reportId: ID laporan yang akan dibatalkan
+  /// - catatan: Catatan pembatalan (min 3 karakter)
+  /// - fotoSelesai: List foto bukti pembatalan
+  /// 
+  /// Side effects:
+  /// - status → DIBATALKAN
+  /// - ob_id → null (laporan bisa diambil OB lain)
+  /// - dikerjakan_at → 0 (di-set ke waktu awal/0)
+  /// - alasan_gagal → diisi dari catatan pembatalan
+  /// - WebSocket notification: LAPORAN_DIBATALKAN
+  Future<Map<String, dynamic>?> cancelObReport({
+    required String reportId,
+    required String catatan,
+    List<String>? fotoSelesai,
+  }) async {
+    _lastRequestError = null;
+
+    try {
+      debugPrint('🚫 OB canceling report: $reportId');
+      debugPrint('Catatan: $catatan');
+      
+      // Validate catatan (min 3 characters)
+      if (catatan.trim().length < 3) {
+        _lastRequestError = 'Catatan pembatalan minimal 3 karakter.';
+        debugPrint('❌ Validation failed: $_lastRequestError');
+        return null;
+      }
+      
+      // Prepare multipart/form-data request body
+      final formData = FormData({
+        'catatan': catatan.trim(),
+      });
+      
+      // Add photos if provided
+      if (fotoSelesai != null && fotoSelesai.isNotEmpty) {
+        debugPrint('Adding ${fotoSelesai.length} photo(s)');
+        for (var i = 0; i < fotoSelesai.length; i++) {
+          final photoPath = fotoSelesai[i];
+          
+          try {
+            // Check if it's a base64 or URL string
+            if (photoPath.startsWith('data:image/') || photoPath.startsWith('http')) {
+              // For base64/URL, we'll send it as a regular field instead of file
+              // Backend should handle this appropriately
+              formData.fields.add(MapEntry('foto_selesai[$i]', photoPath));
+              debugPrint('Added photo as string (base64/URL)');
+            } else {
+              // File path, verify exists and upload
+              final file = File(photoPath);
+              if (await file.exists()) {
+                formData.files.add(MapEntry(
+                  'foto_selesai[$i]',
+                  MultipartFile(photoPath, filename: basename(photoPath)),
+                ));
+                debugPrint('Added photo file: ${basename(photoPath)}');
+              } else {
+                debugPrint('⚠️ Photo file not found: $photoPath');
+              }
+            }
+          } catch (e) {
+            debugPrint('⚠️ Error adding photo: $e');
+          }
+        }
+      }
+      
+      debugPrint('POST /api/ob/laporan/$reportId/batalkan');
+      
+      final response = await _client.post(
+        '/api/ob/laporan/$reportId/batalkan',
+        formData,
+        headers: authHeaders(),
+      );
+
+      if (_canUseOfflineFallback(response)) {
+        debugPrint('📴 Using offline fallback');
+        return _cancelObReportOffline(reportId, catatan);
+      }
+
+      // Handle successful response (200 or 201)
+      if (response.isOk || response.statusCode == 201) {
+        debugPrint('✅ Report cancelled successfully');
+        final body = _responseBodyAsMap(response.body, response.bodyString) ??
+            <String, dynamic>{'success': true};
+        
+        // Log the response for debugging
+        final responsePreview = response.bodyString?.substring(
+          0, 
+          response.bodyString!.length > 200 ? 200 : response.bodyString!.length
+        );
+        debugPrint('Response: $responsePreview');
+        
+        return body;
+      }
+
+      // Handle error responses
+      final statusCode = response.statusCode;
+      
+      if (statusCode == 404) {
+        debugPrint('❌ Report not found (404)');
+        _lastRequestError = 'Laporan tidak ditemukan atau sudah dihapus.';
+      } else if (statusCode == 403) {
+        debugPrint('🔒 Forbidden (403) - Not OB owner');
+        _lastRequestError = 'Anda tidak memiliki akses untuk membatalkan laporan ini. Hanya OB yang mengambil laporan yang dapat membatalkannya.';
+      } else if (statusCode == 400) {
+        debugPrint('❌ Bad request (400)');
+        final body = _responseBodyAsMap(response.body, response.bodyString);
+        final errorMessage = _firstTextFromSources([
+          body,
+          _asMap(body?['errors']),
+        ], const ['message', 'error', 'detail', 'catatan']);
+        _lastRequestError = errorMessage ?? 'Data pembatalan tidak valid.';
+      } else if (statusCode == 401) {
+        debugPrint('🔐 Unauthorized (401)');
+        _lastRequestError = 'Sesi Anda telah berakhir. Silakan login kembali.';
+      } else {
+        debugPrint('❌ Failed with status $statusCode');
+        final body = _responseBodyAsMap(response.body, response.bodyString);
+        _lastRequestError = _firstTextFromSources([
+          body,
+        ], const ['message', 'error']) ?? 'Gagal membatalkan laporan.';
+      }
+
+      debugPrint('❌ Failed to cancel report: $_lastRequestError');
+      return null;
+      
+    } catch (e, stackTrace) {
+      debugPrint('💥 Exception canceling report: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      if (isOfflineMode) {
+        return _cancelObReportOffline(reportId, catatan);
+      }
+      
+      _lastRequestError = 'Tidak dapat menghubungi server untuk membatalkan laporan.';
+      return null;
+    }
+  }
+
+  Map<String, dynamic>? _cancelObReportOffline(String reportId, String catatan) {
+    debugPrint('Offline: Simulating canceling report...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index == -1) return null;
+
+    final updated = Map<String, dynamic>.from(_dummyReports[index]);
+    updated['status'] = 'DIBATALKAN';
+    updated['ob_id'] = null;
+    updated['ob_name'] = null;
+    updated['nama_ob'] = null;
+    updated['dikerjakan_at'] = '0';
+    updated['alasan_gagal'] = catatan;
+    updated['dibatalkan_at'] = DateTime.now().toIso8601String();
+    _dummyReports[index] = updated;
+
+    return {
+      'success': true,
+      'data': updated,
+      'message': 'Laporan berhasil dibatalkan (offline mode)',
+    };
+  }
+
+  // ============================================================
+  // COLLABORATION APIs
+  // ============================================================
+
+  /// Create and Join Collaboration (Auto flow)
+  /// When OB clicks collaboration button, this function:
+  /// 1. Automatically creates collaboration (if not exists)
+  /// 2. Joins the collaboration  
+  /// 3. All OB accounts will be notified via WebSocket (GABUNG_LAPORAN)
+  Future<Map<String, dynamic>?> createAndJoinCollaboration(String reportId) async {
+    debugPrint('🎯 Creating and joining collaboration for report: $reportId');
+    
+    // Send collaboration request (will create and join automatically)
+    final result = await sendCollaborationRequest(reportId);
+    
+    if (result != null) {
+      debugPrint('✅ Successfully created and joined collaboration');
+      return result;
+    }
+    
+    debugPrint('❌ Failed to create and join collaboration');
+    return null;
+  }
+
+  /// Get list of collaboration requests for a report
+  /// API: GET /api/ob/laporan/{laporan_id}/gabung
+  Future<Map<String, dynamic>?> getCollaborationRequests(String reportId) async {
+    try {
+      debugPrint('📋 Getting collaboration requests for report: $reportId');
+      final response = await _client.get(
+        '/api/ob/laporan/$reportId/gabung',
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Got collaboration requests');
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            <String, dynamic>{'success': true, 'data': []};
+      }
+
+      _lastRequestError = _errorMessageFromResponse(response) ?? 
+          'Gagal mengambil daftar permintaan gabung';
+      debugPrint('❌ Failed to get collaboration requests: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      debugPrint('💥 Error getting collaboration requests: $e');
+      _lastRequestError = 'Tidak dapat menghubungi server';
+      return null;
+    }
+  }
+
+  /// Send collaboration request to join a report
+  /// API: POST /api/ob/laporan/{laporan_id}/gabung
+  /// WebSocket: GABUNG_LAPORAN
+  Future<Map<String, dynamic>?> sendCollaborationRequest(String reportId) async {
+    try {
+      debugPrint('🤝 Sending collaboration request for report: $reportId');
+      final response = await _client.post(
+        '/api/ob/laporan/$reportId/gabung',
+        <String, dynamic>{},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk || response.statusCode == 201) {
+        debugPrint('✅ Collaboration request sent');
+        return _responseBodyAsMap(response.body, response.bodyString) ?? 
+            <String, dynamic>{'success': true};
+      }
+
+      _lastRequestError = _errorMessageFromResponse(response) ?? 
+          'Gagal mengirim permintaan gabung';
+      debugPrint('❌ Failed to send collaboration request: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      debugPrint('💥 Error sending collaboration request: $e');
+      _lastRequestError = 'Tidak dapat mengirim permintaan gabung';
+      return null;
+    }
+  }
+
+  /// Approve collaboration request (owner only)
+  /// API: PATCH /api/ob/laporan/{laporan_id}/gabung/{collaboration_id}/setujui
+  /// WebSocket: GABUNG_DISETUJUI
+  Future<Map<String, dynamic>?> approveCollaborationRequest({
+    required String reportId,
+    required String collaborationId,
+  }) async {
+    try {
+      debugPrint('✅ Approving collaboration request: $collaborationId for report: $reportId');
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/gabung/$collaborationId/setujui',
+        <String, dynamic>{},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Collaboration request approved');
+        return _responseBodyAsMap(response.body, response.bodyString) ?? 
+            <String, dynamic>{'success': true};
+      }
+
+      _lastRequestError = _errorMessageFromResponse(response) ?? 
+          'Gagal menyetujui permintaan';
+      debugPrint('❌ Failed to approve collaboration: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      debugPrint('💥 Error approving collaboration: $e');
+      _lastRequestError = 'Tidak dapat menyetujui permintaan';
+      return null;
+    }
+  }
+
+  /// Reject collaboration request (owner only)
+  /// API: PATCH /api/ob/laporan/{laporan_id}/gabung/{collaboration_id}/tolak
+  /// WebSocket: GABUNG_DIBATALKAN
+  Future<Map<String, dynamic>?> rejectCollaborationRequest({
+    required String reportId,
+    required String collaborationId,
+  }) async {
+    try {
+      debugPrint('❌ Rejecting collaboration request: $collaborationId for report: $reportId');
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/gabung/$collaborationId/tolak',
+        <String, dynamic>{},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Collaboration request rejected');
+        return _responseBodyAsMap(response.body, response.bodyString) ?? 
+            <String, dynamic>{'success': true};
+      }
+
+      _lastRequestError = _errorMessageFromResponse(response) ?? 
+          'Gagal menolak permintaan';
+      debugPrint('❌ Failed to reject collaboration: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      debugPrint('💥 Error rejecting collaboration: $e');
+      _lastRequestError = 'Tidak dapat menolak permintaan';
+      return null;
+    }
+  }
+
+  /// Leave collaboration (member only, not owner)
+  /// API: POST /api/ob/laporan/{laporan_id}/gabung/keluar
+  /// WebSocket: KELUAR_KOLABORASI
+  Future<Map<String, dynamic>?> leaveCollaboration(String reportId) async {
+    try {
+      debugPrint('🚪 Leaving collaboration for report: $reportId');
+      final response = await _client.post(
+        '/api/ob/laporan/$reportId/gabung/keluar',
+        <String, dynamic>{},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Successfully left collaboration');
+        return _responseBodyAsMap(response.body, response.bodyString) ?? 
+            <String, dynamic>{'success': true};
+      }
+
+      _lastRequestError = _errorMessageFromResponse(response) ?? 
+          'Gagal keluar dari kolaborasi';
+      debugPrint('❌ Failed to leave collaboration: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      debugPrint('💥 Error leaving collaboration: $e');
+      _lastRequestError = 'Tidak dapat keluar dari kolaborasi';
+      return null;
+    }
+  }
+
+  /// Remove member from collaboration (owner only)
+  /// API: PATCH /api/ob/laporan/{laporan_id}/gabung/{collaboration_id}/keluarkan
+  /// WebSocket: DIKELUARKAN_KOLABORASI
+  Future<Map<String, dynamic>?> removeCollaborationMember({
+    required String reportId,
+    required String collaborationId,
+  }) async {
+    try {
+      debugPrint('🚫 Removing member $collaborationId from collaboration for report: $reportId');
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/gabung/$collaborationId/keluarkan',
+        <String, dynamic>{},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Member removed from collaboration');
+        return _responseBodyAsMap(response.body, response.bodyString) ?? 
+            <String, dynamic>{'success': true};
+      }
+
+      _lastRequestError = _errorMessageFromResponse(response) ?? 
+          'Gagal mengeluarkan anggota';
+      debugPrint('❌ Failed to remove member: ${response.statusCode}');
+      return null;
+    } catch (e) {
+      debugPrint('💥 Error removing member: $e');
+      _lastRequestError = 'Tidak dapat mengeluarkan anggota';
+      return null;
+    }
+  }
+
+  /// Get Available Collaboration Reports
+  /// Returns list of reports that have active collaboration
+  /// Other OB can see these reports and join the collaboration
+  /// 
+  /// This function filters reports from dashboard that have:
+  /// - has_collaboration = true
+  /// - or kolaborasi = true
+  /// - or butuh_bantuan = true
+  Future<List<Map<String, dynamic>>> getAvailableCollaborationReports() async {
+    debugPrint('📋 Getting available collaboration reports');
+    
+    try {
+      // Get all OB reports from dashboard
+      final response = await getObReports();
+      
+      if (response == null) {
+        debugPrint('❌ Failed to get OB reports');
+        return [];
+      }
+      
+      final data = response['data'];
+      if (data == null) {
+        debugPrint('⚠️ No data in response');
+        return [];
+      }
+      
+      // Extract list of reports
+      List<Map<String, dynamic>> allReports = [];
+      if (data is List) {
+        allReports = data.map((e) => e as Map<String, dynamic>).toList();
+      } else if (data is Map) {
+        // Maybe data contains 'laporan' key
+        final laporanData = data['laporan'];
+        if (laporanData is List) {
+          allReports = laporanData.map((e) => e as Map<String, dynamic>).toList();
+        }
+      }
+      
+      // Filter reports that have active collaboration
+      final collaborationReports = allReports.where((report) {
+        final hasCollab = _boolValue(report, [
+          'has_collaboration',
+          'hasCollaboration',
+          'kolaborasi',
+          'butuh_bantuan',
+          'need_help',
+        ]);
+        
+        // Only include if collaboration is active
+        return hasCollab == true;
+      }).toList();
+      
+      debugPrint('✅ Found ${collaborationReports.length} collaboration reports');
+      return collaborationReports;
+      
+    } catch (e) {
+      debugPrint('💥 Error getting collaboration reports: $e');
+      return [];
+    }
+  }
+
+  /// Helper to get boolean value from multiple possible keys
+  bool? _boolValue(Map<String, dynamic>? source, List<String> keys) {
+    if (source == null) return null;
+    
+    for (final key in keys) {
+      final value = source[key];
+      if (value == null) continue;
+      
+      if (value is bool) return value;
+      if (value is int) return value == 1;
+      if (value is String) {
+        final lower = value.toLowerCase();
+        if (lower == 'true' || lower == '1' || lower == 'yes') return true;
+        if (lower == 'false' || lower == '0' || lower == 'no') return false;
+      }
+    }
+    
+    return null;
+  }
+
   Future<Map<String, dynamic>?> getObReports({
     int page = 1,
     int limit = 10,
@@ -1876,10 +2315,51 @@ class AuthService extends GetxService {
     debugPrint('Fetching OB reports: page=$page, limit=$limit');
 
     try {
-      // Based on API doc: GET /api/ob/dashboard returns checklist and laporan
-      debugPrint('Trying endpoint: /api/ob/dashboard');
+      // Try dedicated reports endpoint first for more complete data including reporter details
+      debugPrint('Trying endpoint: /api/ob/laporan');
       
-      final response = await _client.get(
+      var response = await _client.get(
+        '/api/ob/laporan',
+        query: {'page': page.toString(), 'limit': limit.toString()},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ /api/ob/laporan returned ${response.statusCode}');
+        final body = _responseBodyAsMap(response.body, response.bodyString) ?? _asMap(response.body);
+        
+        if (body != null) {
+          debugPrint('Response keys: ${body.keys.join(", ")}');
+          
+          // Extract data object
+          final data = _asMap(body['data']) ?? body;
+          debugPrint('Data keys: ${data.keys.join(", ")}');
+          
+          // Try to extract laporan from various possible locations
+          final laporan = _extractList(data, const [
+            'laporan',
+            'laporans', 
+            'reports',
+            'items',
+            'data',
+          ]);
+          
+          if (laporan != null && laporan.isNotEmpty) {
+            debugPrint('📦 Found ${laporan.length} laporan from dedicated endpoint');
+            return <String, dynamic>{
+              'success': true,
+              'data': laporan,
+            };
+          }
+        }
+      } else {
+        debugPrint('⚠️ /api/ob/laporan returned ${response.statusCode}, falling back to dashboard');
+      }
+
+      // Fallback to dashboard endpoint
+      debugPrint('Trying fallback endpoint: /api/ob/dashboard');
+      
+      response = await _client.get(
         '/api/ob/dashboard',
         headers: authHeaders(),
       );
@@ -1985,6 +2465,58 @@ class AuthService extends GetxService {
     return null;
   }
 
+  /// Get single OB report by ID
+  /// Based on API doc: PATCH /api/ob/laporan/{laporan_id}
+  /// This endpoint retrieves detailed information about a specific report
+  Future<Map<String, dynamic>?> getObReportById(String reportId) async {
+    _lastRequestError = null;
+
+    debugPrint('🔍 Fetching OB report by ID: $reportId');
+
+    try {
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId',
+        <String, dynamic>{}, // Empty body for fetch operation
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Report fetched successfully');
+        final body = _responseBodyAsMap(response.body, response.bodyString);
+        
+        if (body == null) {
+          debugPrint('⚠️ Response body is null');
+          return null;
+        }
+
+        return body;
+      }
+
+      // Handle error responses
+      if (response.statusCode == 404) {
+        debugPrint('❌ Report not found (404)');
+        _lastRequestError = 'Laporan tidak ditemukan';
+      } else if (response.statusCode == 403) {
+        debugPrint('🔒 Forbidden (403)');
+        _lastRequestError = 'Tidak ada akses ke laporan ini';
+      } else if (response.statusCode == 401) {
+        debugPrint('🔐 Unauthorized (401)');
+        _lastRequestError = 'Sesi berakhir, silakan login kembali';
+      } else {
+        debugPrint('❌ Failed with status ${response.statusCode}');
+        _lastRequestError = _extractErrorMessage(response.bodyString ?? '') 
+            ?? 'Gagal mengambil detail laporan';
+      }
+
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint('💥 Exception fetching report: $e');
+      debugPrint('Stack trace: $stackTrace');
+      _lastRequestError = 'Tidak dapat menghubungi server';
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> submitObReportHistory({
     required String reportId,
     required String note,
@@ -1998,7 +2530,8 @@ class AuthService extends GetxService {
       
       // Based on curl example: multiple -F "foto_selesai=@file.jpg" fields
       // This requires http.MultipartRequest, not GetConnect FormData
-      final uri = Uri.parse('$baseUrl/api/ob/laporan/$reportId/histori');
+      // API CHANGE: from /histori to direct POST /api/ob/laporan/{id}
+      final uri = Uri.parse('$baseUrl/api/ob/laporan/$reportId');
       final request = http.MultipartRequest('POST', uri);
       
       // Add headers
@@ -2045,7 +2578,7 @@ class AuthService extends GetxService {
       
       // WORKAROUND: Since backend endpoint is not working properly,
       // use offline fallback so users can still complete reports in UI
-      debugPrint('⚠️  Backend endpoint /histori not working, using offline fallback');
+      debugPrint('⚠️  Backend endpoint not working, using offline fallback');
       return _submitObReportHistoryOffline(reportId, note, photoPaths);
       
       /* Original error handling (disabled for workaround)
@@ -2156,17 +2689,22 @@ class AuthService extends GetxService {
       debugPrint('Rejecting OB report ID: $reportId');
       debugPrint('Reason: ${reason.substring(0, reason.length > 50 ? 50 : reason.length)}...');
       
-      // Based on API doc: POST /api/ob/laporan/{laporan_id}/tolak
-      // Body: catatan (string min 5 chars), foto_selesai (array[string])
-      final payload = {
+      // API CHANGE: from POST /api/ob/laporan/{id}/tolak 
+      //          to POST /api/ob/laporan/{id}/batalkan
+      // Body: catatan (string min 5 chars), foto_selesai (array[string] - optional)
+      // WebSocket: LAPORAN_DIBATALKAN (changed from LAPORAN_DITOLAK)
+      
+      // Use FormData (multipart) instead of JSON to match /batalkan endpoint
+      final formData = FormData({
         'catatan': reason.trim(),
-        'alasan_penolakan': reason.trim(), // Alternative field name
-      };
+      });
+      
+      debugPrint('POST /api/ob/laporan/$reportId/batalkan (multipart/form-data)');
       
       final response = await _client.post(
-        '/api/ob/laporan/$reportId/tolak',
-        payload,
-        headers: authHeaders(extra: const {'Content-Type': 'application/json'}),
+        '/api/ob/laporan/$reportId/batalkan',
+        formData,
+        headers: authHeaders(),
       );
 
       if (_canUseOfflineFallback(response)) {
@@ -2204,8 +2742,9 @@ class AuthService extends GetxService {
     if (index == -1) return null;
 
     final updated = Map<String, dynamic>.from(_dummyReports[index]);
-    updated['status'] = 'tolak';
+    updated['status'] = 'dibatalkan'; // Changed from 'tolak' to match LAPORAN_DIBATALKAN
     updated['reason'] = reason;
+    updated['alasan_gagal'] = reason;
     _dummyReports[index] = updated;
 
     return {
@@ -2215,6 +2754,271 @@ class AuthService extends GetxService {
   }
 
   // ==================== KOLABORASI API ====================
+
+  /// Toggle collaboration status for a report (OB owner only)
+  /// API: PATCH /api/ob/laporan/{laporan_id}/kolaborasi
+  /// Request body: {"is_open": true} to open, {"is_open": false} to close
+  /// When opened, sends notification to all OB accounts
+  /// WebSocket: LAPORAN_DIBUKA_KOLABORASI (when opened)
+  Future<Map<String, dynamic>?> toggleCollaboration(
+    String reportId, {
+    required bool isOpen,
+  }) async {
+    _lastRequestError = null;
+
+    try {
+      debugPrint('🔄 [API] Toggling collaboration for report: $reportId');
+      debugPrint('🔄 [API] Setting is_open to: $isOpen');
+      debugPrint('🔄 [API] Endpoint: PATCH /api/ob/laporan/$reportId/kolaborasi');
+      
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/kolaborasi',
+        jsonEncode({'is_open': isOpen}),
+        headers: authHeaders(),
+      );
+
+      debugPrint('📡 [API] Response status: ${response.statusCode}');
+      debugPrint('📡 [API] Response body length: ${response.bodyString?.length ?? 0}');
+
+      if (_canUseOfflineFallback(response)) {
+        debugPrint('📴 [API] Using offline fallback');
+        return _toggleCollaborationOffline(reportId);
+      }
+
+      if (response.isOk || response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('✅ [API] Collaboration toggled successfully');
+        final body = _responseBodyAsMap(response.body, response.bodyString) ??
+            <String, dynamic>{'success': true};
+        
+        // Log the FULL response for debugging
+        debugPrint('📋 [API] Full response body: ${response.bodyString}');
+        debugPrint('📋 [API] Parsed body keys: ${body.keys.join(", ")}');
+        
+        // Extract collaboration status from response
+        // Backend may return: { success, message, data: { is_kolaborasi_open, kolaborasi } }
+        final data = _asMap(body['data']);
+        debugPrint('🔍 [API] Data object: $data');
+        debugPrint('🔍 [API] Data keys: ${data?.keys.join(", ") ?? "null"}');
+        
+        final hasCollab = data?['is_kolaborasi_open'] ??     // Backend field (priority)
+                         data?['kolaborasi'] ?? 
+                         data?['has_collaboration'] ??
+                         body['is_kolaborasi_open'] ??
+                         body['kolaborasi'] ??
+                         body['has_collaboration'];
+        
+        debugPrint('📊 [API] Extracted collaboration status: $hasCollab (type: ${hasCollab.runtimeType})');
+        
+        if (hasCollab != null) {
+          body['has_collaboration'] = hasCollab;
+          debugPrint('✅ [API] Set has_collaboration in body: $hasCollab');
+        } else {
+          debugPrint('⚠️ [API] No collaboration status found in response!');
+        }
+        
+        return body;
+      }
+
+      // Handle error responses
+      final statusCode = response.statusCode;
+      
+      debugPrint('❌ [API] Request failed with status: $statusCode');
+      
+      if (statusCode == 404) {
+        debugPrint('❌ [API] Report not found (404)');
+        _lastRequestError = 'Laporan tidak ditemukan.';
+      } else if (statusCode == 403) {
+        debugPrint('🔒 [API] Forbidden (403) - Not owner');
+        _lastRequestError = 'Hanya OB pemilik laporan yang bisa mengatur kolaborasi.';
+      } else {
+        _lastRequestError = _errorMessageFromResponse(response) ??
+            'Gagal mengubah status kolaborasi.';
+      }
+
+      debugPrint(
+        '❌ [API] Error response: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint('💥 [API] Exception toggling collaboration: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (isOfflineMode) {
+        return _toggleCollaborationOffline(reportId);
+      }
+      _lastRequestError = 'Tidak dapat menghubungi server.';
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _toggleCollaborationOffline(String reportId) {
+    debugPrint('Offline: Simulating toggle collaboration...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index != -1) {
+      final updated = Map<String, dynamic>.from(_dummyReports[index]);
+      final currentStatus = updated['has_collaboration'] == true || updated['kolaborasi'] == true;
+      final newStatus = !currentStatus;
+      
+      updated['kolaborasi'] = newStatus;
+      updated['has_collaboration'] = newStatus;
+      _dummyReports[index] = updated;
+      
+      return {
+        'success': true,
+        'message': newStatus 
+            ? 'Kolaborasi dibuka. Notifikasi terkirim ke semua OB.' 
+            : 'Kolaborasi ditutup.',
+        'data': {
+          'kolaborasi': newStatus,
+          'has_collaboration': newStatus,
+        }
+      };
+    }
+    return {'success': false, 'message': 'Report not found offline'};
+  }
+
+  /// Close collaboration for a report (OB owner only)
+  /// Based on API doc: PATCH /api/ob/laporan/{laporan_id}/kolaborasi
+  /// Request body: {"is_open": false}
+  /// This closes collaboration on the report
+  Future<Map<String, dynamic>?> closeCollaboration(String reportId) async {
+    _lastRequestError = null;
+
+    try {
+      debugPrint('🔒 Closing collaboration for report: $reportId');
+      
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/kolaborasi',
+        jsonEncode({'is_open': false}),
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Collaboration closed successfully');
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            {'success': true, 'message': 'Kolaborasi berhasil ditutup'};
+      }
+
+      if (_canUseOfflineFallback(response)) {
+        debugPrint('📴 Using offline fallback for close collaboration');
+        return _closeCollaborationOffline(reportId);
+      }
+
+      // Handle error responses
+      if (response.statusCode == 403) {
+        _lastRequestError = 'Hanya OB pemilik laporan yang bisa menutup kolaborasi';
+      } else if (response.statusCode == 404) {
+        _lastRequestError = 'Laporan tidak ditemukan';
+      } else {
+        _lastRequestError = _extractErrorMessage(response.bodyString ?? '')
+            ?? 'Gagal menutup kolaborasi';
+      }
+      
+      debugPrint('❌ Failed to close collaboration: $_lastRequestError');
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint('💥 Exception closing collaboration: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (isOfflineMode) return _closeCollaborationOffline(reportId);
+      _lastRequestError = 'Tidak dapat menghubungi server untuk menutup kolaborasi';
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _closeCollaborationOffline(String reportId) {
+    debugPrint('Offline: Simulating close collaboration...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index != -1) {
+      final updated = Map<String, dynamic>.from(_dummyReports[index]);
+      updated['kolaborasi'] = false;
+      updated['has_collaboration'] = false;
+      updated['is_kolaborasi_open'] = false;
+      _dummyReports[index] = updated;
+      
+      return {
+        'success': true,
+        'message': 'Kolaborasi ditutup (offline mode)',
+        'data': {
+          'is_kolaborasi_open': false,
+        }
+      };
+    }
+    return {'success': false, 'message': 'Report not found offline'};
+  }
+
+  /// Open collaboration for a report (OB owner only)
+  /// Based on API doc: PATCH /api/ob/laporan/{laporan_id}/kolaborasi
+  /// Request body: {"is_open": true}
+  /// This opens collaboration on the report and sends notification to all OB accounts
+  Future<Map<String, dynamic>?> openCollaboration(String reportId) async {
+    _lastRequestError = null;
+
+    try {
+      debugPrint('🔓 Opening collaboration for report: $reportId');
+      
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/kolaborasi',
+        jsonEncode({'is_open': true}),
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Collaboration opened successfully');
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            {'success': true, 'message': 'Kolaborasi berhasil dibuka'};
+      }
+
+      if (_canUseOfflineFallback(response)) {
+        debugPrint('📴 Using offline fallback for open collaboration');
+        return _openCollaborationOffline(reportId);
+      }
+
+      // Handle error responses
+      if (response.statusCode == 403) {
+        _lastRequestError = 'Hanya OB pemilik laporan yang bisa membuka kolaborasi';
+      } else if (response.statusCode == 404) {
+        _lastRequestError = 'Laporan tidak ditemukan';
+      } else {
+        _lastRequestError = _extractErrorMessage(response.bodyString ?? '')
+            ?? 'Gagal membuka kolaborasi';
+      }
+      
+      debugPrint('❌ Failed to open collaboration: $_lastRequestError');
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint('💥 Exception opening collaboration: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (isOfflineMode) return _openCollaborationOffline(reportId);
+      _lastRequestError = 'Tidak dapat menghubungi server untuk membuka kolaborasi';
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _openCollaborationOffline(String reportId) {
+    debugPrint('Offline: Simulating open collaboration...');
+    final index = _dummyReports.indexWhere(
+      (r) => r['id'] == reportId || r['laporan_id'] == reportId,
+    );
+    if (index != -1) {
+      final updated = Map<String, dynamic>.from(_dummyReports[index]);
+      updated['kolaborasi'] = true;
+      updated['has_collaboration'] = true;
+      updated['is_kolaborasi_open'] = true;
+      _dummyReports[index] = updated;
+      
+      return {
+        'success': true,
+        'message': 'Kolaborasi dibuka (offline mode)',
+        'data': {
+          'is_kolaborasi_open': true,
+        }
+      };
+    }
+    return {'success': false, 'message': 'Report not found offline'};
+  }
 
   /// Request collaboration on a report
   /// Based on API doc: POST /api/ob/laporan/{laporan_id}/kolaborasi
@@ -2492,6 +3296,60 @@ class AuthService extends GetxService {
     return {
       'success': true,
       'message': 'Kolaborasi dibatalkan (offline mode)',
+    };
+  }
+
+  /// Update collaboration notes (owner only)
+  /// Based on API doc: PATCH /api/ob/laporan/{laporan_id}/kolaborasi/notes
+  Future<Map<String, dynamic>?> updateCollaborationNotes({
+    required String reportId,
+    required String notes,
+  }) async {
+    _lastRequestError = null;
+
+    try {
+      debugPrint('📝 Updating collaboration notes for report: $reportId');
+      debugPrint('   Notes: $notes');
+
+      final response = await _client.patch(
+        '/api/ob/laporan/$reportId/kolaborasi/catatan',
+        jsonEncode({'catatan': notes}),
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        debugPrint('✅ Collaboration notes updated successfully');
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            {'success': true, 'message': 'Catatan berhasil diperbarui'};
+      }
+
+      if (_canUseOfflineFallback(response)) {
+        debugPrint('📴 Using offline fallback for update notes');
+        return _updateCollaborationNotesOffline(reportId, notes);
+      }
+
+      _lastRequestError = _extractErrorMessage(response.bodyString ?? '')
+          ?? 'Gagal memperbarui catatan';
+      debugPrint('❌ Failed to update notes: $_lastRequestError');
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint('💥 Exception updating collaboration notes: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (isOfflineMode) return _updateCollaborationNotesOffline(reportId, notes);
+      _lastRequestError =
+          'Tidak dapat menghubungi server untuk memperbarui catatan.';
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _updateCollaborationNotesOffline(
+    String reportId,
+    String notes,
+  ) {
+    debugPrint('Offline: Simulating update collaboration notes...');
+    return {
+      'success': true,
+      'message': 'Catatan diperbarui (offline mode)',
     };
   }
 
@@ -3080,113 +3938,6 @@ class AuthService extends GetxService {
     if (username.startsWith('hr')) return 'HR';
     if (username.startsWith('karyawan')) return 'KARYAWAN';
     return null;
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════════
-  // COLLABORATION / GABUNG ENDPOINTS (NEW API)
-  // ══════════════════════════════════════════════════════════════════════════════
-
-  /// Get list of collaboration requests for a report
-  Future<Map<String, dynamic>?> getCollaborationRequests(String reportId) async {
-    try {
-      debugPrint('Getting collaboration requests for report: $reportId');
-      final response = await _client.get(
-        '/api/ob/laporan/$reportId/gabung',
-        headers: authHeaders(),
-      );
-
-      if (response.isOk) {
-        debugPrint('✅ Got collaboration requests');
-        return _asMap(response.body);
-      }
-
-      debugPrint('Failed to get collaboration requests: ${response.statusCode}');
-      return null;
-    } catch (e) {
-      debugPrint('Error getting collaboration requests: $e');
-      return null;
-    }
-  }
-
-  /// Send collaboration request to join a report
-  Future<Map<String, dynamic>?> sendCollaborationRequest(String reportId) async {
-    try {
-      debugPrint('Sending collaboration request for report: $reportId');
-      final response = await _client.post(
-        '/api/ob/laporan/$reportId/gabung',
-        {},
-        headers: authHeaders(),
-      );
-
-      if (response.isOk || response.statusCode == 201) {
-        debugPrint('✅ Collaboration request sent');
-        return _asMap(response.body) ?? {'success': true};
-      }
-
-      _lastRequestError = _errorMessageFromResponse(response) ?? 'Gagal mengirim permintaan gabung';
-      debugPrint('Failed to send collaboration request: ${response.statusCode} - ${response.bodyString}');
-      return null;
-    } catch (e) {
-      debugPrint('Error sending collaboration request: $e');
-      _lastRequestError = 'Tidak dapat mengirim permintaan gabung';
-      return null;
-    }
-  }
-
-  /// Approve collaboration request (owner only)
-  Future<Map<String, dynamic>?> approveCollaborationRequest({
-    required String reportId,
-    required String collaborationId,
-  }) async {
-    try {
-      debugPrint('Approving collaboration request: $collaborationId for report: $reportId');
-      final response = await _client.patch(
-        '/api/ob/laporan/$reportId/gabung/$collaborationId/setujui',
-        {},
-        headers: authHeaders(),
-      );
-
-      if (response.isOk) {
-        debugPrint('✅ Collaboration request approved');
-        return _asMap(response.body) ?? {'success': true};
-      }
-
-      _lastRequestError = _errorMessageFromResponse(response) ?? 'Gagal menyetujui permintaan';
-      debugPrint('Failed to approve collaboration: ${response.statusCode} - ${response.bodyString}');
-      return null;
-    } catch (e) {
-      debugPrint('Error approving collaboration: $e');
-      _lastRequestError = 'Tidak dapat menyetujui permintaan';
-      return null;
-    }
-  }
-
-  /// Reject collaboration request (owner only)
-  Future<Map<String, dynamic>?> rejectCollaborationRequest({
-    required String reportId,
-    required String collaborationId,
-  }) async {
-    try {
-      debugPrint('Rejecting collaboration request: $collaborationId for report: $reportId');
-      final response = await _client.patch(
-        '/api/ob/laporan/$reportId/gabung/$collaborationId/tolak',
-        {},
-        headers: authHeaders(),
-      );
-
-      if (response.isOk) {
-        debugPrint('✅ Collaboration request rejected');
-        return _asMap(response.body) ?? {'success': true};
-      }
-
-      _lastRequestError = _errorMessageFromResponse(response) ?? 'Gagal menolak permintaan';
-      debugPrint('Failed to reject collaboration: ${response.statusCode} - ${response.bodyString}');
-      return null;
-    } catch (e) {
-      debugPrint('Error rejecting collaboration: $e');
-      _lastRequestError = 'Tidak dapat menolak permintaan';
-      return null;
-    }
   }
 
 }

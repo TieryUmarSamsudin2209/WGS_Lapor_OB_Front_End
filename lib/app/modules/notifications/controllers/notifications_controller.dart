@@ -8,7 +8,7 @@ import '../../../shared/services/notification_socket.dart';
 
 class NotificationItem {
   const NotificationItem({
-    required this.id,
+    this.id,
     required this.type,
     required this.title,
     required this.message,
@@ -16,9 +16,12 @@ class NotificationItem {
     required this.timeLabel,
     required this.createdAt,
     this.isUnread = true,
+    this.reportId,
+    this.laporanId,
+    this.data,
   });
 
-  final String id;
+  final String? id;
   final String type;
   final String title;
   final String message;
@@ -26,6 +29,9 @@ class NotificationItem {
   final String timeLabel;
   final DateTime createdAt;
   final bool isUnread;
+  final String? reportId;
+  final String? laporanId;
+  final Map<String, dynamic>? data;
 }
 
 class NotificationsController extends GetxController {
@@ -69,21 +75,52 @@ class NotificationsController extends GetxController {
   }
 
   void _handleSocketMessage(Map<String, dynamic> message) {
-    final notification = _notificationFromApi(message, 'TERBARU');
-    if (notification != null) {
-      notifications.insert(0, notification);
-    }
+    final item = _asMap(message) ?? {};
+    if (item.isEmpty) return;
+    final id = item['id']?.toString() ?? '';
+    final type = item['tipe']?.toString() ?? item['type']?.toString() ?? 'system';
+    final title = item['judul']?.toString() ?? item['title']?.toString() ?? 'Notifikasi';
+    final body = item['pesan']?.toString() ?? item['message']?.toString() ?? '';
+    final readAt = item['read_at'];
+    final createdAt = _parseDate(item['created_at']?.toString());
+    final isUnread = readAt == null || readAt.toString().isEmpty || readAt.toString() == 'null';
+    final reportId = item['laporan_id']?.toString() ?? item['report_id']?.toString();
+    final laporanId = item['laporan_id']?.toString();
+
+    notifications.insert(0, NotificationItem(
+      id: id.isNotEmpty ? id : null,
+      type: type,
+      title: title,
+      message: body,
+      section: 'TERBARU',
+      timeLabel: _formatTimeAgo(createdAt),
+      createdAt: createdAt,
+      isUnread: isUnread,
+      reportId: reportId,
+      laporanId: laporanId,
+      data: item,
+    ));
   }
 
   Future<void> loadNotifications() async {
     isLoading.value = true;
+
     try {
       final response = await _authService.getNotifications();
-      if (response != null) {
-        _parseApiResponse(response);
+
+      if (response == null) {
+        _showDummyNotifications();
         return;
       }
-      _showDummyNotifications();
+
+      final items = _parseNotificationsFromApi(response);
+
+      if (items.isEmpty) {
+        _showDummyNotifications();
+        return;
+      }
+
+      notifications.value = items;
     } catch (_) {
       _showDummyNotifications();
     } finally {
@@ -91,59 +128,61 @@ class NotificationsController extends GetxController {
     }
   }
 
-  void _parseApiResponse(Map<String, dynamic> response) {
+  List<NotificationItem> _parseNotificationsFromApi(Map<String, dynamic> response) {
     final data = _asMap(response['data']);
-    if (data == null) {
-      _showDummyNotifications();
-      return;
-    }
+    final List<dynamic> allNotifications = [];
 
-    final items = <NotificationItem>[];
-
-    final hariIni = _asList(data['hari_ini']);
-    if (hariIni != null) {
-      for (final raw in hariIni) {
-        final item = _notificationFromApi(raw, 'TERBARU');
-        if (item != null) items.add(item);
+    if (data != null) {
+      final hariIni = data['hari_ini'];
+      if (hariIni is List) {
+        allNotifications.addAll(hariIni);
+      }
+      final kemarin = data['kemarin'];
+      if (kemarin is List) {
+        allNotifications.addAll(kemarin);
+      }
+      final sebelumnya = data['sebelumnya'];
+      if (sebelumnya is List) {
+        allNotifications.addAll(sebelumnya);
       }
     }
 
-    final kemarin = _asList(data['kemarin']);
-    if (kemarin != null) {
-      for (final raw in kemarin) {
-        final item = _notificationFromApi(raw, 'SEBELUMNYA');
-        if (item != null) items.add(item);
-      }
+    final notifList = data?['mari_list'] as List? ??
+                     response['mari_list'] as List? ??
+                     data?['notifications'] as List? ??
+                     response['notifications'] as List?;
+
+    if (notifList != null) {
+      allNotifications.addAll(notifList);
     }
 
-    if (items.isEmpty) {
-      _showDummyNotifications();
-      return;
-    }
+    return allNotifications.whereType<Map>().map((rawItem) {
+      final item = _asMap(rawItem) ?? const {};
+      final id = item['id']?.toString() ?? '';
+      final type = _mapNotificationType(item['tipe']?.toString() ?? item['type']?.toString() ?? '');
+      final title = item['judul']?.toString() ?? item['title']?.toString() ?? 'Notifikasi';
+      final message = item['pesan']?.toString() ?? item['message']?.toString() ?? '';
+      final readAt = item['read_at'];
+      final createdAt = _parseDate(item['created_at']?.toString());
+      final isUnread = readAt == null || readAt.toString().isEmpty || readAt.toString() == 'null';
+      final reportId = item['laporan_id']?.toString() ?? item['report_id']?.toString();
+      final laporanId = item['laporan_id']?.toString();
 
-    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    notifications.value = items;
-  }
-
-  NotificationItem? _notificationFromApi(dynamic raw, String section) {
-    final map = _asMap(raw);
-    if (map == null) return null;
-
-    final id = map['id']?.toString() ?? '';
-    if (id.isEmpty) return null;
-
-    return NotificationItem(
-      id: id,
-      type: _mapNotificationType(map['tipe']?.toString() ?? ''),
-      title: map['judul']?.toString() ?? '',
-      message: map['pesan']?.toString() ?? '',
-      section: section,
-      timeLabel: _formatTimeAgo(
-        _parseDate(map['created_at']?.toString()),
-      ),
-      createdAt: _parseDate(map['created_at']?.toString()),
-      isUnread: !_isTruthy(map['is_read']),
-    );
+      return NotificationItem(
+        id: id.isNotEmpty ? id : null,
+        type: type,
+        title: title,
+        message: message,
+        section: _sectionFromDate(createdAt),
+        timeLabel: _formatTimeAgo(createdAt),
+        createdAt: createdAt,
+        isUnread: isUnread,
+        reportId: reportId,
+        laporanId: laporanId,
+        data: item,
+      );
+    }).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   String _mapNotificationType(String tipe) {
@@ -170,9 +209,18 @@ class NotificationsController extends GetxController {
     }
   }
 
+  String _sectionFromDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(date.year, date.month, date.day);
+    if (day == today) return 'TERBARU';
+    if (day == today.subtract(const Duration(days: 1))) return 'KEMARIN';
+    return 'SEBELUMNYA';
+  }
+
   String _formatTimeAgo(DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'Baru';
+    if (diff.inMinutes < 1) return 'Baru saja';
     if (diff.inMinutes < 60) return '${diff.inMinutes} mnt yang lalu';
     if (diff.inHours < 24) return '${diff.inHours} jam yang lalu';
     if (diff.inDays == 1) return 'Kemarin';
@@ -193,7 +241,7 @@ class NotificationsController extends GetxController {
   }
 
   Future<void> markAsRead(NotificationItem item) async {
-    final index = notifications.indexWhere((n) => n.id == item.id);
+    final index = notifications.indexWhere((n) => n == item);
     if (index == -1 || !notifications[index].isUnread) return;
 
     notifications[index] = NotificationItem(
@@ -208,7 +256,9 @@ class NotificationsController extends GetxController {
     );
     notifications.refresh();
 
-    await _authService.markNotificationRead(item.id);
+    if (item.id != null && item.id!.isNotEmpty) {
+      await _authService.markNotificationRead(item.id!);
+    }
   }
 
   Future<void> markAllAsRead() async {
@@ -227,8 +277,8 @@ class NotificationsController extends GetxController {
       );
     }).toList();
 
-    final success = await _authService.markAllNotificationsRead();
-    if (success) {
+    try {
+      await _authService.markAllNotificationsRead();
       Get.snackbar(
         'success'.tr,
         'all_notifications_marked_read'.tr,
@@ -239,7 +289,7 @@ class NotificationsController extends GetxController {
         borderRadius: 12,
         duration: const Duration(seconds: 2),
       );
-    }
+    } catch (_) {}
   }
 
   void _showDummyNotifications() {
@@ -310,11 +360,6 @@ class NotificationsController extends GetxController {
     if (value is Map) {
       return value.map((key, value) => MapEntry(key.toString(), value));
     }
-    return null;
-  }
-
-  List<dynamic>? _asList(dynamic value) {
-    if (value is List) return value;
     return null;
   }
 }
