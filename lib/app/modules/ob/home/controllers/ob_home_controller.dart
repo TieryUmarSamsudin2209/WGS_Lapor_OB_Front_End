@@ -63,6 +63,7 @@ class ObHomeController extends GetxController {
   final name = 'OB'.obs;
   final isLoadingTasks = false.obs;
   final isLoadingReports = false.obs;
+  final unreadNotificationCount = 0.obs;
 
   // List of Daily Tasks
   final dailyTasks = <DailyTask>[].obs;
@@ -120,6 +121,11 @@ class ObHomeController extends GetxController {
       'username',
       'email',
     ]);
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    final count = await _authService.getUnreadNotificationCount();
+    unreadNotificationCount.value = count;
   }
 
   void createReport() {
@@ -319,6 +325,7 @@ class ObHomeController extends GetxController {
     _loadUser();
     loadHomeData();
     _startReportPolling();
+    _loadUnreadNotificationCount();
   }
 
   void openReportDetail(HomeReport report) {

@@ -13,6 +13,7 @@ class HomeController extends GetxController {
   final name = 'Karyawan'.obs;
   final reports = <Map<String, dynamic>>[].obs;
   final isLoadingReports = false.obs;
+  final unreadNotificationCount = 0.obs;
 
   List<Map<String, dynamic>> get recentReports => reports.take(2).toList();
 
@@ -21,6 +22,7 @@ class HomeController extends GetxController {
     super.onInit();
     _loadUser();
     loadReports();
+    _loadUnreadNotificationCount();
   }
 
   void _loadUser() {
@@ -86,6 +88,11 @@ class HomeController extends GetxController {
   }
 
   void increment() => count.value++;
+
+  Future<void> _loadUnreadNotificationCount() async {
+    final count = await _authService.getUnreadNotificationCount();
+    unreadNotificationCount.value = count;
+  }
 
   Map<String, dynamic> _reportFromApi(Map<String, dynamic> item) {
     final detail = _asMap(item['laporan']) ?? _asMap(item['report']) ?? item;

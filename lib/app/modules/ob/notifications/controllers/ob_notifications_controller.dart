@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/notification_socket.dart';
 import '../../../../shared/utils/checklist_translation_key.dart';
 import '../../../../shared/utils/report_translation_key.dart';
 
 class ObNotificationItem {
   const ObNotificationItem({
+    required this.id,
     required this.type,
     required this.title,
     required this.message,
@@ -18,6 +22,7 @@ class ObNotificationItem {
     this.isUnread = true,
   });
 
+  final String id;
   final String type;
   final String title;
   final String message;
@@ -37,12 +42,38 @@ class ObNotificationsController extends GetxController {
   final notifications = <ObNotificationItem>[].obs;
   final isLoading = false.obs;
 
+  NotificationSocketClient? _socketClient;
+  StreamSubscription<Map<String, dynamic>>? _socketSubscription;
+
   int get unreadCount => notifications.where((n) => n.isUnread).length;
 
   @override
   void onInit() {
     super.onInit();
     loadNotifications();
+    _initSocket();
+  }
+
+  @override
+  void onClose() {
+    _socketSubscription?.cancel();
+    _socketClient?.dispose();
+    super.onClose();
+  }
+
+  void _initSocket() {
+    if (!_authService.isLoggedIn) return;
+    try {
+      _socketClient = createNotificationSocketClient();
+      final uri = _authService.notificationWebSocketUri();
+      _socketClient!.connect(uri);
+      _socketSubscription = _socketClient!.messages.listen((message) {
+        final tipe = message['tipe']?.toString() ?? '';
+        if (tipe.contains('TUGAS') || tipe.contains('LAPORAN') || tipe.contains('TASK') || tipe.contains('REPORT')) {
+          loadNotifications();
+        }
+      });
+    } catch (_) {}
   }
 
   Future<void> loadNotifications() async {
@@ -66,41 +97,41 @@ class ObNotificationsController extends GetxController {
 
       notifications.value = items;
     } catch (_) {
-      _showDummyNotifications();
+      if (notifications.isEmpty) {
+        _showDummyNotifications();
+      }
     } finally {
       isLoading.value = false;
     }
   }
 
-  /// Mark single notification as read
-  void markAsRead(ObNotificationItem item) {
-    final index = notifications.indexWhere((n) => n == item);
-    if (index != -1 && notifications[index].isUnread) {
-      notifications[index] = ObNotificationItem(
-        type: item.type,
-        title: item.title,
-        message: item.message,
-        section: item.section,
-        timeLabel: item.timeLabel,
-        createdAt: item.createdAt,
-        titleParams: item.titleParams,
-        messageParams: item.messageParams,
-        isUnread: false,
-      );
-      notifications.refresh();
-      
-      // TODO: Call API to mark as read
-      // await _authService.markNotificationAsRead(item.id);
-    }
+  Future<void> markAsRead(ObNotificationItem item) async {
+    final index = notifications.indexWhere((n) => n.id == item.id);
+    if (index == -1 || !notifications[index].isUnread) return;
+
+    notifications[index] = ObNotificationItem(
+      id: item.id,
+      type: item.type,
+      title: item.title,
+      message: item.message,
+      section: item.section,
+      timeLabel: item.timeLabel,
+      createdAt: item.createdAt,
+      titleParams: item.titleParams,
+      messageParams: item.messageParams,
+      isUnread: false,
+    );
+    notifications.refresh();
+
+    await _authService.markNotificationRead(item.id);
   }
 
-  /// Mark all notifications as read
   Future<void> markAllAsRead() async {
     if (unreadCount == 0) return;
-    
-    // Update all notifications to read
+
     notifications.value = notifications.map((item) {
       return ObNotificationItem(
+        id: item.id,
         type: item.type,
         title: item.title,
         message: item.message,
@@ -112,26 +143,27 @@ class ObNotificationsController extends GetxController {
         isUnread: false,
       );
     }).toList();
-    
-    Get.snackbar(
-      'success'.tr,
-      'all_notifications_marked_read'.tr,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF2BC36A),
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-      duration: const Duration(seconds: 2),
-    );
-    
-    // TODO: Call API to mark all as read
-    // await _authService.markAllNotificationsAsRead();
+
+    final success = await _authService.markAllNotificationsRead();
+    if (success) {
+      Get.snackbar(
+        'success'.tr,
+        'all_notifications_marked_read'.tr,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF2BC36A),
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+        duration: const Duration(seconds: 2),
+      );
+    }
   }
 
   void _showDummyNotifications() {
     final now = DateTime.now();
     notifications.value = [
       ObNotificationItem(
+        id: 'ob_dummy_1',
         type: 'task',
         title: 'Tugas Baru: @title',
         titleParams: {
@@ -144,6 +176,7 @@ class ObNotificationsController extends GetxController {
         isUnread: true,
       ),
       ObNotificationItem(
+        id: 'ob_dummy_2',
         type: 'report',
         title: 'Laporan Baru: @title',
         titleParams: {'title': reportTranslationKey('AC Bocor di Pantry')},
@@ -155,6 +188,7 @@ class ObNotificationsController extends GetxController {
         isUnread: true,
       ),
       ObNotificationItem(
+        id: 'ob_dummy_3',
         type: 'system',
         title: 'Pembaruan Sistem',
         message: 'Versi aplikasi @version tersedia.',
@@ -165,6 +199,7 @@ class ObNotificationsController extends GetxController {
         isUnread: false,
       ),
       ObNotificationItem(
+        id: 'ob_dummy_4',
         type: 'task',
         title: 'Pengingat Tugas: @title',
         titleParams: {
@@ -202,6 +237,10 @@ class ObNotificationsController extends GetxController {
       'results',
     ]);
 
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
     return items.whereType<Map>().take(8).map((rawItem) {
       final item = _asMap(rawItem) ?? const {};
       final detail =
@@ -229,14 +268,21 @@ class ObNotificationsController extends GetxController {
             'Tugas Harian',
       );
 
+      final day = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      final isRecent = day == today || day == yesterday;
+      final isUnread = day == today;
+
       return ObNotificationItem(
+        id: 'task_${title.hashCode}_${createdAt.millisecondsSinceEpoch}',
         type: 'task',
-        title: 'Tugas Baru: @title',
+        title: isRecent ? 'Tugas Baru: @title' : 'Pengingat Tugas: @title',
         titleParams: {'title': title},
-        message: 'Admin baru saja menugaskan Anda.',
+        message: isRecent ? 'Admin baru saja menugaskan Anda.' : 'Tugas ini harus selesai dalam @duration.',
+        messageParams: isRecent ? {} : const {'duration': '24 jam'},
         section: _sectionFromDate(createdAt),
         timeLabel: _timeAgo(createdAt),
         createdAt: createdAt,
+        isUnread: isUnread,
       );
     }).toList();
   }
@@ -250,6 +296,9 @@ class ObNotificationsController extends GetxController {
       'rows',
       'results',
     ]);
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
     return items.whereType<Map>().take(8).map((rawItem) {
       final item = _asMap(rawItem) ?? const {};
@@ -294,7 +343,11 @@ class ObNotificationsController extends GetxController {
             'lokasi terkait',
       );
 
+      final day = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      final isUnread = day == today;
+
       return ObNotificationItem(
+        id: 'report_${title.hashCode}_${createdAt.millisecondsSinceEpoch}',
         type: 'report',
         title: 'Penugasan Baru',
         message:
@@ -307,6 +360,7 @@ class ObNotificationsController extends GetxController {
         section: _sectionFromDate(createdAt),
         timeLabel: _timeAgo(createdAt),
         createdAt: createdAt,
+        isUnread: isUnread,
       );
     }).toList();
   }
