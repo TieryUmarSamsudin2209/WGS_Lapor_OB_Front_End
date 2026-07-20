@@ -20,7 +20,7 @@ class SplashScreenController extends GetxController {
     await Future.delayed(Duration(seconds: 2));
     progressValue.value = 1.0;
     await Future.delayed(Duration(milliseconds: 500));
-    Get.offNamed('/auth-activation');
+    Get.offNamed('/login');
   }
 
   @override

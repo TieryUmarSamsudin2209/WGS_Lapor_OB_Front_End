@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
-import 'package:lapor_ob/app/data/providers/api_services.dart';
 import '../../../routes/app_pages.dart';
 
 class AuthActivationController extends GetxController {
-  final ApiService api = Get.find<ApiService>();
+  final Dio api = Dio(BaseOptions(
+    baseUrl: 'https://stylar-nonseverable-denver.ngrok-free.dev',
+    headers: {'Content-Type': 'application/json'},
+  ));
 
   final passwordController = TextEditingController();
   final passwordConfirmationController = TextEditingController();
@@ -94,7 +96,7 @@ class AuthActivationController extends GetxController {
 
       final response = await api.post(
         "/auth/activate-account?token=$token",
-        {
+        data: {
           "password": passwordController.text.trim(),
           "confirmPassword":
               passwordConfirmationController.text.trim(),

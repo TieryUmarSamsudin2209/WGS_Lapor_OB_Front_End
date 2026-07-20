@@ -1,21 +1,20 @@
-import 'package:dio/dio.dart' as dio;
-import 'package:get/get.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class ApiService extends GetxService {
-  late dio.Dio dioClient;
+class ApiService {
 
-  @override
-  void onInit() {
-    super.onInit();
-    dioClient = dio.Dio(
-      dio.BaseOptions(
-        baseUrl: "https://stylar-nonseverable-denver.ngrok-free.dev/api",
-        headers: {"Content-Type": "application/json"},
-      ),
+  static const baseUrl = 'http://192.168.1.5:3000';
+
+  Future<List<dynamic>> getUsers() async {
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/users'),
     );
-  }
 
-  Future<dio.Response> get(String endpoint) async => await dioClient.get(endpoint);
-  Future<dio.Response> post(String endpoint, Map<String, dynamic> data) async =>
-      await dioClient.post(endpoint, data: data);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    throw Exception('Gagal mengambil data');
+  }
 }

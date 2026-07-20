@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/ob_home_controller.dart';
+import '../../profile/views/ob_profile_view.dart';
+import '../../profile/controllers/ob_profile_controller.dart';
 
 class OBHomeView extends GetView<ObHomeController> {
   const OBHomeView({super.key});
@@ -25,8 +27,16 @@ class _BottomNavigationLayoutState extends State<BottomNavigationLayout> {
   final List<Widget> _pages = [
     const ObHomePage(),
     const Center(child: Text('Report')),
-    const Center(child: Text('Profile')),
+    const ObProfileView(),
   ];
+  @override
+  void initState() {
+    super.initState();
+
+    Get.put(ObProfileController());
+
+    print(Get.isRegistered<ObProfileController>());
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
