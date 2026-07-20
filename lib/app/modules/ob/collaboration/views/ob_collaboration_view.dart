@@ -616,12 +616,12 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
         Obx(() {
           final currentUserId = controller.currentUserId;
           final hasJoined = controller.collaborators.any(
-            (c) => c.id == currentUserId,
+            (c) => c.obId == currentUserId,
           );
 
           if (hasJoined) {
             final currentUser = controller.collaborators.firstWhere(
-              (c) => c.id == currentUserId,
+              (c) => c.obId == currentUserId,
             );
             return Column(
               children: [
@@ -638,6 +638,32 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
           }
 
           return const SizedBox.shrink();
+        }),
+
+        // Show other approved collaborators
+        Obx(() {
+          final currentUserId = controller.currentUserId;
+          final otherApproved = controller.collaborators.where(
+            (c) => c.obId != currentUserId && c.status == 'APPROVED',
+          ).toList();
+
+          if (otherApproved.isEmpty) return const SizedBox.shrink();
+
+          return Column(
+            children: [
+              const SizedBox(height: 12),
+              ...otherApproved.map((c) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildTeamMemberCard(
+                  c.name,
+                  'Anggota',
+                  isDark,
+                  titleColor,
+                  mutedColor,
+                ),
+              )),
+            ],
+          );
         }),
       ],
     );
@@ -896,11 +922,10 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
     // Check if current user already joined
     final currentUserId = controller.currentUserId;
     final hasJoined = controller.collaborators.any(
-      (c) => c.id == currentUserId,
+      (c) => c.obId == currentUserId,
     );
 
     if (hasJoined) {
-      // User already joined - show "Keluar" button (red with exit icon)
       return _buildSolidButton(
         'Keluar',
         urgentRed,
@@ -909,7 +934,6 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
       );
     }
 
-    // User not joined yet - show "Bergabung" button (navy with add icon)
     return _buildSolidButton(
       'Bergabung',
       navyColor,
