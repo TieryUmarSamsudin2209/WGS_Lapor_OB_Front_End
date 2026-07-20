@@ -308,6 +308,33 @@ class ObCollaborationController extends GetxController {
       }
     }
 
+    // Source C: Fetch approved collaborators from /kolaborasi API (for both owner and non-owner)
+    // This endpoint returns the list of approved collaborators
+    try {
+      debugPrint('📋 Fetching collaborators from /kolaborasi endpoint...');
+      final collabResponse = await _authService.getCollaborators(reportId);
+      if (collabResponse != null) {
+        final data = collabResponse['data'];
+        if (data is List) {
+          debugPrint('📋 Found ${data.length} collaborators from /kolaborasi');
+          for (var item in data) {
+            if (item is Map<String, dynamic>) {
+              final updatedItem = Map<String, dynamic>.from(item);
+              if (updatedItem['status'] == null) {
+                updatedItem['status'] = 'APPROVED';
+              }
+              final model = CollaboratorModel.fromJson(updatedItem);
+              if (!combinedList.any((c) => c.id == model.id || (c.obId != null && c.obId == model.obId))) {
+                combinedList.add(model);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error fetching collaborators from /kolaborasi: $e');
+    }
+
     // 4. Collect all PENDING requests (only for owner), avoiding any who are already APPROVED
     if (requestsResponse != null) {
       final data = requestsResponse['data'];
