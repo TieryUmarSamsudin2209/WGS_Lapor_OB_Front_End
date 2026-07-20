@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:collection/collection.dart';
 
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/widgets/custom_alert.dart';
@@ -44,11 +45,25 @@ class ObCollaborationController extends GetxController {
           // After fetching, re-determine ownership
           _determineOwnership();
           // Then load collaborators
-          Future.microtask(() => _loadCollaborators());
+          Future.microtask(() {
+            _loadCollaborators();
+            // Start periodic refresh if owner
+            if (isOwner.value) {
+              _startPeriodicRefresh();
+            }
+          });
         });
       } else {
+        // Determine ownership first
+        _determineOwnership();
         // Load collaborators after initialization
-        Future.microtask(() => _loadCollaborators());
+        Future.microtask(() {
+          _loadCollaborators();
+          // Start periodic refresh if owner
+          if (isOwner.value) {
+            _startPeriodicRefresh();
+          }
+        });
       }
     } else {
       // No valid report data passed
@@ -61,6 +76,38 @@ class ObCollaborationController extends GetxController {
       Future.delayed(const Duration(seconds: 2), () {
         Get.back();
       });
+    }
+  }
+
+  @override
+  void onClose() {
+    _stopPeriodicRefresh();
+    super.onClose();
+  }
+
+  Timer? _refreshTimer;
+
+  /// Start periodic refresh for owner to auto-load new collaboration requests
+  void _startPeriodicRefresh() {
+    if (!isOwner.value) return;
+    
+    debugPrint('🔄 Starting periodic refresh for collaboration requests');
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (isOwner.value) {
+        debugPrint('⏰ Auto-refreshing collaboration requests...');
+        _loadCollaborators();
+      } else {
+        _stopPeriodicRefresh();
+      }
+    });
+  }
+
+  /// Stop periodic refresh
+  void _stopPeriodicRefresh() {
+    if (_refreshTimer != null) {
+      debugPrint('⏹️ Stopping periodic refresh');
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
     }
   }
 
@@ -79,25 +126,27 @@ class ObCollaborationController extends GetxController {
         debugPrint('✅ Got response, checking for owner info...');
         
         // Try to extract owner info from response
-        final data = response['data'];
         final laporan = response['laporan'];
         
         // Owner info might be in laporan object
         if (laporan is Map) {
-          final obData = laporan['ob'];
-          if (obData is Map) {
-            final obId = obData['id']?.toString();
-            final obName = obData['nama_lengkap']?.toString() ?? 
-                          obData['nama']?.toString() ?? 
-                          obData['name']?.toString();
+          final obId = laporan['ob_id']?.toString() ??
+                       laporan['assigned_ob_id']?.toString() ??
+                       laporan['ob']?['id']?.toString() ??
+                       laporan['user_id']?.toString();
+                       
+          final obName = laporan['ob_name']?.toString() ??
+                         laporan['nama_ob']?.toString() ??
+                         laporan['ob']?['nama_lengkap']?.toString() ??
+                         laporan['ob']?['nama']?.toString() ??
+                         laporan['ob']?['name']?.toString();
             
-            if (obId != null && obId.isNotEmpty) {
-              debugPrint('✅ Found owner info from API: $obName (ID: $obId)');
-              if (activeReport != null) {
-                activeReport!.obId.value = obId;
-                if (obName != null) {
-                  activeReport!.obName.value = obName;
-                }
+          if (obId != null && obId.isNotEmpty) {
+            debugPrint('✅ Found owner info from API: $obName (ID: $obId)');
+            if (activeReport != null) {
+              activeReport!.obId.value = obId;
+              if (obName != null) {
+                activeReport!.obName.value = obName;
               }
             }
           }
@@ -171,88 +220,150 @@ class ObCollaborationController extends GetxController {
     
     isLoading.value = true;
     
-    final response = await _authService.getCollaborationRequests(reportId);
-    
-    isLoading.value = false;
+    List<CollaboratorModel> combinedList = [];
+    String? requestError;
 
-    if (response == null) {
-      debugPrint('❌ Failed to load collaborators');
-      
-      // If non-owner and got 403, it's expected - just clear list and continue
-      if (!isOwner.value && _authService.lastRequestError?.contains('403') == true) {
-        debugPrint('ℹ️ Non-owner got 403 as expected, clearing collaborators list');
-        collaborators.clear();
-        return;
+    // 1. Sync dashboard reports list first to get latest collaborators on activeReport
+    try {
+      if (Get.isRegistered<ObHomeController>()) {
+        debugPrint('🔄 Syncing reports list from dashboard...');
+        await Get.find<ObHomeController>().loadReports(silent: true);
       }
-      
-      final message = _authService.lastRequestError ??
-          'Gagal memuat daftar permintaan kolaborasi'.tr;
-      
-      // Only show error if owner (owner needs to see collaboration requests)
-      if (isOwner.value && _authService.lastRequestError != null) {
-        final ctx = Get.context;
-        if (ctx != null) {
-          await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
+    } catch (e) {
+      debugPrint('⚠️ Error syncing reports: $e');
+    }
+
+    // 2. Fetch requests from /gabung (only for owner) to get pending requests and any approved ones in laporan
+    Map? requestsResponse;
+    if (isOwner.value) {
+      debugPrint('📋 Fetching collaboration requests...');
+      requestsResponse = await _authService.getCollaborationRequests(reportId);
+      if (requestsResponse == null) {
+        requestError = _authService.lastRequestError;
+      }
+    }
+
+    // 3. Collect all APPROVED collaborators first
+    // Source A: Extract approved collaborators from the laporan object inside requestsResponse (if available)
+    if (requestsResponse != null) {
+      final laporan = requestsResponse['laporan'];
+      if (laporan is Map) {
+        for (final key in [
+          'kolaborator',
+          'kolaborators',
+          'collaborators',
+          'team',
+          'tim',
+          'ob_list',
+          'obList',
+          'ob_kolaborator',
+          'obKolaborator',
+        ]) {
+          final list = laporan[key];
+          if (list is List) {
+            debugPrint('📋 Found ${list.length} active collaborators in response.laporan.$key');
+            for (var item in list) {
+              if (item is Map<String, dynamic>) {
+                final updatedItem = Map<String, dynamic>.from(item);
+                updatedItem['status'] = 'APPROVED';
+                final model = CollaboratorModel.fromJson(updatedItem);
+                if (!combinedList.any((c) => c.id == model.id || (c.obId != null && c.obId == model.obId))) {
+                  combinedList.add(model);
+                }
+              }
+            }
+            break;
+          }
         }
       }
-      return;
     }
 
-    debugPrint('✅ Got collaboration response: ${response.keys.join(", ")}');
+    // Source B: Add approved collaborators from activeReport.collaborators
+    final currentUser = _authService.user.value;
+    final currentUserId = currentUser?['id']?.toString();
+    final currentUserName = currentUser?['nama_lengkap']?.toString() ?? 
+                            currentUser?['nama']?.toString() ?? 
+                            currentUser?['name']?.toString() ?? 
+                            '';
 
-    // Extract collaborators from response
-    final data = response['data'];
-    
-    if (data == null) {
-      debugPrint('ℹ️ No collaborators data in response');
-      collaborators.clear();
-      return;
-    }
-
-    List<dynamic> items = [];
-    
-    if (data is List) {
-      items = data;
-      debugPrint('📋 Found ${items.length} collaborators (direct list)');
-    } else if (data is Map) {
-      // Combine hari_ini and kemarin if available
-      final hariIni = data['hari_ini'];
-      final kemarin = data['kemarin'];
+    debugPrint('👥 Adding approved collaborators from activeReport (count: ${activeReport!.collaborators.length})');
+    for (final name in activeReport!.collaborators) {
+      if (name.isEmpty) continue;
       
-      if (hariIni is List) {
-        items.addAll(hariIni);
-      }
-      if (kemarin is List) {
-        items.addAll(kemarin);
-      }
+      // Skip if it's the owner (owner is already displayed separately in UI)
+      if (name == ownerName.value) continue;
+
+      final isMe = name == currentUserName;
       
-      debugPrint('📋 Found ${items.length} collaborators (from grouped data)');
+      // Deduplicate: check if this collaborator is already in combinedList
+      final exists = combinedList.any((c) => c.name == name || (isMe && c.obId == currentUserId));
+      if (!exists) {
+        combinedList.add(CollaboratorModel(
+          id: isMe ? (currentUserId ?? '') : name, // Use user ID if it's current user
+          obId: isMe ? currentUserId : null,
+          name: name,
+          status: 'APPROVED',
+          role: 'Anggota',
+        ));
+      }
     }
 
-    // Parse items to CollaboratorModel
-    final parsedCollaborators = items.map((item) {
-      if (item is Map<String, dynamic>) {
-        return CollaboratorModel.fromJson(item);
+    // 4. Collect all PENDING requests (only for owner), avoiding any who are already APPROVED
+    if (requestsResponse != null) {
+      final data = requestsResponse['data'];
+      List<dynamic> items = [];
+      if (data is List) {
+        items = data;
+      } else if (data is Map) {
+        final hariIni = data['hari_ini'];
+        final kemarin = data['kemarin'];
+        if (hariIni is List) items.addAll(hariIni);
+        if (kemarin is List) items.addAll(kemarin);
       }
-      return null;
-    }).whereType<CollaboratorModel>().toList();
 
-    collaborators.assignAll(parsedCollaborators);
+      for (var item in items) {
+        if (item is Map<String, dynamic>) {
+          final model = CollaboratorModel.fromJson(item);
+          
+          // Check if already approved/present in list
+          final exists = combinedList.any((c) => c.id == model.id || (c.obId != null && c.obId == model.obId));
+          if (!exists) {
+            combinedList.add(model);
+          }
+        }
+      }
+
+      // Extract notes if available
+      if (requestsResponse['notes'] != null) {
+        notes.value = requestsResponse['notes'].toString();
+      } else if (requestsResponse['catatan'] != null) {
+        notes.value = requestsResponse['catatan'].toString();
+      }
+    }
+
+    isLoading.value = false;
+
+    // Assign all loaded collaborators
+    collaborators.assignAll(combinedList);
     debugPrint('✅ Loaded ${collaborators.length} collaborators');
-    
-    // Extract notes if available
-    if (response['notes'] != null) {
-      notes.value = response['notes'].toString();
-      debugPrint('📝 Notes: ${notes.value}');
-    } else if (response['catatan'] != null) {
-      notes.value = response['catatan'].toString();
-      debugPrint('📝 Notes: ${notes.value}');
-    }
     
     // Debug print each collaborator
     for (var collab in collaborators) {
       debugPrint('   - ${collab.name} (${collab.role}) [${collab.status}]');
     }
+
+    // Only show error if owner and requests failed to load
+    if (isOwner.value && requestError != null) {
+      final ctx = Get.context;
+      if (ctx != null) {
+        await CustomAlert.show(ctx, isSuccess: false, description: requestError.tr);
+      }
+    }
+  }
+
+  /// Public method to reload collaborators (can be called from UI)
+  Future<void> loadCollaborators() async {
+    await _loadCollaborators();
   }
 
   Future<void> joinCollaboration() async {
@@ -329,7 +440,7 @@ class ObCollaborationController extends GetxController {
     // Find current user's collaboration ID
     final currentUserId = _authService.user.value?['id']?.toString();
     final currentCollaboration = collaborators.firstWhereOrNull(
-      (c) => c.id == currentUserId,
+      (c) => c.obId == currentUserId || c.id == currentUserId,
     );
 
     if (currentCollaboration == null) {
@@ -718,12 +829,14 @@ class ObCollaborationController extends GetxController {
 
 class CollaboratorModel {
   final String id;
+  final String? obId;
   final String name;
   final String role;
   final String status; // PENDING, APPROVED, REJECTED
 
   CollaboratorModel({
     required this.id,
+    this.obId,
     required this.name,
     this.role = 'Anggota',
     this.status = 'PENDING',
@@ -737,6 +850,10 @@ class CollaboratorModel {
         json['ob_id']?.toString() ??
         json['user_id']?.toString() ??
         '';
+
+    final obId = json['ob_id']?.toString() ??
+        json['user_id']?.toString() ??
+        json['ob']?['id']?.toString();
 
     // Extract name from nested ob object or direct fields
     String name = 'OB';
@@ -770,6 +887,7 @@ class CollaboratorModel {
 
     return CollaboratorModel(
       id: id,
+      obId: obId,
       name: name,
       role: role,
       status: status,

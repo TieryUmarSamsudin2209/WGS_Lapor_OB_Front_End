@@ -536,15 +536,7 @@ class ObDetailView extends GetView<ObDetailController> {
                 navyColor,
                 () => controller.setWorking(),
               ),
-              const SizedBox(height: 20),
-              _buildOutlineButton(
-                'Butuh Bantuan',
-                () => controller.toggleNeedHelp(),
-                icon: controller.isNeedHelp.value
-                    ? Icons.help
-                    : Icons.help_outline,
-                isActive: controller.isNeedHelp.value,
-              ),
+              
             ],
           );
         }

@@ -156,24 +156,43 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
           ),
         ),
         centerTitle: false,
+        actions: [
+          // Manual refresh button for owner
+          Obx(() {
+            if (controller.isOwner.value) {
+              return IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                onPressed: () => controller.loadCollaborators(),
+                tooltip: 'Refresh'.tr,
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Report Info Card
-            _buildReportInfoCard(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await controller.loadCollaborators();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // Report Info Card
+              _buildReportInfoCard(),
 
-            const SizedBox(height: 15),
+              const SizedBox(height: 15),
 
-            // Collaborators Section
-            _buildCollaboratorsSection(),
+              // Collaborators Section
+              _buildCollaboratorsSection(),
 
-            const SizedBox(height: 15),
+              const SizedBox(height: 15),
 
-            // Action Buttons
-            Obx(() => _buildActionButtons()),
-          ],
+              // Action Buttons
+              Obx(() => _buildActionButtons()),
+            ],
+          ),
         ),
       ),
     );
@@ -856,7 +875,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
       children: [
         // Selesaikan Laporan button (biru)
         _buildSolidButton(
-          'Selesaikan Laporan',
+          'Selesaikan',
           const Color(0xFF1689D8), // Blue color
           () => controller.completeReportFromCollaboration(),
           icon: Icons.check_circle_outline,

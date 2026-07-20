@@ -961,7 +961,7 @@ class _SearchAndFilters extends StatelessWidget {
                       onTap: () => controller.setFilter(filter),
                     );
                   },
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemCount: 5,
                 );
               },

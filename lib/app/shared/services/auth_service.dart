@@ -21,6 +21,9 @@ class AuthService extends GetxService {
   final _client = GetConnect(timeout: const Duration(seconds: 30));
   String? _lastRequestError;
 
+  // Public getter for last error
+  String? get lastRequestError => _lastRequestError;
+
   // ✅ Dummy laporan untuk testing offline mode
   final List<Map<String, dynamic>> _dummyReports = [
     {
@@ -426,7 +429,6 @@ class AuthService extends GetxService {
 
   bool get isLoggedIn => token.value != null && token.value!.isNotEmpty;
   bool get isOfflineMode => token.value == 'dummy_token' && EnvConfig.useOfflineMode;
-  String? get lastRequestError => _lastRequestError;
   String get normalizedRole =>
       _normalizeRole(role.value ?? user.value?['role']);
 
@@ -521,12 +523,65 @@ class AuthService extends GetxService {
         return true;
       }
 
-      debugPrint('Login gagal: ${response.bodyString ?? response.body}');
+      // Extract error message from server response
+      final errorMessage = _extractErrorMessage(response, body);
+      _lastRequestError = errorMessage;
+      debugPrint('Login gagal: $errorMessage');
+      debugPrint('Response body: ${response.bodyString ?? response.body}');
       return false;
     } catch (e) {
       debugPrint('Error login: $e');
       _lastRequestError = 'Terjadi kesalahan saat login. Coba lagi.';
       return false;
+    }
+  }
+
+  /// Extract error message from server response
+  String _extractErrorMessage(Response response, Map<String, dynamic>? body) {
+    // Try to get message from response body
+    if (body != null) {
+      // Check for 'message' field
+      final message = body['message']?.toString();
+      if (message != null && message.isNotEmpty) {
+        return message;
+      }
+      
+      // Check for 'error' field
+      final error = body['error']?.toString();
+      if (error != null && error.isNotEmpty) {
+        return error;
+      }
+      
+      // Check for 'errors' array (validation errors)
+      final errors = body['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final firstError = errors.first;
+        if (firstError is Map) {
+          final msg = firstError['message']?.toString() ?? firstError['msg']?.toString();
+          if (msg != null) return msg;
+        }
+        return errors.first.toString();
+      }
+    }
+    
+    // Default messages based on status code
+    switch (response.statusCode) {
+      case 400:
+        return 'Data login tidak valid. Periksa email/username dan password Anda.';
+      case 401:
+        return 'Email/username atau password salah.';
+      case 403:
+        return 'Akses ditolak. Akun Anda mungkin tidak aktif.';
+      case 404:
+        return 'Endpoint login tidak ditemukan. Hubungi administrator.';
+      case 422:
+        return 'Data yang dikirim tidak valid.';
+      case 429:
+        return 'Terlalu banyak percobaan login. Coba lagi nanti.';
+      case 500:
+        return 'Terjadi kesalahan di server. Coba lagi nanti.';
+      default:
+        return 'Login gagal. Periksa email/username dan password Anda.';
     }
   }
 
@@ -2507,7 +2562,7 @@ class AuthService extends GetxService {
         _lastRequestError = 'Sesi berakhir, silakan login kembali';
       } else {
         debugPrint('❌ Failed with status ${response.statusCode}');
-        _lastRequestError = _extractErrorMessage(response.bodyString ?? '') 
+        _lastRequestError = _extractErrorMessageFromBody(response.bodyString ?? '') 
             ?? 'Gagal mengambil detail laporan';
       }
 
@@ -2586,7 +2641,7 @@ class AuthService extends GetxService {
       
       /* Original error handling (disabled for workaround)
       _lastRequestError =
-          _extractErrorMessage(response.body) ??
+          _extractErrorMessageFromBody(response.body) ??
           'Gagal menyelesaikan laporan. Server menolak data histori.';
       return null;
       */
@@ -2602,7 +2657,7 @@ class AuthService extends GetxService {
     }
   }
   
-  String? _extractErrorMessage(String responseBody) {
+  String? _extractErrorMessageFromBody(String responseBody) {
     try {
       final data = json.decode(responseBody);
       if (data is Map) {
@@ -2914,7 +2969,7 @@ class AuthService extends GetxService {
       } else if (response.statusCode == 404) {
         _lastRequestError = 'Laporan tidak ditemukan';
       } else {
-        _lastRequestError = _extractErrorMessage(response.bodyString ?? '')
+        _lastRequestError = _extractErrorMessageFromBody(response.bodyString ?? '')
             ?? 'Gagal menutup kolaborasi';
       }
       
@@ -2985,7 +3040,7 @@ class AuthService extends GetxService {
       } else if (response.statusCode == 404) {
         _lastRequestError = 'Laporan tidak ditemukan';
       } else {
-        _lastRequestError = _extractErrorMessage(response.bodyString ?? '')
+        _lastRequestError = _extractErrorMessageFromBody(response.bodyString ?? '')
             ?? 'Gagal membuka kolaborasi';
       }
       
@@ -3331,7 +3386,7 @@ class AuthService extends GetxService {
         return _updateCollaborationNotesOffline(reportId, notes);
       }
 
-      _lastRequestError = _extractErrorMessage(response.bodyString ?? '')
+      _lastRequestError = _extractErrorMessageFromBody(response.bodyString ?? '')
           ?? 'Gagal memperbarui catatan';
       debugPrint('❌ Failed to update notes: $_lastRequestError');
       return null;
