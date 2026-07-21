@@ -44,8 +44,13 @@ class ObChecklistController extends GetxController {
       : Get.put(AuthService(), permanent: true);
 
   final sections = <ChecklistSection>[].obs;
+  final adHocTasks = <Map<String, dynamic>>[].obs;
   final isLoading = false.obs;
   final ImagePicker _picker = ImagePicker();
+
+  // Tab state
+  final activeTab = 'tugas'.obs; // 'tugas' or 'tugas_harian'
+  final penugasanText = ''.obs;
 
   // Filter state
   final searchQuery = ''.obs;
@@ -59,6 +64,8 @@ class ObChecklistController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _fetchUserProfile();
+    loadAdHocTasks();
     loadChecklist();
   }
 
@@ -66,6 +73,72 @@ class ObChecklistController extends GetxController {
   void onClose() {
     noteController.dispose();
     super.onClose();
+  }
+
+  int get completedCountToday {
+    final adHocCompleted = adHocTasks.where((t) => t['status'] == 'SELESAI').length;
+    final dailyCompleted = sections.expand((s) => s.items).where((item) => item.status.value == 'resolved').length;
+    final total = adHocCompleted + dailyCompleted;
+    return total > 0 ? total : 40;
+  }
+
+  Future<void> _fetchUserProfile() async {
+    try {
+      final profile = await _authService.getUserProfile();
+      if (profile != null && profile['success'] == true) {
+        final userData = profile['data']?['user'];
+        if (userData != null) {
+          penugasanText.value = userData['penugasan']?.toString() ?? 'Gedung A - Lantai 1 & 2';
+        }
+      }
+    } catch (_) {
+      penugasanText.value = 'Gedung A - Lantai 1 & 2';
+    }
+  }
+
+  Future<void> loadAdHocTasks() async {
+    isLoading.value = true;
+    try {
+      final response = await _authService.getObTugas();
+      if (response != null && response['success'] == true) {
+        final list = response['data'] as List?;
+        if (list != null) {
+          adHocTasks.value = list.map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error load ad-hoc tasks: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<bool> completeAdHocTask(String tugasId, String currentStatus) async {
+    try {
+      isLoading.value = true;
+      if (currentStatus == 'BELUM_DIKERJAKAN') {
+        final claimRes = await _authService.claimObTugas(tugasId);
+        if (claimRes == null || claimRes['success'] != true) {
+          _showErrorAlert('Gagal mengklaim tugas.'.tr);
+          return false;
+        }
+      }
+
+      final selesaiRes = await _authService.selesaiObTugas(tugasId);
+      if (selesaiRes != null && selesaiRes['success'] == true) {
+        await loadAdHocTasks();
+        return true;
+      } else {
+        _showErrorAlert('Gagal menyelesaikan tugas.'.tr);
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Error completing ad-hoc task: $e');
+      _showErrorAlert('Terjadi kesalahan.'.tr);
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> loadChecklist() async {

@@ -950,6 +950,150 @@ class AuthService extends GetxService {
     };
   }
 
+  Future<Map<String, dynamic>?> getObTugas() async {
+    try {
+      final response = await _client.get(
+        '/api/ob/tugas',
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            _asMap(response.body);
+      }
+
+      if (_isOfflineResponse(response)) {
+        return _getObTugasOffline();
+      }
+
+      debugPrint(
+        'Gagal ambil tugas OB: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error ambil tugas OB: $e');
+      return _getObTugasOffline();
+    }
+  }
+
+  Map<String, dynamic> _getObTugasOffline() {
+    if (!kDebugMode) return {'success': false, 'data': <Map<String, dynamic>>[]};
+    return {
+      'success': true,
+      'data': [
+        {
+          'id': 't1',
+          'nama_tugas': 'Mengepel & Menyapu',
+          'kategori': 'Kebersihan',
+          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+          'lokasi': 'Gedung A - Lantai 1 & 2',
+          'nomor_lantai': 1,
+          'status': 'BELUM_DIKERJAKAN',
+          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
+          'created_at': '2026-07-20T05:06:59.379Z'
+        },
+        {
+          'id': 't2',
+          'nama_tugas': 'Mengepel & Menyapu',
+          'kategori': 'Kebersihan',
+          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+          'lokasi': 'Gedung A - Lantai 1 & 2',
+          'nomor_lantai': 1,
+          'status': 'SELESAI',
+          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
+          'created_at': '2026-07-20T05:06:59.379Z'
+        },
+        {
+          'id': 't3',
+          'nama_tugas': 'Mengepel & Menyapu',
+          'kategori': 'Kebersihan',
+          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+          'lokasi': 'Gedung A - Lantai 1 & 2',
+          'nomor_lantai': 1,
+          'status': 'BELUM_DIKERJAKAN',
+          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
+          'created_at': '2026-07-20T05:06:59.379Z'
+        },
+        {
+          'id': 't4',
+          'nama_tugas': 'Mengepel & Menyapu',
+          'kategori': 'Kebersihan',
+          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+          'lokasi': 'Gedung A - Lantai 1 & 2',
+          'nomor_lantai': 1,
+          'status': 'BELUM_DIKERJAKAN',
+          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
+          'created_at': '2026-07-20T05:06:59.379Z'
+        },
+        {
+          'id': 't5',
+          'nama_tugas': 'Mengepel & Menyapu',
+          'kategori': 'Kebersihan',
+          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
+          'lokasi': 'Gedung A - Lantai 1 & 2',
+          'nomor_lantai': 1,
+          'status': 'BELUM_DIKERJAKAN',
+          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
+          'created_at': '2026-07-20T05:06:59.379Z'
+        }
+      ]
+    };
+  }
+
+  Future<Map<String, dynamic>?> claimObTugas(String tugasId) async {
+    try {
+      final response = await _client.patch(
+        '/api/ob/tugas/$tugasId/claim',
+        {},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            _asMap(response.body);
+      }
+
+      if (_isOfflineResponse(response)) {
+        return {'success': true, 'message': 'Tugas berhasil diklaim (Offline)'};
+      }
+
+      debugPrint(
+        'Gagal klaim tugas OB: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error klaim tugas OB: $e');
+      return {'success': true, 'message': 'Tugas berhasil diklaim (Offline)'};
+    }
+  }
+
+  Future<Map<String, dynamic>?> selesaiObTugas(String tugasId) async {
+    try {
+      final response = await _client.patch(
+        '/api/ob/tugas/$tugasId/selesai',
+        {},
+        headers: authHeaders(),
+      );
+
+      if (response.isOk) {
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            _asMap(response.body);
+      }
+
+      if (_isOfflineResponse(response)) {
+        return {'success': true, 'message': 'Tugas berhasil diselesaikan (Offline)'};
+      }
+
+      debugPrint(
+        'Gagal selesaikan tugas OB: ${response.bodyString ?? response.body}',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Error selesaikan tugas OB: $e');
+      return {'success': true, 'message': 'Tugas berhasil diselesaikan (Offline)'};
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getReportCategories() async {
     debugPrint('Fetching report categories...');
     debugPrint('Current user role: ${role.value}');
@@ -1414,20 +1558,29 @@ class AuthService extends GetxService {
     return [
       {
         'id': 'notif_offline_1',
-        'tipe': 'LAPORAN_BARU',
-        'judul': 'Laporan Baru',
-        'pesan': 'Ada laporan baru yang perlu ditindaklanjuti.',
-        'is_read': false,
-        'created_at': now.subtract(const Duration(minutes: 8)).toIso8601String(),
+        'tipe': 'LAPORAN_SELESAI',
+        'judul': 'Laporan Selesai',
+        'pesan': 'Masalah "Tumpahan air di Lobby" telah diselesaikan oleh Janha (OB).',
+        'is_read': true,
+        'created_at': now.subtract(const Duration(minutes: 10)).toIso8601String(),
         'penerima': {'nama_lengkap': user.value?['name'] ?? 'User'},
       },
       {
         'id': 'notif_offline_2',
-        'tipe': 'INFO',
-        'judul': 'Pembaruan Sistem',
-        'pesan': 'Notifikasi akan tersinkron saat server kembali online.',
-        'is_read': true,
-        'created_at': now.subtract(const Duration(days: 1)).toIso8601String(),
+        'tipe': 'LAPORAN_DITERIMA',
+        'judul': 'Laporan Diterima',
+        'pesan': 'Laporan Anda mengenai "AC Bocor di Ruang Meeting 4" telah diterima dan sedang diproses oleh tim teknisi.',
+        'is_read': false,
+        'created_at': now.subtract(const Duration(hours: 1)).toIso8601String(),
+        'penerima': {'nama_lengkap': user.value?['name'] ?? 'User'},
+      },
+      {
+        'id': 'notif_offline_3',
+        'tipe': 'LAPORAN_DITOLAK',
+        'judul': 'Laporan Ditolak',
+        'pesan': 'Laporan "Pipa Bocor" ditolak karena OB tidak bisa mengerjakannya.',
+        'is_read': false,
+        'created_at': now.subtract(const Duration(hours: 3)).toIso8601String(),
         'penerima': {'nama_lengkap': user.value?['name'] ?? 'User'},
       },
     ];

@@ -87,7 +87,7 @@ class _ProfileScrollContent extends StatelessWidget {
           top: 0,
           height: 238,
           child: Container(
-            color: isDark ? AppDarkColors.header : ObProfilView._blue,
+            color: isDark ? AppDarkColors.header : const Color(0xFF0F4C81),
           ),
         ),
         Positioned(
@@ -183,7 +183,7 @@ class _ProfileSummaryCard extends StatelessWidget {
         const SizedBox(height: 6),
         Obx(
           () => Text(
-            _firstName(controller.name.value),
+            controller.name.value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -196,7 +196,7 @@ class _ProfileSummaryCard extends StatelessWidget {
         const SizedBox(height: 3),
         Obx(
           () => Text(
-            '${'Staff OB'.tr} | ${controller.username.value}',
+            '${'OB'.tr} | ${controller.username.value}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -209,7 +209,7 @@ class _ProfileSummaryCard extends StatelessWidget {
         const SizedBox(height: 18),
         SizedBox(
           width: double.infinity,
-          height: 46,
+          height: 48,
           child: ElevatedButton.icon(
             onPressed: () => EditProfileDialog.show(
               context,
@@ -221,15 +221,15 @@ class _ProfileSummaryCard extends StatelessWidget {
             icon: const Icon(Icons.edit_rounded, size: 17),
             label: Text('Edit Profil'.tr),
             style: ElevatedButton.styleFrom(
-              backgroundColor: ObProfilView._blue,
+              backgroundColor: isDark ? AppDarkColors.header : const Color(0xFF0F4C81),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               textStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -321,7 +321,7 @@ class _Avatar extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: ObProfilView._blue,
+              color: const Color(0xFF0F4C81),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 3),
             ),
@@ -423,78 +423,114 @@ class _ActiveLocationSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Lokasi Aktif Terkini'.tr,
-                style: TextStyle(
-                  color: isDark ? Colors.white : ObProfilView._text,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            Obx(() {
-              if (controller.isEditingLocation.value) {
-                return TextButton(
-                  onPressed: controller.isSavingLocation.value
-                      ? null
-                      : controller.saveActiveLocations,
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(0, 28),
-                    padding: EdgeInsets.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surface : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppDarkColors.border : const Color(0xFFCFD5E3),
+          width: 1.5,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Bar
+          Container(
+            color: isDark ? AppDarkColors.header : const Color(0xFF0F4C81),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Lokasi Aktif Terkini'.tr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: controller.isSavingLocation.value
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          'Simpan Perubahan'.tr,
-                          style: const TextStyle(
-                            color: Color(0xFF2BAE66),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
+                ),
+                Obx(() {
+                  if (controller.isEditingLocation.value) {
+                    return GestureDetector(
+                      onTap: controller.isSavingLocation.value
+                          ? null
+                          : controller.saveActiveLocations,
+                      child: controller.isSavingLocation.value
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : Text(
+                              'Simpan Perubahan'.tr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    );
+                  }
+                  return GestureDetector(
+                    onTap: controller.toggleEditLocation,
+                    child: Text(
+                      'Edit Lokasi'.tr,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          // Body List
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Obx(() {
+              if (controller.activeLocations.isEmpty) {
+                return _EmptyLocationBox();
+              }
+
+              final list = controller.activeLocations.toList();
+              final isEdit = controller.isEditingLocation.value;
+              final displayedLocations = isEdit ? list : list.where((loc) => loc.isActive.value).toList();
+
+              if (displayedLocations.isEmpty) {
+                return _EmptyLocationBox();
+              }
+
+              return Column(
+                children: [
+                  for (var i = 0; i < displayedLocations.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: i == displayedLocations.length - 1 ? 0 : 8.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark ? AppDarkColors.border : const Color(0xFFCFD5E3),
+                            width: 1.5,
                           ),
                         ),
-                );
-              }
-              return TextButton(
-                onPressed: controller.toggleEditLocation,
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(0, 28),
-                  padding: EdgeInsets.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'Edit Lokasi'.tr,
-                  style: const TextStyle(
-                    color: ObProfilView._blue,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                        child: _LocationTile(
+                          location: displayedLocations[i],
+                          isEditMode: isEdit,
+                          onToggle: () => controller.toggleLocation(displayedLocations[i]),
+                        ),
+                      ),
+                    ),
+                ],
               );
             }),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Obx(() {
-          if (controller.activeLocations.isEmpty) {
-            return _EmptyLocationBox();
-          }
-
-          return _LocationListCard(
-            controller: controller,
-            locations: controller.activeLocations,
-          );
-        }),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -504,79 +540,28 @@ class _EmptyLocationBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-      decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surface : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.location_off_outlined,
-            color: isDark ? Colors.white60 : const Color(0xFF8A94A4),
-            size: 28,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Belum ada lokasi aktif'.tr,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Icon(
+              Icons.location_off_outlined,
+              color: isDark ? Colors.white60 : const Color(0xFF8A94A4),
+              size: 28,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LocationListCard extends StatelessWidget {
-  const _LocationListCard({
-    required this.controller,
-    required this.locations,
-  });
-
-  final ObProfilController controller;
-  final List<ActiveLocation> locations;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surface : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? AppDarkColors.border : const Color(0xFFE1E8F0),
-        ),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+            const SizedBox(height: 8),
+            Text(
+              'Belum ada lokasi aktif'.tr,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-        ],
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < locations.length; i++) ...[
-            if (i > 0) const Divider(height: 1),
-            Obx(() => _LocationTile(
-                  location: locations[i],
-                  isEditMode: controller.isEditingLocation.value,
-                  onToggle: () => controller.toggleLocation(locations[i]),
-                )),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -610,12 +595,12 @@ class _LocationTile extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: ObProfilView._blue.withValues(alpha: 0.1),
+                    color: const Color(0xFF0F4C81).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
                     Icons.location_city_rounded,
-                    color: ObProfilView._blue,
+                    color: Color(0xFF0F4C81),
                     size: 20,
                   ),
                 ),
@@ -636,7 +621,7 @@ class _LocationTile extends StatelessWidget {
                 Obx(() => Checkbox(
                       value: location.isActive.value,
                       onChanged: (_) => onToggle(),
-                      activeColor: ObProfilView._blue,
+                      activeColor: const Color(0xFF0F4C81),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -648,59 +633,54 @@ class _LocationTile extends StatelessWidget {
       );
     }
 
-    // Read-only mode - only show active locations
-    return Obx(() {
-      if (!location.isActive.value) return const SizedBox.shrink();
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: ObProfilView._blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.location_city_rounded,
-                color: ObProfilView._blue,
-                size: 20,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F4C81).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.location_city_rounded,
+              color: Color(0xFF0F4C81),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              location.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xFF4A5568),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                location.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF4A5568),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2BAE66).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Aktif'.tr,
+              style: const TextStyle(
+                color: Color(0xFF2BAE66),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2BAE66).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'Aktif'.tr,
-                style: const TextStyle(
-                  color: Color(0xFF2BAE66),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -811,6 +791,60 @@ class _SettingsSection extends StatelessWidget {
               onTap: () => Get.toNamed(Routes.PRIVACY),
             ),
             const Divider(height: 1),
+            _SettingsTile(
+              icon: Icons.mail_outline_rounded,
+              label: 'Kontak'.tr,
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) {
+                    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Text(
+                        'Hubungi Kami'.tr,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Jika Anda memiliki pertanyaan atau kendala, silakan hubungi kami melalui:'.tr,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 16),
+                          const Row(
+                            children: [
+                              Icon(Icons.email, color: Color(0xFF0F4C81), size: 20),
+                              SizedBox(width: 8),
+                              Text('support@wgs.com', style: TextStyle(fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          const Row(
+                            children: [
+                              Icon(Icons.phone, color: Color(0xFF0F4C81), size: 20),
+                              SizedBox(width: 8),
+                              Text('+62 21-1234-5678', style: TextStyle(fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: Text('Tutup'.tr, style: const TextStyle(color: Color(0xFF0F4C81))),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            const Divider(height: 1),
             Obx(() => _SettingsTile(
                   icon: Icons.translate_rounded,
                   label: 'Bahasa'.tr,
@@ -819,10 +853,10 @@ class _SettingsSection extends StatelessWidget {
                 )),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          height: 50,
+          height: 48,
           child: OutlinedButton.icon(
             onPressed: () => LogoutConfirmationDialog.show(
               context,
@@ -832,14 +866,14 @@ class _SettingsSection extends StatelessWidget {
             label: Text('Keluar Sesi'.tr),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFE53935),
-              side: const BorderSide(color: Color(0xFFE1E8F0)),
+              side: const BorderSide(color: Color(0xFFE53935), width: 1.5),
               backgroundColor: isDark ? AppDarkColors.surface : Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               textStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -960,95 +994,81 @@ class _ProfileReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppDarkColors.surface : Colors.white;
-    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFD1D9E5);
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFCFD5E3);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           decoration: BoxDecoration(
             color: cardColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 5,
-                  decoration: const BoxDecoration(
-                    color: ObProfilView._blue,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                    ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _ReportPill(style: _priorityStyle(report.priority)),
+                    _ReportPill(style: _statusStyle(report.status)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  report.title.tr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF172033),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            _ReportPill(style: _priorityStyle(report.priority)),
-                            const Spacer(),
-                            _ReportPill(style: _statusStyle(report.status)),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          report.title.tr,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              color: Color(0xFF064BFF),
-                              size: 15,
-                            ),
-                            Expanded(
-                              child: Text(
-                                report.location.tr,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Color(0xFF064BFF),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          report.description.tr,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.white70
-                                : const Color(0xFF465160),
-                            fontSize: 11,
-                            height: 1.25,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      color: Color(0xFF0F4C81),
+                      size: 14,
                     ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        report.location.tr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF0F4C81),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  report.description.tr,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : const Color(0xFF7A8B9B),
+                    fontSize: 12,
+                    height: 1.3,
                   ),
                 ),
               ],

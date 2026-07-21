@@ -199,6 +199,11 @@ class NotificationsController extends GetxController {
       case 'RECEIVED':
       case 'LAPORAN_DITERIMA':
         return 'received';
+      case 'DITOLAK':
+      case 'REJECTED':
+      case 'LAPORAN_DITOLAK':
+      case 'LAPORAN_DIBATALKAN':
+        return 'rejected';
       case 'STATUS_UPDATE':
       case 'INFO':
       case 'SYSTEM':
@@ -230,14 +235,6 @@ class NotificationsController extends GetxController {
   DateTime _parseDate(String? value) {
     if (value == null || value.isEmpty) return DateTime.now();
     return DateTime.tryParse(value)?.toLocal() ?? DateTime.now();
-  }
-
-  bool _isTruthy(dynamic value) {
-    if (value == null) return false;
-    if (value is bool) return value;
-    if (value is num) return value != 0;
-    final text = value.toString().toLowerCase().trim();
-    return text == 'true' || text == '1' || text == 'yes';
   }
 
   Future<void> markAsRead(NotificationItem item) async {

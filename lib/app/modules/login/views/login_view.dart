@@ -84,7 +84,7 @@ class _LoginCard extends StatelessWidget {
           children: [
             const Center(
               child: Text(
-                'Halo,Usn!',
+                'Halo, Usn!',
                 style: TextStyle(
                   fontSize: 42,
                   fontWeight: FontWeight.w900,
@@ -95,7 +95,7 @@ class _LoginCard extends StatelessWidget {
             const SizedBox(height: 8),
             const Center(
               child: Text(
-                'Selamat datang di Lapor OB!',
+                'Selamat datang di Lapor OB',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -104,12 +104,13 @@ class _LoginCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            const _InputLabel('Email / Username'),
+            const _InputLabel('Username'),
             _LoginInputField(
               hint: 'Masukan email atau username',
               controller: controller.identifierController,
               keyboardType: TextInputType.text,
               textInputAction: TextInputAction.next,
+              onChanged: (_) => controller.clearErrorMessage(),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Email atau username wajib diisi';
@@ -126,6 +127,7 @@ class _LoginCard extends StatelessWidget {
                 isPassword: controller.obscurePassword.value,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => controller.login(),
+                onChanged: (_) => controller.clearErrorMessage(),
                 suffixIcon: IconButton(
                   onPressed: controller.togglePasswordVisibility,
                   icon: Icon(
@@ -144,12 +146,49 @@ class _LoginCard extends StatelessWidget {
                 },
               ),
             ),
-            
-            const SizedBox(height: 30),
+            Obx(() {
+              if (controller.errorMessage.value.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                margin: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE8E8),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFF8B4B4),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: Color(0xFFC81E1E),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        controller.errorMessage.value,
+                        style: const TextStyle(
+                          color: Color(0xFFC81E1E),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 24),
             Center(
               child: SizedBox(
-                width: 130,
-                height: 38,
+                width: 140,
+                height: 42,
                 child: Obx(
                   () => ElevatedButton(
                     onPressed: controller.isLoading.value
@@ -182,14 +221,14 @@ class _LoginCard extends StatelessWidget {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
-                              fontSize: 13,
+                              fontSize: 14,
                             ),
                           ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 36),
             const _AdminContactPrompt(),
           ],
         ),
@@ -209,9 +248,9 @@ class _AdminContactPrompt extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           const Text(
-            'Belum punya akun? ',
+            'Kesulitan Log In? ',
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.grey,
             ),
@@ -221,7 +260,7 @@ class _AdminContactPrompt extends StatelessWidget {
             child: const Text(
               'Hubungi admin',
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: LoginPage._navyTextColor,
               ),
@@ -264,6 +303,7 @@ class _LoginInputField extends StatelessWidget {
     this.suffixIcon,
     this.validator,
     this.onSubmitted,
+    this.onChanged,
   });
 
   final String hint;
@@ -274,6 +314,7 @@ class _LoginInputField extends StatelessWidget {
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -296,6 +337,7 @@ class _LoginInputField extends StatelessWidget {
         keyboardType: keyboardType,
         textInputAction: textInputAction,
         onFieldSubmitted: onSubmitted,
+        onChanged: onChanged,
         validator: validator,
         style: const TextStyle(color: LoginPage._navyTextColor, fontSize: 14),
         decoration: InputDecoration(

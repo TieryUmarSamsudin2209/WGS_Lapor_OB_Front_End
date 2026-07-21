@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import '../../../../routes/app_pages.dart';
@@ -325,11 +325,16 @@ class ObHomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Defer heavy startup work (network + polling) until after the first
+    // frame is rendered to avoid blocking the UI thread on cold start
+    // (prevents ANR / skipped frames during app launch).
     _loadUser();
-    loadHomeData();
-    _startReportPolling();
-    _loadUnreadNotificationCount();
-    _startNotificationPolling();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadHomeData();
+      _loadUnreadNotificationCount();
+      _startReportPolling();
+      _startNotificationPolling();
+    });
   }
 
   void openReportDetail(HomeReport report) {

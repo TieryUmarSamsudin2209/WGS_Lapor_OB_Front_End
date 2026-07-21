@@ -10,6 +10,11 @@ import '../../home/controllers/ob_home_controller.dart';
 class ObCollaborationController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
 
+  // Cache of approved collaborators keyed by report id. Persists across
+  // controller disposal so re-opening the page keeps the member list even
+  // when the server doesn't return an approved-members list.
+  static final Map<String, List<CollaboratorModel>> _approvedCache = {};
+
   HomeReport? activeReport;
 
   var isLoading = false.obs;
@@ -117,36 +122,91 @@ class ObCollaborationController extends GetxController {
     if (reportId == null) return;
 
     debugPrint('🔄 Fetching complete report data for: $reportId');
-    
+
     try {
-      // Try to get collaboration requests - if successful, extract owner info
-      final response = await _authService.getCollaborationRequests(reportId);
-      
+      // Fetch the single report detail which contains the owner (ob_id) info
+      final response = await _authService.getObReportById(reportId);
+
       if (response != null) {
-        debugPrint('✅ Got response, checking for owner info...');
-        
-        // Try to extract owner info from response
-        final laporan = response['laporan'];
-        
-        // Owner info might be in laporan object
-        if (laporan is Map) {
-          final obId = laporan['ob_id']?.toString() ??
-                       laporan['assigned_ob_id']?.toString() ??
-                       laporan['ob']?['id']?.toString() ??
-                       laporan['user_id']?.toString();
-                       
-          final obName = laporan['ob_name']?.toString() ??
-                         laporan['nama_ob']?.toString() ??
-                         laporan['ob']?['nama_lengkap']?.toString() ??
-                         laporan['ob']?['nama']?.toString() ??
-                         laporan['ob']?['name']?.toString();
-            
-          if (obId != null && obId.isNotEmpty) {
-            debugPrint('✅ Found owner info from API: $obName (ID: $obId)');
-            if (activeReport != null) {
-              activeReport!.obId.value = obId;
-              if (obName != null) {
-                activeReport!.obName.value = obName;
+        debugPrint('✅ Got report detail, checking for owner info...');
+        debugPrint('📦 Report detail top-level keys: ${response.keys.join(", ")}');
+        final laporanObj = response['laporan'];
+        if (laporanObj is Map) {
+          debugPrint('📦 laporan keys: ${(laporanObj as Map).keys.join(", ")}');
+        }
+        final dataObj = response['data'];
+        if (dataObj is Map) {
+          debugPrint('📦 data keys: ${(dataObj as Map).keys.join(", ")}');
+        }
+
+        // The detail response may wrap the report in 'data' or 'laporan'
+        final candidates = <dynamic>[
+          response['laporan'],
+          response['data'],
+          response,
+        ];
+
+        String? obId;
+        String? obName;
+
+        for (final candidate in candidates) {
+          if (candidate is Map) {
+            final foundId = candidate['ob_id']?.toString() ??
+                candidate['assigned_ob_id']?.toString() ??
+                candidate['petugas_id']?.toString() ??
+                candidate['user_id']?.toString() ??
+                candidate['created_by']?.toString() ??
+                candidate['ob']?['id']?.toString();
+            final foundName = candidate['ob_name']?.toString() ??
+                candidate['nama_ob']?.toString() ??
+                candidate['ob']?['nama_lengkap']?.toString() ??
+                candidate['ob']?['nama']?.toString() ??
+                candidate['ob']?['name']?.toString();
+
+            if (foundId != null && foundId.isNotEmpty) {
+              obId = foundId;
+              if (foundName != null) obName = foundName;
+              break;
+            }
+          }
+        }
+
+        if (obId != null && obId.isNotEmpty) {
+          debugPrint('✅ Found owner info from API: $obName (ID: $obId)');
+          if (activeReport != null) {
+            activeReport!.obId.value = obId;
+            if (obName != null) {
+              activeReport!.obName.value = obName;
+            }
+          }
+        } else {
+          debugPrint('⚠️ Owner info (ob_id) not found in report detail response, trying collaboration endpoint...');
+          // Fallback: the collaboration requests endpoint returns the laporan
+          // object (with ob_id) for the owner, and an "OB utama" error confirms
+          // the current user is the owner.
+          final collabResponse = await _authService.getCollaborationRequests(reportId);
+          if (collabResponse != null) {
+            // The collaboration requests endpoint returns 200 ONLY for the
+            // report owner (non-owners who haven't joined get an error). So a
+            // successful response here confirms the current user is the owner.
+            debugPrint('✅ Collaboration requests returned 200 — current user is the owner');
+            final currentUser = _authService.user.value;
+            final currentObId = currentUser?['id']?.toString();
+            if (currentObId != null && activeReport != null) {
+              activeReport!.obId.value = currentObId;
+              activeReport!.obName.value = currentUser?['nama_lengkap']?.toString() ?? 'OB';
+            }
+          } else {
+            // If the request failed with an "OB utama"/owner error, the current
+            // user IS the owner of this report.
+            final err = _authService.lastRequestError ?? '';
+            if (err.contains('OB utama') || err.contains('owner') || err.contains('pemilik')) {
+              debugPrint('⚠️ Collaboration endpoint confirms current user is the owner');
+              final currentUser = _authService.user.value;
+              final currentObId = currentUser?['id']?.toString();
+              if (currentObId != null && activeReport != null) {
+                activeReport!.obId.value = currentObId;
+                activeReport!.obName.value = currentUser?['nama_lengkap']?.toString() ?? 'OB';
               }
             }
           }
@@ -176,7 +236,7 @@ class ObCollaborationController extends GetxController {
       debugPrint('   ✅ Current user IS owner');
     } else {
       isOwner.value = false;
-      ownerName.value = activeReport?.obName.value ?? 'Pemilik Laporan';
+      ownerName.value = activeReport?.obName.value ?? 'Pemilik Laporan'.tr;
       debugPrint('   ℹ️ Current user is NOT owner');
     }
     
@@ -222,6 +282,20 @@ class ObCollaborationController extends GetxController {
     
     List<CollaboratorModel> combinedList = [];
     String? requestError;
+
+    // 0. Preserve locally-approved collaborators so a reload (or re-opening the
+    //    page) doesn't drop them when the server doesn't return an
+    //    approved-members list. We read from both the live Rx list and the
+    //    per-report cache (which survives controller disposal).
+    final cached = _approvedCache[reportId];
+    if (cached != null) combinedList.addAll(cached);
+    for (final local in List<CollaboratorModel>.from(collaborators)) {
+      if (local.status == 'APPROVED') {
+        if (!combinedList.any((c) => c.id == local.id || (c.obId != null && c.obId == local.obId))) {
+          combinedList.add(local);
+        }
+      }
+    }
 
     // 1. Sync dashboard reports list first to get latest collaborators on activeReport
     try {
@@ -303,7 +377,7 @@ class ObCollaborationController extends GetxController {
           obId: isMe ? currentUserId : null,
           name: name,
           status: 'APPROVED',
-          role: 'Anggota',
+          role: 'Anggota'.tr,
         ));
       }
     }
@@ -513,7 +587,21 @@ class ObCollaborationController extends GetxController {
       return;
     }
 
-    // Success - reload collaborators
+    // Success - update collaborator status locally so the name appears immediately
+    final idx = collaborators.indexWhere((c) => c.id == collaborationId);
+    if (idx != -1) {
+      final updated = CollaboratorModel(
+        id: collaborators[idx].id,
+        obId: collaborators[idx].obId,
+        name: collaborators[idx].name,
+        role: 'Anggota'.tr,
+        status: 'APPROVED',
+      );
+      collaborators[idx] = updated;
+      // Persist into the per-report cache so re-opening keeps the member.
+      _cacheApproved(reportId, updated);
+    }
+
     final ctx = Get.context;
     if (ctx != null) {
       await CustomAlert.show(
@@ -524,6 +612,20 @@ class ObCollaborationController extends GetxController {
     }
 
     await _loadCollaborators();
+  }
+
+  void _cacheApproved(String reportId, CollaboratorModel member) {
+    final list = _approvedCache.putIfAbsent(reportId, () => <CollaboratorModel>[]);
+    if (!list.any((c) => c.id == member.id || (c.obId != null && c.obId == member.obId))) {
+      list.add(member);
+    }
+  }
+
+  void _uncacheApproved(String reportId, String collaborationId) {
+    final list = _approvedCache[reportId];
+    if (list != null) {
+      list.removeWhere((c) => c.id == collaborationId);
+    }
   }
 
   Future<void> rejectCollaborator(String collaborationId) async {
@@ -558,7 +660,10 @@ class ObCollaborationController extends GetxController {
       return;
     }
 
-    // Success - reload collaborators
+    // Success - remove collaborator from local list
+    collaborators.removeWhere((c) => c.id == collaborationId);
+    _uncacheApproved(reportId, collaborationId);
+
     final ctx = Get.context;
     if (ctx != null) {
       await CustomAlert.show(
@@ -647,7 +752,10 @@ class ObCollaborationController extends GetxController {
       return;
     }
 
-    // Success - reload collaborators
+    // Success - remove collaborator from local list
+    collaborators.removeWhere((c) => c.id == collaborationId);
+    _uncacheApproved(reportId, collaborationId);
+
     final ctx = Get.context;
     if (ctx != null) {
       await CustomAlert.show(
@@ -842,6 +950,8 @@ class CollaboratorModel {
     this.status = 'PENDING',
   });
 
+  String get translatedRole => role.tr;
+
   factory CollaboratorModel.fromJson(Map<String, dynamic> json) {
     // Extract ID from various possible keys
     final id = json['id']?.toString() ??
@@ -882,8 +992,8 @@ class CollaboratorModel {
     final status = (json['status']?.toString() ?? 'PENDING').toUpperCase();
 
     // Extract role (if available)
-    final role = json['role']?.toString() ?? 
-        (status == 'APPROVED' ? 'Anggota' : 'Menunggu Persetujuan');
+    final role = json['role']?.toString() ??
+        (status == 'APPROVED' ? 'Anggota'.tr : 'Menunggu Persetujuan'.tr);
 
     return CollaboratorModel(
       id: id,

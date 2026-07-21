@@ -12,6 +12,7 @@ class LoginController extends GetxController {
 
   final isLoading = false.obs;
   final obscurePassword = true.obs;
+  final errorMessage = ''.obs;
   final token = RxnString();
   final user = Rxn<Map<String, dynamic>>();
 
@@ -40,8 +41,16 @@ class LoginController extends GetxController {
     obscurePassword.toggle();
   }
 
+  void clearErrorMessage() {
+    if (errorMessage.value.isNotEmpty) {
+      errorMessage.value = '';
+    }
+  }
+
   Future<void> login() async {
     if (isLoading.value) return;
+    errorMessage.value = '';
+
     if (!(formKey.currentState?.validate() ?? false)) return;
 
     isLoading.value = true;
@@ -66,23 +75,19 @@ class LoginController extends GetxController {
         return;
       }
 
-      _showError('Login gagal. Periksa email/username dan password Anda.');
+      final errorMsg = _authService.lastRequestError;
+      if (errorMsg != null && errorMsg.isNotEmpty) {
+        errorMessage.value = errorMsg;
+      } else {
+        errorMessage.value =
+            'Password atau konfirmasi passowrd salah. Silakan coba lagi.';
+      }
     } catch (_) {
-      _showError('Tidak dapat terhubung ke server. Coba lagi sebentar.');
+      errorMessage.value =
+          'Tidak dapat terhubung ke server. Coba lagi sebentar.';
     } finally {
       isLoading.value = false;
     }
-  }
-
-  void _showError(String message) {
-    Get.snackbar(
-      'Login gagal',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-      backgroundColor: const Color(0xFFE53935),
-      colorText: Colors.white,
-    );
   }
 
   String _dashboardRouteFor(
