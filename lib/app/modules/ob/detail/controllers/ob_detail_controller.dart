@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/utils/report_translation_key.dart';
 import '../../../../shared/widgets/custom_alert.dart';
+import '../../../../shared/widgets/ob_complete_report_dialog.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
 class ObDetailController extends GetxController {
@@ -333,6 +334,23 @@ class ObDetailController extends GetxController {
       return;
     }
 
+    final ctx = Get.context;
+    if (ctx == null) return;
+
+    // Tampilkan Popup Konfirmasi 1 ("Selesaikan Laporan?")
+    await ObCompleteReportDialog.showConfirmation(
+      ctx,
+      onConfirm: () async {
+        await _processCompleteReport(ctx, reportId, note);
+      },
+    );
+  }
+
+  Future<void> _processCompleteReport(
+    BuildContext context,
+    String reportId,
+    String note,
+  ) async {
     isSubmitting.value = true;
     final response = await _authService.submitObReportHistory(
       reportId: reportId,
@@ -342,25 +360,33 @@ class ObDetailController extends GetxController {
     isSubmitting.value = false;
 
     if (response == null) {
-      final ctx = Get.context;
       final message =
           _authService.lastRequestError ?? 'Gagal menyelesaikan laporan'.tr;
-      if (ctx != null) {
-        await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
-      } else {
-        Get.snackbar('Error'.tr, message.tr);
-      }
+      await CustomAlert.show(context, isSuccess: false, description: message.tr);
       return;
     }
 
     activeReport?.status.value = 'Selesai';
-    final ctx = Get.context;
-    if (ctx != null) {
-      CustomAlert.show(ctx, isSuccess: true);
-    }
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      Get.back(); // Tutup Dialog Alert
-      Get.back(); // Kembali ke halaman sebelumnya (Home OB)
+
+    try {
+      final obHomeController = Get.find<ObHomeController>();
+      await obHomeController.loadReports(silent: true);
+    } catch (_) {}
+
+    // Tampilkan Popup Berhasil 2 ("Laporan Selesai!")
+    ObCompleteReportDialog.showSuccess(
+      context,
+      onClose: () {
+        Get.back(); // Kembali ke OB Home
+      },
+    );
+
+    // Auto navigate back setelah 2.2 detik jika tombol close tidak ditekan
+    Future.delayed(const Duration(milliseconds: 2200), () {
+      if (Get.isDialogOpen ?? false) {
+        Get.back(); // Tutup Dialog jika masih terbuka
+        Get.back(); // Kembali ke OB Home
+      }
     });
   }
 

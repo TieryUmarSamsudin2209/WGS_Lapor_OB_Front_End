@@ -519,7 +519,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
             children: controller.collaborators.map((collaborator) {
               return _buildCollaboratorItem(
                 collaborator.name,
-                collaborator.status == 'APPROVED' ? 'Anggota' : 'Menunggu',
+                collaborator.status == 'APPROVED' ? 'Anggota'.tr : 'Menunggu'.tr,
                 collaborator.status == 'PENDING',
                 collaborator.id,
                 isDark,
@@ -606,7 +606,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
         // Owner info
         _buildTeamMemberCard(
           controller.ownerName.value,
-          'Pemilik Laporan',
+          'Pemilik Laporan'.tr,
           isDark,
           titleColor,
           mutedColor,
@@ -656,7 +656,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildTeamMemberCard(
                   c.name,
-                  'Anggota',
+                  'Anggota'.tr,
                   isDark,
                   titleColor,
                   mutedColor,
@@ -901,7 +901,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
       children: [
         // Selesaikan Laporan button (biru)
         _buildSolidButton(
-          'Selesaikan',
+          'Selesaikan'.tr,
           const Color(0xFF1689D8), // Blue color
           () => controller.completeReportFromCollaboration(),
           icon: Icons.check_circle_outline,
@@ -909,7 +909,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
         const SizedBox(height: 12),
         // Batalkan Kolaborasi button (merah)
         _buildSolidButton(
-          'Batalkan Kolaborasi',
+          'Batalkan Kolaborasi'.tr,
           urgentRed, // Red color
           () => controller.closeCollaboration(),
           icon: Icons.cancel_outlined,
@@ -927,7 +927,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
 
     if (hasJoined) {
       return _buildSolidButton(
-        'Keluar',
+        'Keluar'.tr,
         urgentRed,
         () => _showLeaveConfirmation(),
         icon: Icons.logout,
@@ -935,7 +935,7 @@ class ObCollaborationView extends GetView<ObCollaborationController> {
     }
 
     return _buildSolidButton(
-      'Bergabung',
+      'Bergabung'.tr,
       navyColor,
       () => controller.joinCollaboration(),
       icon: Icons.group_add,

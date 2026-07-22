@@ -7,10 +7,10 @@ import '../controllers/notifications_controller.dart';
 class NotificationsView extends GetView<NotificationsController> {
   const NotificationsView({super.key});
 
-  static const _blue = Color(0xFF0F4C81);
-  static const _pageBg = Color(0xFFF4F7FA);
-  static const _text = Color(0xFF172033);
-  static const _muted = Color(0xFF6F7785);
+  static const _blue = Color(0xFF003366);
+  static const _pageBg = Color(0xFFF8FAFC);
+  static const _text = Color(0xFF1E293B);
+  static const _muted = Color(0xFF64748B);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class NotificationsView extends GetView<NotificationsController> {
           'notifikasi'.tr,
           style: TextStyle(
             color: isDark ? Colors.white : _blue,
-            fontSize: 19,
+            fontSize: 20,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -53,7 +53,7 @@ class NotificationsView extends GetView<NotificationsController> {
               child: Text(
                 'read_all'.tr,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -63,111 +63,51 @@ class NotificationsView extends GetView<NotificationsController> {
       ),
       body: SafeArea(
         top: false,
-        child: Column(
-          children: [
-            _buildFilterChips(),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: controller.loadNotifications,
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+        child: RefreshIndicator(
+          onRefresh: controller.loadNotifications,
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                  final grouped = controller.groupedNotifications;
-                  if (grouped.isEmpty) {
-                    return ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(22, 40, 22, 24),
-                      children: const [
-                        _EmptyState(),
-                      ],
-                    );
-                  }
+            final grouped = controller.groupedNotifications;
+            if (grouped.isEmpty) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(22, 40, 22, 24),
+                children: const [
+                  _EmptyState(),
+                ],
+              );
+            }
 
-                  return ListView(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-                    children: grouped.entries.expand((entry) {
-                      return [
-                        _SectionTitle(title: entry.key == 'TERBARU' ? 'terbaru'.tr : 'sebelumnya'.tr),
-                        const SizedBox(height: 10),
-                        ...entry.value.map(
-                          (item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: GestureDetector(
-                              onTap: () {
-                                // Mark as read when tapped
-                                Get.find<NotificationsController>().markAsRead(item);
-                              },
-                              child: _NotificationCard(item: item),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ];
-                    }).toList(),
-                  );
-                }),
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
               ),
-            ),
-          ],
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              children: grouped.entries.expand((entry) {
+                return [
+                  _SectionTitle(title: entry.key == 'TERBARU' ? 'TERBARU' : (entry.key == 'KEMARIN' ? 'KEMARIN' : 'SEBELUMNYA')),
+                  const SizedBox(height: 12),
+                  ...entry.value.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GestureDetector(
+                        onTap: () {
+                          Get.find<NotificationsController>().markAsRead(item);
+                        },
+                        child: _NotificationCard(item: item),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ];
+              }).toList(),
+            );
+          }),
         ),
       ),
-    );
-  }
-
-  Widget _buildFilterChips() {
-    final isDark = Get.isDarkMode;
-    final chips = ['Semua', 'Laporan', 'Info'];
-    final chipLabels = {
-      'Semua': 'semua'.tr,
-      'Laporan': 'laporan'.tr,
-      'Info': 'info'.tr,
-    };
-
-    return Container(
-      height: 48,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 0),
-      child: Obx(() {
-        return Row(
-          children: chips.map((chip) {
-            final isSelected = controller.activeFilter.value == chip;
-            return Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: ChoiceChip(
-                label: Text(
-                  chipLabels[chip] ?? chip,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white70 : const Color(0xFF4E5765)),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                selected: isSelected,
-                selectedColor: const Color(0xFF0F4C81),
-                backgroundColor: isDark ? AppDarkColors.surface : const Color(0xFFEDF2F7),
-                side: BorderSide.none,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                showCheckmark: false,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                onSelected: (val) {
-                  if (val) {
-                    controller.activeFilter.value = chip;
-                  }
-                },
-              ),
-            );
-          }).toList(),
-        );
-      }),
     );
   }
 }
@@ -184,10 +124,10 @@ class _SectionTitle extends StatelessWidget {
       style: TextStyle(
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white70
-            : const Color(0xFF4E5765),
-        fontSize: 13,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 0.2,
+            : const Color(0xFF888888),
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.5,
       ),
     );
   }
@@ -203,13 +143,13 @@ class _NotificationCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final style = _styleForType(item.type);
     final cardColor = isDark ? AppDarkColors.surface : Colors.white;
-    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFE0E7EF);
+    final borderColor = isDark ? AppDarkColors.border : const Color(0xFFF1F5F9);
 
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor, width: 1),
         boxShadow: [
           if (!isDark)
             BoxShadow(
@@ -220,85 +160,60 @@ class _NotificationCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (item.type == 'received')
+              if (style.stripeColor != null)
                 Container(
                   width: 4,
-                  color: const Color(0xFF1A73E8),
+                  color: style.stripeColor,
                 ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: 46,
+                        height: 46,
                         decoration: BoxDecoration(
                           color: style.background,
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(style.icon, color: style.foreground, size: 23),
+                        child: Icon(
+                          style.icon,
+                          color: style.foreground,
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _translateTitle(item.title),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: isDark ? Colors.white : NotificationsView._text,
-                                      fontSize: 13,
-                                      height: 1.15,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  item.timeLabel == '2 mnt yang lalu'
-                                      ? 'time_2_min_ago'.tr
-                                      : item.timeLabel == '1 jam yang lalu'
-                                          ? 'time_1_hr_ago'.tr
-                                          : item.timeLabel == 'Kemarin'
-                                              ? 'time_yesterday'.tr
-                                              : item.timeLabel == '2 hari yang lalu'
-                                                  ? 'time_2_days_ago'.tr
-                                                  : item.timeLabel,
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white54
-                                        : NotificationsView._muted,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              item.title,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : NotificationsView._text,
+                                fontSize: 14,
+                                height: 1.2,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                            const SizedBox(height: 4),
-                            _buildMessage(context, _translateMessage(item.message), isDark),
+                            const SizedBox(height: 5),
+                            Text(
+                              item.message,
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : NotificationsView._muted,
+                                fontSize: 12.5,
+                                height: 1.35,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: item.isUnread ? style.foreground : Colors.transparent,
-                          shape: BoxShape.circle,
                         ),
                       ),
                     ],
@@ -308,63 +223,6 @@ class _NotificationCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  String _translateTitle(String title) {
-    if (title == 'Laporan Selesai') return 'laporan_selesai'.tr;
-    if (title == 'Laporan Diterima') return 'laporan_diterima'.tr;
-    if (title == 'Pembaruan Status') return 'pembaruan_status'.tr;
-    return title.tr;
-  }
-
-  String _translateMessage(String message) {
-    if (message.contains('Tumpahan air')) return 'notif_selesai_1'.tr;
-    if (message.contains('AC Bocor')) return 'notif_diterima_1'.tr;
-    if (message.contains('Lift B2')) return 'notif_status_1'.tr;
-    if (message.contains('Kertas Habis')) return 'notif_selesai_2'.tr;
-    return message.tr;
-  }
-
-  Widget _buildMessage(BuildContext context, String message, bool isDark) {
-    final highlight = 'facility_status_normal'.tr;
-    if (message.contains(highlight)) {
-      final parts = message.split(highlight);
-      return RichText(
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        text: TextSpan(
-          style: TextStyle(
-            color: isDark ? Colors.white70 : NotificationsView._muted,
-            fontSize: 12,
-            height: 1.28,
-            fontWeight: FontWeight.w500,
-            fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
-          ),
-          children: [
-            TextSpan(text: parts[0]),
-            TextSpan(
-              text: highlight,
-              style: const TextStyle(
-                color: Color(0xFF2BC36A),
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            if (parts.length > 1) TextSpan(text: parts[1]),
-          ],
-        ),
-      );
-    }
-    return Text(
-      message,
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        color: isDark ? Colors.white70 : NotificationsView._muted,
-        fontSize: 12,
-        height: 1.28,
-        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -413,45 +271,52 @@ class _NotificationStyle {
     required this.icon,
     required this.background,
     required this.foreground,
+    this.stripeColor,
   });
 
   final IconData icon;
   final Color background;
   final Color foreground;
+  final Color? stripeColor;
 }
 
 _NotificationStyle _styleForType(String type) {
   if (type == 'resolved') {
     return const _NotificationStyle(
-      icon: Icons.check_rounded,
-      background: Color(0xFFE6F4EA),
-      foreground: Color(0xFF2BC36A),
+      icon: Icons.check_circle_outline_rounded,
+      background: Color(0xFFE8F5E9),
+      foreground: Color(0xFF2E7D32),
+      stripeColor: null,
     );
   }
   if (type == 'received') {
     return const _NotificationStyle(
-      icon: Icons.engineering_rounded,
-      background: Color(0xFFE8F0FE),
-      foreground: Color(0xFF1A73E8),
+      icon: Icons.assignment_ind_outlined,
+      background: Color(0xFFE0E7FF),
+      foreground: Color(0xFF1D4ED8),
+      stripeColor: Color(0xFF1D4ED8),
     );
   }
-  if (type == 'status_update') {
+  if (type == 'rejected') {
     return const _NotificationStyle(
-      icon: Icons.sync_rounded,
-      background: Color(0xFFE8F0FE),
-      foreground: Color(0xFF1A73E8),
+      icon: Icons.error_outline_rounded,
+      background: Color(0xFFFEE2E2),
+      foreground: Color(0xFFDC2626),
+      stripeColor: Color(0xFFDC2626),
     );
   }
   if (type == 'report') {
     return const _NotificationStyle(
       icon: Icons.warning_amber_rounded,
-      background: Color(0xFFFFEAB8),
-      foreground: Color(0xFFFFA21A),
+      background: Color(0xFFFFF7ED),
+      foreground: Color(0xFFEA580C),
+      stripeColor: Color(0xFFEA580C),
     );
   }
   return const _NotificationStyle(
     icon: Icons.info_outline_rounded,
-    background: Color(0xFFE8F0FE),
-    foreground: Color(0xFF1A73E8),
+    background: Color(0xFFE0E7FF),
+    foreground: Color(0xFF1D4ED8),
+    stripeColor: Color(0xFF1D4ED8),
   );
 }

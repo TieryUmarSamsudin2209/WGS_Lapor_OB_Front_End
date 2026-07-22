@@ -13,7 +13,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
 
   final bool isNested;
 
-  static const _navy = Color(0xFF0F2A5E);
   static const _bg = Color(0xFFF5F6FA);
 
   @override
@@ -42,7 +41,11 @@ class ObChecklistView extends GetView<ObChecklistController> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 16),
-                              _buildSectionsList(),
+                              _buildSummaryCard(),
+                              const SizedBox(height: 12),
+                              _buildTabToggle(),
+                              const SizedBox(height: 8),
+                              _buildTugasContainer(),
                               const SizedBox(height: 110),
                             ],
                           ),
@@ -89,18 +92,548 @@ class ObChecklistView extends GetView<ObChecklistController> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-          child: Text(
-            'Daftar Tugas'.tr,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-            ),
+          padding: const EdgeInsets.fromLTRB(12, 16, 24, 20),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 22),
+                onPressed: () => Get.back(),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Daftar Tugas'.tr,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  // ─── Summary Card ──────────────────────────────────────────────────────
+  Widget _buildSummaryCard() {
+    return Obx(() {
+      final count = controller.completedCountToday;
+      final location = controller.penugasanText.value;
+      final isDark = Get.isDarkMode;
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? AppDarkColors.surface : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFE2EAF8).withValues(alpha: isDark ? 0.2 : 0.8),
+                blurRadius: 10,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tugas Diselesaikan hari ini'.tr,
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : const Color(0xFF0F2A5E),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: isDark ? Colors.blueAccent : const Color(0xFF5A78FF),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'Penugasan: $location'.tr,
+                            style: TextStyle(
+                              color: isDark ? Colors.white60 : const Color(0xFF5A78FF),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$count',
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F4C81),
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ─── Tab Toggle ────────────────────────────────────────────────────────
+  Widget _buildTabToggle() {
+    return Obx(() {
+      final isDark = Get.isDarkMode;
+      final currentTab = controller.activeTab.value;
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Container(
+          height: 50,
+          decoration: BoxDecoration(
+            color: isDark ? AppDarkColors.surfaceVariant : const Color(0xFFF6F8FD),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => controller.activeTab.value = 'tugas',
+                  child: AnimatedContainer(
+                     duration: const Duration(milliseconds: 200),
+                     alignment: Alignment.center,
+                     decoration: BoxDecoration(
+                       color: currentTab == 'tugas'
+                           ? const Color(0xFF154B86)
+                           : Colors.transparent,
+                       borderRadius: BorderRadius.circular(25),
+                     ),
+                     child: Text(
+                       'Tugas'.tr,
+                       style: TextStyle(
+                         color: currentTab == 'tugas'
+                             ? Colors.white
+                             : (isDark ? Colors.white60 : const Color(0xFF7A8B9B)),
+                         fontWeight: FontWeight.bold,
+                         fontSize: 14,
+                       ),
+                     ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => controller.activeTab.value = 'tugas_harian',
+                  child: AnimatedContainer(
+                     duration: const Duration(milliseconds: 200),
+                     alignment: Alignment.center,
+                     decoration: BoxDecoration(
+                       color: currentTab == 'tugas_harian'
+                           ? const Color(0xFF154B86)
+                           : Colors.transparent,
+                       borderRadius: BorderRadius.circular(25),
+                     ),
+                     child: Text(
+                       'Tugas Harian'.tr,
+                       style: TextStyle(
+                         color: currentTab == 'tugas_harian'
+                             ? Colors.white
+                             : (isDark ? Colors.white60 : const Color(0xFF7A8B9B)),
+                         fontWeight: FontWeight.bold,
+                         fontSize: 14,
+                       ),
+                     ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ─── Tugas Container ────────────────────────────────────────────────────
+  Widget _buildTugasContainer() {
+    return Obx(() {
+      final isDark = Get.isDarkMode;
+      final currentTab = controller.activeTab.value;
+
+      if (currentTab == 'tugas_harian') {
+        return _buildSectionsList();
+      }
+
+      if (controller.isLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 36),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      final tasks = controller.adHocTasks;
+      if (tasks.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: const _ChecklistEmptyState(),
+        );
+      }
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? AppDarkColors.surface : const Color(0xFF154B86),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tugas'.tr,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: tasks.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final task = tasks[index];
+                  return _buildAdHocTaskCard(context, task);
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ─── Ad Hoc Task Card ──────────────────────────────────────────────────
+  Widget _buildAdHocTaskCard(BuildContext context, Map<String, dynamic> task) {
+    final isDark = Get.isDarkMode;
+    final id = task['id']?.toString() ?? '';
+    final title = task['nama_tugas']?.toString() ?? '';
+    final description = task['catatan']?.toString() ?? task['deskripsi']?.toString() ?? '';
+    final status = task['status']?.toString() ?? 'BELUM_DIKERJAKAN';
+    final isCompleted = status == 'SELESAI';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8F8F0),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFF2E8B57),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F2A5E),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : const Color(0xFF7A8B9B),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: isCompleted
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F8F0),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF2E8B57),
+                                size: 14,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Selesai'.tr,
+                                style: TextStyle(
+                                  color: Color(0xFF2E8B57),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ElevatedButton(
+                          onPressed: () => _showConfirmationDialog(context, id, status),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F4C81),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Selesaikan Tugas'.tr,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Confirmation & Success Dialogs ─────────────────────────────────────
+  void _showConfirmationDialog(BuildContext context, String tugasId, String currentStatus) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        final isDark = Get.isDarkMode;
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE8F8F0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF2E8B57),
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Selesaikan Tugas?'.tr,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F2A5E),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Konfirmasi apakah anda sudah menyelesaikan tugas anda.'.tr,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white60 : const Color(0xFF7A8B9B),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.of(context).pop(); // Close confirmation dialog
+                      final success = await controller.completeAdHocTask(tugasId, currentStatus);
+                      if (success && context.mounted) {
+                        _showSuccessDialog(context);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF053E85),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Ya, Selesai'.tr,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF053E85),
+                      side: const BorderSide(color: Color(0xFF053E85)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Batalkan'.tr,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        final isDark = Get.isDarkMode;
+        Future.delayed(const Duration(seconds: 2), () {
+          if (context.mounted && Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        });
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 36.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 70,
+                      height: 70,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE8F8F0),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: Color(0xFF2E8B57),
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Tugas Selesai!'.tr,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF0F2A5E),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Kerja bagus! Tugas Anda telah tercatat.'.tr,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white60 : const Color(0xFF7A8B9B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Icon(
+                    Icons.close,
+                    color: isDark ? Colors.white70 : const Color(0xFF0F2A5E),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -282,7 +815,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
 
   // ─── POPUP DETAIL ──────────────────────────────────────────────────────
   void _showItemDetailPopup(BuildContext context, ChecklistItem item) {
-    // Pre-populate note text field
     controller.noteController.text = item.note.value;
 
     showGeneralDialog(
@@ -790,21 +1322,21 @@ _StatusStyle _statusStyle(String status) {
         Color(0xFF3FA76B),
         Color(0xFFE4F6EA),
         Icons.check_circle_outline_rounded,
-        'Resolved',
+        'Selesai',
       );
     case 'pending':
       return const _StatusStyle(
         Color(0xFFC98A1B),
         Color(0xFFFCF1DC),
         Icons.access_time_rounded,
-        'Pending',
+        'Menunggu',
       );
     default:
       return const _StatusStyle(
         Color(0xFFD9534F),
         Color(0xFFFBE7E6),
         Icons.radio_button_unchecked_rounded,
-        'To-Do',
+        'Belum Dikerjakan',
       );
   }
 }

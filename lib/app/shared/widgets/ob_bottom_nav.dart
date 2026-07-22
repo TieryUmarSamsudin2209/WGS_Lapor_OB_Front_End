@@ -10,7 +10,7 @@ class ObBottomNav extends StatelessWidget {
   const ObBottomNav({
     super.key,
     required this.activeItem,
-    this.middleLabel = 'Checklist',
+    this.middleLabel = 'Tugas',
     this.compact = false,
     this.onTap,
   });
