@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,6 +21,7 @@ class ObDetailController extends GetxController {
   var isDetailExpanded = true.obs;
   var isNeedHelp = false.obs;
   var isSubmitting = false.obs;
+  final elapsedWorkTime = '00:00:00'.obs;
 
   // Rx variables to make view dynamically change according to report
   var title = 'Kebocoran Pipa Air'.obs;
@@ -33,6 +36,8 @@ class ObDetailController extends GetxController {
   final noteController = TextEditingController();
   final actionPhotos = <String>[].obs;
   final ImagePicker _picker = ImagePicker();
+  Timer? _workTimer;
+  DateTime? _workStartedAt;
 
   @override
   void onInit() {
@@ -66,6 +71,12 @@ class ObDetailController extends GetxController {
         pageState.value = 'resolved'; // non-modifiable final states if needed
       } else {
         pageState.value = 'initial';
+      }
+
+      if (pageState.value == 'working') {
+        _startWorkTimer(startedAt: activeReport!.workingStartedAt);
+      } else {
+        _stopWorkTimer(reset: true);
       }
     }
   }
@@ -108,6 +119,9 @@ class ObDetailController extends GetxController {
     pageState.value = 'working';
     isDetailExpanded.value = false;
     activeReport?.status.value = 'Sedang Diproses'; // Always "Sedang Diproses", never "Belum Diproses"
+    final startedAt = _startedAtFromResponse(response) ?? DateTime.now();
+    activeReport?.workingStartedAt = startedAt;
+    _startWorkTimer(startedAt: startedAt);
     
     // Set owner info from response or current user
     final obNameFromResponse = _assignedObNameFromResponse(response);
@@ -367,6 +381,7 @@ class ObDetailController extends GetxController {
     }
 
     activeReport?.status.value = 'Selesai';
+    _stopWorkTimer();
 
     try {
       final obHomeController = Get.find<ObHomeController>();
@@ -438,6 +453,7 @@ class ObDetailController extends GetxController {
     }
 
     activeReport?.status.value = 'Ditolak';
+    _stopWorkTimer();
     final ctx = Get.context;
     if (ctx != null) {
       CustomAlert.show(
@@ -481,6 +497,43 @@ class ObDetailController extends GetxController {
 
   void toggleDetailExpand() {
     isDetailExpanded.value = !isDetailExpanded.value;
+  }
+
+  void _startWorkTimer({DateTime? startedAt}) {
+    _workStartedAt = startedAt ?? DateTime.now();
+    _workTimer?.cancel();
+    _updateElapsedWorkTime();
+    _workTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateElapsedWorkTime();
+    });
+  }
+
+  void _stopWorkTimer({bool reset = false}) {
+    _workTimer?.cancel();
+    _workTimer = null;
+    if (reset) {
+      _workStartedAt = null;
+      elapsedWorkTime.value = '00:00:00';
+    }
+  }
+
+  void _updateElapsedWorkTime() {
+    final startedAt = _workStartedAt;
+    if (startedAt == null) {
+      elapsedWorkTime.value = '00:00:00';
+      return;
+    }
+
+    var elapsed = DateTime.now().difference(startedAt);
+    if (elapsed.isNegative) elapsed = Duration.zero;
+    elapsedWorkTime.value = _formatDuration(elapsed);
+  }
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours.toString().padLeft(2, '0');
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
   }
 
   String? get _activeReportId {
@@ -590,6 +643,28 @@ class ObDetailController extends GetxController {
     ]);
   }
 
+  DateTime? _startedAtFromResponse(Map<String, dynamic> response) {
+    final value = _firstTextFromSources([
+      response,
+      _asMap(response['data']),
+      _asMap(response['laporan']),
+      _asMap(response['report']),
+    ], const [
+      'dikerjakan_at',
+      'dikerjakanAt',
+      'started_at',
+      'startedAt',
+      'work_started_at',
+      'workStartedAt',
+      'taken_at',
+      'takenAt',
+      'diambil_at',
+      'diambilAt',
+    ]);
+    if (value == null || value == '0') return null;
+    return DateTime.tryParse(value)?.toLocal();
+  }
+
   String? _firstTextFromSources(
     List<Map<String, dynamic>?> sources,
     List<String> keys,
@@ -656,6 +731,7 @@ class ObDetailController extends GetxController {
 
   @override
   void onClose() {
+    _stopWorkTimer();
     noteController.dispose();
     super.onClose();
   }

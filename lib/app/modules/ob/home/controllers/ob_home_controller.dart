@@ -35,6 +35,7 @@ class HomeReport {
   final Rx<String?> obId; // Made reactive for dynamic updates
   final Rx<String?> obName; // Made reactive for dynamic updates
   final RxList<String> collaborators; // List of collaborator names
+  DateTime? workingStartedAt;
 
   // Convenience getters for backward compatibility
   String? get assignedObId => obId.value;
@@ -54,6 +55,7 @@ class HomeReport {
     String? assignedObId,
     String? assignedObName,
     List<String> collaborators = const [],
+    this.workingStartedAt,
   }) : status = status.obs,
        hasCollaboration = hasCollaboration.obs,
        obId = Rx<String?>(assignedObId),
@@ -816,6 +818,18 @@ class ObHomeController extends GetxController {
           'petugas_ob',
           'ob',
         ]),
+        workingStartedAt: _dateTimeValueFromSources([item, detail], [
+          'dikerjakan_at',
+          'dikerjakanAt',
+          'started_at',
+          'startedAt',
+          'work_started_at',
+          'workStartedAt',
+          'taken_at',
+          'takenAt',
+          'diambil_at',
+          'diambilAt',
+        ]),
         photos: photos.isNotEmpty ? photos : _photosFromApi(detail),
         collaborators: _collaboratorsFromApi(item, detail),
       );
@@ -961,6 +975,15 @@ class ObHomeController extends GetxController {
       if (value != null) return value;
     }
     return null;
+  }
+
+  DateTime? _dateTimeValueFromSources(
+    List<Map<String, dynamic>> sources,
+    List<String> keys,
+  ) {
+    final value = _stringValueFromSources(sources, keys);
+    if (value == null || value == '0') return null;
+    return DateTime.tryParse(value)?.toLocal();
   }
 
   String _taskStatusFromApi(String status) {

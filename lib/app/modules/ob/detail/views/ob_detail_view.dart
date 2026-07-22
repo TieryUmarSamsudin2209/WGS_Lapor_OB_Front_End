@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -249,13 +251,32 @@ class ObDetailView extends GetView<ObDetailController> {
                     ),
                   )),
                   const SizedBox(height: 25),
-                  Text(
-                    'BUKTI FOTO'.tr,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: mutedColor,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'BUKTI FOTO'.tr,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: mutedColor,
+                          ),
+                        ),
+                      ),
+                      Obx(
+                        () => Text(
+                          controller.elapsedWorkTime.value,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: titleColor,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Obx(() {

@@ -376,14 +376,9 @@ class AuthService extends GetxService {
       if (status.connectionError) return true;
     } catch (_) {}
     
-    // Check for ngrok tunnel errors
-    final bodyStr = (response.bodyString ?? response.body ?? '').toString();
-    if (bodyStr.contains('ERR_NGROK_') || bodyStr.contains('Tunnel not found')) {
-      return true;
-    }
-    
-    // DO NOT treat 503/502/504 as offline - these are server errors, not network errors
-    // Let them be handled by normal error handling with informative messages
+    // All other cases (including ngrok error pages, 503, 502, 504) are
+    // server errors, NOT network failures. The server responded — it just
+    // returned an error. Callers should handle these as normal HTTP errors.
     return false;
   }
 
@@ -729,7 +724,7 @@ class AuthService extends GetxService {
         return profileData;
       }
 
-      if (_isOfflineResponse(response)) {
+      if (_canUseOfflineFallback(response)) {
         debugPrint('📴 Offline mode, using cached profile');
         return _getUserProfileOffline();
       }
@@ -737,10 +732,7 @@ class AuthService extends GetxService {
       debugPrint(
         '❌ Gagal ambil profile: statusCode=${response.statusCode}, body=${response.bodyString ?? response.body}',
       );
-      
-      // If API error, use cached profile from SharedPreferences
-      debugPrint('⚠️  API error, falling back to cached profile');
-      return _getUserProfileOffline();
+      return null;
     } catch (e) {
       debugPrint('❌ Error ambil profile: $e');
       return _getUserProfileOffline();
@@ -1392,7 +1384,7 @@ class AuthService extends GetxService {
             _asMap(response.body);
       }
 
-      if (_isOfflineResponse(response)) {
+      if (_canUseOfflineFallback(response)) {
         return _getNotificationsOffline();
       }
 
@@ -1422,7 +1414,7 @@ class AuthService extends GetxService {
         return int.tryParse(data?.toString() ?? '') ?? 0;
       }
 
-      if (_isOfflineResponse(response)) {
+      if (_canUseOfflineFallback(response)) {
         return _offlineNotifications().where((item) {
           return _isTruthy(item['is_read']) == false;
         }).length;
@@ -1456,7 +1448,7 @@ class AuthService extends GetxService {
       );
 
       if (response.isOk) return true;
-      if (_isOfflineResponse(response)) return true;
+      if (_canUseOfflineFallback(response)) return true;
 
       debugPrint(
         'Gagal tandai semua notifikasi: ${response.bodyString ?? response.body}',
@@ -1480,7 +1472,7 @@ class AuthService extends GetxService {
       );
 
       if (response.isOk) return true;
-      if (_isOfflineResponse(response)) return true;
+      if (_canUseOfflineFallback(response)) return true;
 
       debugPrint(
         'Gagal tandai notifikasi: ${response.bodyString ?? response.body}',
