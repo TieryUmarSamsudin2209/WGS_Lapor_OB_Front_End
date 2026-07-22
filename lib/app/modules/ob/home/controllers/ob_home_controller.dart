@@ -35,6 +35,8 @@ class HomeReport {
   final Rx<String?> obId; // Made reactive for dynamic updates
   final Rx<String?> obName; // Made reactive for dynamic updates
   final RxList<String> collaborators; // List of collaborator names
+  final DateTime? createdAt;
+  DateTime? dikerjakanAt;
 
   // Convenience getters for backward compatibility
   String? get assignedObId => obId.value;
@@ -54,6 +56,8 @@ class HomeReport {
     String? assignedObId,
     String? assignedObName,
     List<String> collaborators = const [],
+    this.createdAt,
+    this.dikerjakanAt,
   }) : status = status.obs,
        hasCollaboration = hasCollaboration.obs,
        obId = Rx<String?>(assignedObId),
@@ -818,12 +822,33 @@ class ObHomeController extends GetxController {
         ]),
         photos: photos.isNotEmpty ? photos : _photosFromApi(detail),
         collaborators: _collaboratorsFromApi(item, detail),
+        createdAt: _parseDateTime(_stringValueFromSources([item, detail], [
+          'created_at',
+          'createdAt',
+          'tanggal',
+          'date',
+          'tanggal_laporan',
+          'waktu_laporan',
+        ])),
+        dikerjakanAt: _parseDateTime(_stringValueFromSources([item, detail], [
+          'dikerjakan_at',
+          'dikerjakanAt',
+          'taken_at',
+          'takenAt',
+          'diambil_at',
+          'diambilAt',
+        ])),
       );
     } catch (e, stackTrace) {
       debugPrint('Exception parsing report: $e');
       debugPrint('Stack trace: $stackTrace');
       return null;
     }
+  }
+
+  DateTime? _parseDateTime(String? value) {
+    if (value == null || value.trim().isEmpty || value == '0') return null;
+    return DateTime.tryParse(value);
   }
 
   String _reportStatusFromApi(String status) {

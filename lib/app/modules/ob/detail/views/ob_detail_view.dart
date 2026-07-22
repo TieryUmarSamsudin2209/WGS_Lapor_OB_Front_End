@@ -153,10 +153,15 @@ class ObDetailView extends GetView<ObDetailController> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                '10 menit yang lalu'.tr,
-                style: TextStyle(fontSize: 11, color: mutedColor),
-              ),
+              Obx(() {
+                final isWorking = controller.pageState.value == 'working';
+                final elapsed = controller.elapsedTime.value;
+                if (elapsed.isEmpty) return const SizedBox.shrink();
+                return Text(
+                  isWorking ? 'Dikerjakan: $elapsed' : elapsed,
+                  style: TextStyle(fontSize: 11, color: mutedColor),
+                );
+              }),
             ],
           ),
           const SizedBox(height: 15),

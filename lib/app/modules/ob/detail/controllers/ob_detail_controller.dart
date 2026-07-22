@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,6 +36,12 @@ class ObDetailController extends GetxController {
   final actionPhotos = <String>[].obs;
   final ImagePicker _picker = ImagePicker();
 
+  // Timer untuk elapsed time
+  Timer? _elapsedTimer;
+  var elapsedTime = ''.obs;
+  DateTime? _createdAt;
+  DateTime? _dikerjakanAt;
+
   @override
   void onInit() {
     super.onInit();
@@ -56,6 +64,9 @@ class ObDetailController extends GetxController {
       reportPhotos.assignAll(activeReport!.photos);
       isNeedHelp.value = activeReport!.hasCollaboration.value;
 
+      _createdAt = activeReport!.createdAt;
+      _dikerjakanAt = activeReport!.dikerjakanAt;
+
       // Map status values to appropriate page state
       final currentStatus = activeReport!.status.value;
       if (currentStatus == 'Sedang Diproses') {
@@ -66,6 +77,11 @@ class ObDetailController extends GetxController {
         pageState.value = 'resolved'; // non-modifiable final states if needed
       } else {
         pageState.value = 'initial';
+      }
+
+      _updateElapsedTime();
+      if (pageState.value == 'working') {
+        _startElapsedTimer();
       }
     }
   }
@@ -108,6 +124,11 @@ class ObDetailController extends GetxController {
     pageState.value = 'working';
     isDetailExpanded.value = false;
     activeReport?.status.value = 'Sedang Diproses'; // Always "Sedang Diproses", never "Belum Diproses"
+
+    // Set dikerjakanAt to now when taken
+    _dikerjakanAt = DateTime.now();
+    activeReport?.dikerjakanAt = _dikerjakanAt;
+    _startElapsedTimer();
     
     // Set owner info from response or current user
     final obNameFromResponse = _assignedObNameFromResponse(response);
@@ -148,6 +169,57 @@ class ObDetailController extends GetxController {
       pageState.value = 'rejecting';
       isDetailExpanded.value = false;
     }
+  }
+
+  void _startElapsedTimer() {
+    _elapsedTimer?.cancel();
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateElapsedTime();
+    });
+  }
+
+  void _stopElapsedTimer() {
+    _elapsedTimer?.cancel();
+    _elapsedTimer = null;
+  }
+
+  void _updateElapsedTime() {
+    if (pageState.value == 'working') {
+      final start = _dikerjakanAt;
+      if (start != null) {
+        final duration = DateTime.now().difference(start);
+        elapsedTime.value = _formatDuration(duration);
+        return;
+      }
+    }
+    if (pageState.value == 'initial' || pageState.value == 'taken') {
+      final created = _createdAt;
+      if (created != null) {
+        final diff = DateTime.now().difference(created);
+        elapsedTime.value = _formatTimeAgo(diff);
+        return;
+      }
+    }
+    elapsedTime.value = '';
+  }
+
+  String _formatDuration(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60);
+    final seconds = d.inSeconds.remainder(60);
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  String _formatTimeAgo(Duration diff) {
+    if (diff.inMinutes < 1) return 'baru saja';
+    if (diff.inHours < 1) return '${diff.inMinutes} menit yang lalu';
+    if (diff.inDays < 1) return '${diff.inHours} jam yang lalu';
+    if (diff.inDays < 7) return '${diff.inDays} hari yang lalu';
+    final date = _createdAt?.toLocal();
+    if (date != null) {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+    return '';
   }
 
   Future<void> toggleNeedHelp() async {
@@ -367,6 +439,7 @@ class ObDetailController extends GetxController {
     }
 
     activeReport?.status.value = 'Selesai';
+    _stopElapsedTimer();
 
     try {
       final obHomeController = Get.find<ObHomeController>();
@@ -438,6 +511,7 @@ class ObDetailController extends GetxController {
     }
 
     activeReport?.status.value = 'Ditolak';
+    _stopElapsedTimer();
     final ctx = Get.context;
     if (ctx != null) {
       CustomAlert.show(
@@ -656,6 +730,7 @@ class ObDetailController extends GetxController {
 
   @override
   void onClose() {
+    _stopElapsedTimer();
     noteController.dispose();
     super.onClose();
   }
