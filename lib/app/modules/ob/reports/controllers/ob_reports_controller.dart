@@ -224,6 +224,18 @@ class ObReportsController extends GetxController {
         'petugas_ob',
         'ob',
       ]),
+      dikerjakanAt: _dateTimeValueFromSources([item, detail], [
+        'dikerjakan_at',
+        'dikerjakanAt',
+        'started_at',
+        'startedAt',
+        'work_started_at',
+        'workStartedAt',
+        'taken_at',
+        'takenAt',
+        'diambil_at',
+        'diambilAt',
+      ]),
       photos: photos.isNotEmpty ? photos : _photosFromApi(detail),
     );
   }
@@ -389,6 +401,15 @@ class ObReportsController extends GetxController {
       if (value != null) return value;
     }
     return null;
+  }
+
+  DateTime? _dateTimeValueFromSources(
+    List<Map<String, dynamic>> sources,
+    List<String> keys,
+  ) {
+    final value = _stringValueFromSources(sources, keys);
+    if (value == null || value == '0') return null;
+    return DateTime.tryParse(value)?.toLocal();
   }
 
   String? _translatedValueOrNull(String? value) {
