@@ -3,10 +3,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:collection/collection.dart';
 import '../../../../shared/widgets/custom_alert.dart';
 import '../../../../shared/theme/theme_controller.dart';
 import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_checklist_controller.dart';
+import '../../home/controllers/ob_home_controller.dart';
 
 class ObChecklistView extends GetView<ObChecklistController> {
   const ObChecklistView({super.key, this.isNested = false});
@@ -220,31 +222,6 @@ class ObChecklistView extends GetView<ObChecklistController> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => controller.activeTab.value = 'tugas',
-                  child: AnimatedContainer(
-                     duration: const Duration(milliseconds: 200),
-                     alignment: Alignment.center,
-                     decoration: BoxDecoration(
-                       color: currentTab == 'tugas'
-                           ? const Color(0xFF154B86)
-                           : Colors.transparent,
-                       borderRadius: BorderRadius.circular(25),
-                     ),
-                     child: Text(
-                       'Tugas'.tr,
-                       style: TextStyle(
-                         color: currentTab == 'tugas'
-                             ? Colors.white
-                             : (isDark ? Colors.white60 : const Color(0xFF7A8B9B)),
-                         fontWeight: FontWeight.bold,
-                         fontSize: 14,
-                       ),
-                     ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
                   onTap: () => controller.activeTab.value = 'tugas_harian',
                   child: AnimatedContainer(
                      duration: const Duration(milliseconds: 200),
@@ -256,9 +233,34 @@ class ObChecklistView extends GetView<ObChecklistController> {
                        borderRadius: BorderRadius.circular(25),
                      ),
                      child: Text(
-                       'Tugas Harian'.tr,
+                       'Rutin'.tr,
                        style: TextStyle(
                          color: currentTab == 'tugas_harian'
+                             ? Colors.white
+                             : (isDark ? Colors.white60 : const Color(0xFF7A8B9B)),
+                         fontWeight: FontWeight.bold,
+                         fontSize: 14,
+                       ),
+                     ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => controller.activeTab.value = 'tugas',
+                  child: AnimatedContainer(
+                     duration: const Duration(milliseconds: 200),
+                     alignment: Alignment.center,
+                     decoration: BoxDecoration(
+                       color: currentTab == 'tugas'
+                           ? const Color(0xFF154B86)
+                           : Colors.transparent,
+                       borderRadius: BorderRadius.circular(25),
+                     ),
+                     child: Text(
+                       'Tidak Rutin'.tr,
+                       style: TextStyle(
+                         color: currentTab == 'tugas'
                              ? Colors.white
                              : (isDark ? Colors.white60 : const Color(0xFF7A8B9B)),
                          fontWeight: FontWeight.bold,
@@ -320,7 +322,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Tugas'.tr,
+                'Tidak Rutin'.tr,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -353,105 +355,126 @@ class ObChecklistView extends GetView<ObChecklistController> {
     final description = task['catatan']?.toString() ?? task['deskripsi']?.toString() ?? '';
     final status = task['status']?.toString() ?? 'BELUM_DIKERJAKAN';
     final isCompleted = status == 'SELESAI';
+    final cardColor = isDark ? AppDarkColors.surfaceVariant : Colors.white;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppDarkColors.surfaceVariant : Colors.white,
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE8F8F0),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check_circle_outline_rounded,
-              color: Color(0xFF2E8B57),
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F2A5E),
-                  ),
+        onTap: () {
+          if (isCompleted) return;
+          final report = HomeReport(
+            id: id,
+            title: title,
+            location: task['lokasi']?.toString() ?? controller.penugasanText.value,
+            description: description,
+            priority: 'STANDARD',
+            status: 'Sedang Diproses',
+            categoryName: 'Tidak Rutin',
+          );
+          Get.toNamed(
+            '/ob/detail',
+            arguments: report,
+          )?.then((_) {
+            controller.loadAdHocTasks();
+          });
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F8F0),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white60 : const Color(0xFF7A8B9B),
-                  ),
+                child: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Color(0xFF2E8B57),
+                  size: 20,
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: isCompleted
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F8F0),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                color: Color(0xFF2E8B57),
-                                size: 14,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF0F2A5E),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white60 : const Color(0xFF7A8B9B),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: isCompleted
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F8F0),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Selesai'.tr,
-                                style: TextStyle(
-                                  color: Color(0xFF2E8B57),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Color(0xFF2E8B57),
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Selesai'.tr,
+                                    style: const TextStyle(
+                                      color: Color(0xFF2E8B57),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Lihat Detail'.tr,
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ElevatedButton(
-                          onPressed: () => _showConfirmationDialog(context, id, status),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F4C81),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                                const SizedBox(width: 2),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.grey,
+                                  size: 16,
+                                ),
+                              ],
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Selesaikan Tugas'.tr,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -727,7 +750,39 @@ class ObChecklistView extends GetView<ObChecklistController> {
         color: cardColor,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: () => _showItemDetailPopup(Get.context!, item),
+          onTap: () {
+            if (status == 'resolved') return;
+            
+            // Build section title to use as the specific location
+            String specificLocation = controller.penugasanText.value;
+            try {
+              final section = controller.sections.firstWhereOrNull(
+                (s) => s.items.any((i) => i.id == item.id)
+              );
+              if (section != null) {
+                specificLocation = section.title.tr;
+              }
+            } catch (_) {}
+
+            final report = HomeReport(
+              id: item.id,
+              title: item.title,
+              location: controller.penugasanText.value,
+              description: item.description,
+              priority: 'STANDARD',
+              status: 'Sedang Diproses',
+              photos: item.photos.toList(),
+              categoryName: 'Rutin',
+              reporterName: 'Sistem',
+              assignedObName: 'Anda',
+            );
+            Get.toNamed(
+              '/ob/detail',
+              arguments: report,
+            )?.then((_) {
+              controller.loadChecklist();
+            });
+          },
           borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
@@ -778,29 +833,53 @@ class ObChecklistView extends GetView<ObChecklistController> {
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: style.bgColor,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(style.icon, size: 11, color: style.color),
-                              const SizedBox(width: 4),
-                              Text(
-                                style.label.tr,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: style.color,
+                        child: status == 'resolved'
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F8F0),
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFF2E8B57),
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Selesai'.tr,
+                                      style: const TextStyle(
+                                        color: Color(0xFF2E8B57),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Lihat Detail'.tr,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  const Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: Colors.grey,
+                                    size: 15,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
                       ),
                     ],
                   ),

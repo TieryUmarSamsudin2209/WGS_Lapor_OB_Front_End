@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:collection/collection.dart';
 
 import '../../../../shared/services/auth_service.dart';
 import '../../../../shared/utils/report_translation_key.dart';
 import '../../../../shared/widgets/custom_alert.dart';
 import '../../../../shared/widgets/ob_complete_report_dialog.dart';
 import '../../home/controllers/ob_home_controller.dart';
+import '../../checklist/controllers/ob_checklist_controller.dart';
 
 class ObDetailController extends GetxController {
   final AuthService _authService = Get.isRegistered<AuthService>()
@@ -33,6 +35,7 @@ class ObDetailController extends GetxController {
   final reportPhotos = <String>[].obs;
 
   final noteController = TextEditingController();
+  final beforePhotos = <String>[].obs;
   final actionPhotos = <String>[].obs;
   final ImagePicker _picker = ImagePicker();
 
@@ -401,6 +404,10 @@ class ObDetailController extends GetxController {
       Get.snackbar('Catatan terlalu pendek'.tr, 'Keterangan minimal 5 karakter'.tr);
       return;
     }
+    if (beforePhotos.isEmpty) {
+      Get.snackbar('Foto wajib diisi'.tr, 'Mohon unggah bukti foto belum selesai'.tr);
+      return;
+    }
     if (actionPhotos.isEmpty) {
       Get.snackbar('Foto wajib diisi'.tr, 'Mohon unggah bukti foto selesai'.tr);
       return;
@@ -409,7 +416,7 @@ class ObDetailController extends GetxController {
     final ctx = Get.context;
     if (ctx == null) return;
 
-    // Tampilkan Popup Konfirmasi 1 ("Selesaikan Laporan?")
+    // Tampilkan Popup Konfirmasi 1 ("Selesaikan Tugas?")
     await ObCompleteReportDialog.showConfirmation(
       ctx,
       onConfirm: () async {
@@ -424,29 +431,84 @@ class ObDetailController extends GetxController {
     String note,
   ) async {
     isSubmitting.value = true;
-    final response = await _authService.submitObReportHistory(
-      reportId: reportId,
-      note: note,
-      photoPaths: actionPhotos.toList(),
-    );
-    isSubmitting.value = false;
+    final category = activeReport?.categoryName;
 
-    if (response == null) {
-      final message =
-          _authService.lastRequestError ?? 'Gagal menyelesaikan laporan'.tr;
-      await CustomAlert.show(context, isSuccess: false, description: message.tr);
-      return;
+    if (category == 'Rutin') {
+      try {
+        final checklistController = Get.find<ObChecklistController>();
+        final item = checklistController.sections
+            .expand((s) => s.items)
+            .firstWhereOrNull((i) => i.id == reportId);
+        if (item != null) {
+          checklistController.setItemStatus(item, 'resolved');
+          item.note.value = note;
+          item.photos.assignAll(actionPhotos);
+          checklistController.submitItemDetail(item);
+        }
+      } catch (e) {
+        debugPrint('Error completing checklist item: $e');
+      }
+      isSubmitting.value = false;
+    } else if (category == 'Tidak Rutin') {
+      // Ad-hoc task completion API call
+      String currentStatus = 'BELUM_DIKERJAKAN';
+      try {
+        final checklistController = Get.find<ObChecklistController>();
+        final task = checklistController.adHocTasks.firstWhereOrNull((t) => t['id']?.toString() == reportId);
+        if (task != null) {
+          currentStatus = task['status']?.toString() ?? 'BELUM_DIKERJAKAN';
+        }
+      } catch (_) {}
+
+      if (currentStatus == 'BELUM_DIKERJAKAN') {
+        final claimRes = await _authService.claimObTugas(reportId);
+        if (claimRes == null || claimRes['success'] != true) {
+          isSubmitting.value = false;
+          final message = _authService.lastRequestError ?? 'Gagal mengklaim tugas.'.tr;
+          await CustomAlert.show(context, isSuccess: false, description: message.tr);
+          return;
+        }
+      }
+
+      final response = await _authService.selesaiObTugas(reportId);
+      isSubmitting.value = false;
+
+      if (response == null || response['success'] != true) {
+        final message = _authService.lastRequestError ?? 'Gagal menyelesaikan tugas'.tr;
+        await CustomAlert.show(context, isSuccess: false, description: message.tr);
+        return;
+      }
+
+      try {
+        final checklistController = Get.find<ObChecklistController>();
+        await checklistController.loadAdHocTasks();
+      } catch (_) {}
+    } else {
+      final response = await _authService.submitObReportHistory(
+        reportId: reportId,
+        note: note,
+        photoPaths: actionPhotos.toList(),
+        beforePhotoPaths: beforePhotos.toList(),
+      );
+      isSubmitting.value = false;
+
+      if (response == null) {
+        final message =
+            _authService.lastRequestError ?? 'Gagal menyelesaikan laporan'.tr;
+        await CustomAlert.show(context, isSuccess: false, description: message.tr);
+        return;
+      }
+
+      activeReport?.status.value = 'Selesai';
+      _stopElapsedTimer();
+
+      try {
+        final obHomeController = Get.find<ObHomeController>();
+        await obHomeController.loadReports(silent: true);
+      } catch (_) {}
     }
 
-    activeReport?.status.value = 'Selesai';
-    _stopElapsedTimer();
-
-    try {
-      final obHomeController = Get.find<ObHomeController>();
-      await obHomeController.loadReports(silent: true);
-    } catch (_) {}
-
-    // Tampilkan Popup Berhasil 2 ("Laporan Selesai!")
+    // Tampilkan Popup Berhasil 2 ("Tugas Selesai!")
     ObCompleteReportDialog.showSuccess(
       context,
       onClose: () {
@@ -484,34 +546,56 @@ class ObDetailController extends GetxController {
     // Foto pembatalan OPSIONAL (tidak wajib)
     // User dapat menolak dengan atau tanpa foto
 
-    isSubmitting.value = true;
-    final response = await _authService.cancelObReport(
-      reportId: reportId,
-      catatan: reason,
-      fotoSelesai: actionPhotos.isNotEmpty ? actionPhotos.toList() : null,
-    );
-    isSubmitting.value = false;
+    final category = activeReport?.categoryName;
+    if (category == 'Rutin') {
+      isSubmitting.value = true;
+      try {
+        final checklistController = Get.find<ObChecklistController>();
+        final item = checklistController.sections
+            .expand((s) => s.items)
+            .firstWhereOrNull((i) => i.id == reportId);
+        if (item != null) {
+          checklistController.setItemStatus(item, 'pending');
+          item.note.value = reason;
+          checklistController.submitItemDetail(item);
+        }
+      } catch (e) {
+        debugPrint('Error suspending checklist item: $e');
+      }
+      isSubmitting.value = false;
+    } else if (category == 'Tidak Rutin') {
+      // Ad-hoc task suspension
+    } else {
+      isSubmitting.value = true;
+      final response = await _authService.cancelObReport(
+        reportId: reportId,
+        catatan: reason,
+        fotoSelesai: actionPhotos.isNotEmpty ? actionPhotos.toList() : null,
+      );
+      isSubmitting.value = false;
 
-    if (response == null) {
-      final ctx = Get.context;
-      var message = _authService.lastRequestError ?? 'Gagal menolak laporan'.tr;
-      
-      // Jika backend masih memerlukan foto, berikan petunjuk yang jelas
-      if (message.toLowerCase().contains('foto') && 
-          message.toLowerCase().contains('wajib')) {
-        message = 'Foto bukti pembatalan diperlukan oleh sistem. Mohon unggah minimal 1 foto.'.tr;
+      if (response == null) {
+        final ctx = Get.context;
+        var message = _authService.lastRequestError ?? 'Gagal menolak laporan'.tr;
+        
+        // Jika backend masih memerlukan foto, berikan petunjuk yang jelas
+        if (message.toLowerCase().contains('foto') && 
+            message.toLowerCase().contains('wajib')) {
+          message = 'Foto bukti pembatalan diperlukan oleh sistem. Mohon unggah minimal 1 foto.'.tr;
+        }
+        
+        if (ctx != null) {
+          await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
+        } else {
+          Get.snackbar('Error'.tr, message.tr);
+        }
+        return;
       }
-      
-      if (ctx != null) {
-        await CustomAlert.show(ctx, isSuccess: false, description: message.tr);
-      } else {
-        Get.snackbar('Error'.tr, message.tr);
-      }
-      return;
+
+      activeReport?.status.value = 'Ditolak';
+      _stopElapsedTimer();
     }
 
-    activeReport?.status.value = 'Ditolak';
-    _stopElapsedTimer();
     final ctx = Get.context;
     if (ctx != null) {
       CustomAlert.show(
@@ -524,6 +608,33 @@ class ObDetailController extends GetxController {
       Get.back(); // Tutup Dialog Alert
       Get.back(); // Kembali ke halaman sebelumnya (Home OB)
     });
+  }
+
+  Future<void> pickBeforeImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        if (beforePhotos.length < 3) {
+          beforePhotos.add(image.path);
+        } else {
+          Get.snackbar(
+            'Batas Maksimal'.tr,
+            'Anda hanya dapat mengunggah maksimal 3 foto.'.tr,
+          );
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error'.tr, 'Gagal mengambil foto: @error'.trParams({
+        'error': e.toString(),
+      }));
+    }
+  }
+
+  void removeBeforePhoto(int index) {
+    beforePhotos.removeAt(index);
   }
 
   Future<void> pickImage(ImageSource source) async {

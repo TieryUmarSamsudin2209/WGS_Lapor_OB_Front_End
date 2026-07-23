@@ -115,7 +115,7 @@ class _ConfirmationContent extends StatelessWidget {
               const SizedBox(height: 20),
               // Judul
               Text(
-                'Selesaikan Laporan?'.tr,
+                'Selesaikan Tugas?'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: titleColor,
@@ -127,7 +127,7 @@ class _ConfirmationContent extends StatelessWidget {
               const SizedBox(height: 10),
               // Subtitle
               Text(
-                'Konfirmasi apakah anda sudah menyelesaikan laporan anda.'.tr,
+                'Konfirmasi apakah anda sudah menyelesaikan tugas anda.'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: messageColor,
@@ -259,7 +259,7 @@ class _SuccessContent extends StatelessWidget {
               const SizedBox(height: 20),
               // Judul
               Text(
-                'Laporan Selesai!'.tr,
+                'Tugas Selesai!'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: titleColor,
@@ -271,7 +271,7 @@ class _SuccessContent extends StatelessWidget {
               const SizedBox(height: 10),
               // Subtitle
               Text(
-                'Kerja bagus! Laporan telah terselesaikan.'.tr,
+                'Kerja bagus! Tugas Anda telah selesai.'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: messageColor,

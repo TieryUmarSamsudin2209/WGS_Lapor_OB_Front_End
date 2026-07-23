@@ -132,11 +132,11 @@ class ObCollaborationController extends GetxController {
         debugPrint('📦 Report detail top-level keys: ${response.keys.join(", ")}');
         final laporanObj = response['laporan'];
         if (laporanObj is Map) {
-          debugPrint('📦 laporan keys: ${(laporanObj as Map).keys.join(", ")}');
+          debugPrint('📦 laporan keys: ${(laporanObj).keys.join(", ")}');
         }
         final dataObj = response['data'];
         if (dataObj is Map) {
-          debugPrint('📦 data keys: ${(dataObj as Map).keys.join(", ")}');
+          debugPrint('📦 data keys: ${(dataObj).keys.join(", ")}');
         }
 
         // The detail response may wrap the report in 'data' or 'laporan'

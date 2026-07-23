@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui' show FontFeature;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -29,7 +28,7 @@ class ObDetailView extends GetView<ObDetailController> {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          'Detail Laporan'.tr,
+          'Detail Tugas'.tr,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -53,12 +52,14 @@ class ObDetailView extends GetView<ObDetailController> {
                   titleText: 'Beri Catatan',
                   hintText: 'catatan_hint',  // Translation key
                   photoLabel: 'Bukti Foto Selesai',
+                  isWorking: true,
                 );
               } else if (controller.pageState.value == 'rejecting') {
                 return _buildActionForm(
                   titleText: 'Beri Alasan Menolak',
                   hintText: 'Tidak bisa diperbaiki, alat rusak total',
                   photoLabel: 'Bukti Foto Pembatalan (Opsional)',
+                  isWorking: false,
                 );
               }
               return const SizedBox.shrink(); // Kosong jika state awal
@@ -409,6 +410,7 @@ class ObDetailView extends GetView<ObDetailController> {
     required String titleText,
     required String hintText,
     required String photoLabel,
+    bool isWorking = false,
   }) {
     final isDark = Get.isDarkMode;
     final surface = isDark ? const Color(0xFF102235) : lightPurple;
@@ -452,88 +454,136 @@ class ObDetailView extends GetView<ObDetailController> {
             ),
           ),
           const SizedBox(height: 20),
-          Text(
-            photoLabel.tr,
+          if (isWorking) ...[
+            _buildPhotoUploadSection(
+              label: 'Bukti Foto Belum Selesai',
+              photosList: controller.beforePhotos,
+              onPick: controller.pickBeforeImage,
+              onRemove: controller.removeBeforePhoto,
+            ),
+            const SizedBox(height: 20),
+            _buildPhotoUploadSection(
+              label: 'Bukti Foto Selesai',
+              photosList: controller.actionPhotos,
+              onPick: controller.pickImage,
+              onRemove: controller.removePhoto,
+            ),
+          ] else ...[
+            _buildPhotoUploadSection(
+              label: photoLabel,
+              photosList: controller.actionPhotos,
+              onPick: controller.pickImage,
+              onRemove: controller.removePhoto,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhotoUploadSection({
+    required String label,
+    required RxList<String> photosList,
+    required Function(ImageSource) onPick,
+    required Function(int) onRemove,
+  }) {
+    final isDark = Get.isDarkMode;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RichText(
+          text: TextSpan(
+            text: label.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
               color: titleColor,
             ),
+            children: [
+              if (!label.toLowerCase().contains('opsional') &&
+                  !label.toLowerCase().contains('optional'))
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: Colors.red),
+                ),
+            ],
           ),
-          const SizedBox(height: 10),
+        ),
+        const SizedBox(height: 10),
 
-          // Preview Foto Dinamis
-          Obx(() {
-            if (controller.actionPhotos.isEmpty) {
-              return GestureDetector(
-                onTap: _showPhotoSourceSheet,
-                child: Container(
-                  width: double.infinity,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
+        // Preview Foto Dinamis
+        Obx(() {
+          if (photosList.isEmpty) {
+            return GestureDetector(
+              onTap: () => _showPhotoSourceSheetFor(onPick),
+              child: Container(
+                width: double.infinity,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.add_a_photo_outlined,
+                      size: 40,
+                      color: Color(0xFF0F4C81),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ambil / Pilih Foto Bukti'.tr,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: kIsWeb
+                ? Image.network(
+                    photosList.first,
+                    width: double.infinity,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  )
+                : Image.file(
+                    File(photosList.first),
+                    width: double.infinity,
+                    height: 150,
+                    fit: BoxFit.cover,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.add_a_photo_outlined,
-                        size: 40,
-                        color: Color(0xFF0F4C81),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Ambil / Pilih Foto Bukti'.tr,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
+          );
+        }),
+        const SizedBox(height: 10),
+
+        // Thumbnail Foto Dinamis
+        Obx(() {
+          return Row(
+            children: [
+              ...photosList.asMap().entries.map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: _buildPhotoThumbnailFor(
+                    path: entry.value,
+                    index: entry.key,
+                    onRemove: onRemove,
                   ),
                 ),
-              );
-            }
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: kIsWeb
-                  ? Image.network(
-                      controller.actionPhotos.first,
-                      width: double.infinity,
-                      height: 150,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.file(
-                      File(controller.actionPhotos.first),
-                      width: double.infinity,
-                      height: 150,
-                      fit: BoxFit.cover,
-                    ),
-            );
-          }),
-          const SizedBox(height: 10),
-
-          // Thumbnail Foto Dinamis
-          Obx(() {
-            return Row(
-              children: [
-                ...controller.actionPhotos.asMap().entries.map(
-                  (entry) => Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: _buildPhotoThumbnail(
-                      path: entry.value,
-                      index: entry.key,
-                    ),
-                  ),
-                ),
-                if (controller.actionPhotos.length < 3) _buildEmptyPhotoAdd(),
-              ],
-            );
-          }),
-        ],
-      ),
+              ),
+              if (photosList.length < 3) _buildEmptyPhotoAddFor(onPick),
+            ],
+          );
+        }),
+      ],
     );
   }
 
@@ -576,13 +626,13 @@ class ObDetailView extends GetView<ObDetailController> {
           return Column(
             children: [
               _buildSolidButton(
-                'Selesaikan Laporan',
+                'Selesaikan Tugas',
                 navyColor,
                 () => controller.completeReport(),
               ),
               const SizedBox(height: 12),
               _buildSolidButton(
-                'Tolak Laporan',
+                'Tangguhkan',
                 urgentRed,
                 () => controller.setRejecting(),
               ),
@@ -603,7 +653,7 @@ class ObDetailView extends GetView<ObDetailController> {
           return Column(
             children: [
               _buildSolidButton(
-                'Konfirmasi Tolak',
+                'Konfirmasi Tangguhkan',
                 urgentRed,
                 () => controller.confirmReject(),
                 icon: Icons.block,
@@ -639,7 +689,7 @@ class ObDetailView extends GetView<ObDetailController> {
     );
   }
 
-  void _showPhotoSourceSheet() {
+  void _showPhotoSourceSheetFor(Function(ImageSource) onPick) {
     final isDark = Get.isDarkMode;
     final sheetColor = isDark ? AppDarkColors.surface : Colors.white;
     final titleColor = isDark ? Colors.white : Colors.black87;
@@ -687,7 +737,7 @@ class ObDetailView extends GetView<ObDetailController> {
                 title: Text('Kamera'.tr, style: TextStyle(color: titleColor)),
                 onTap: () {
                   Get.back();
-                  controller.pickImage(ImageSource.camera);
+                  onPick(ImageSource.camera);
                 },
               ),
               ListTile(
@@ -708,7 +758,7 @@ class ObDetailView extends GetView<ObDetailController> {
                 title: Text('Galeri'.tr, style: TextStyle(color: titleColor)),
                 onTap: () {
                   Get.back();
-                  controller.pickImage(ImageSource.gallery);
+                  onPick(ImageSource.gallery);
                 },
               ),
             ],
@@ -907,9 +957,13 @@ class ObDetailView extends GetView<ObDetailController> {
     );
   }
 
-  Widget _buildPhotoThumbnail({required String path, required int index}) {
+  Widget _buildPhotoThumbnailFor({
+    required String path,
+    required int index,
+    required Function(int) onRemove,
+  }) {
     return GestureDetector(
-      onTap: () => controller.removePhoto(index),
+      onTap: () => onRemove(index),
       child: Stack(
         children: [
           Container(
@@ -943,9 +997,9 @@ class ObDetailView extends GetView<ObDetailController> {
     );
   }
 
-  Widget _buildEmptyPhotoAdd() {
+  Widget _buildEmptyPhotoAddFor(Function(ImageSource) onPick) {
     return GestureDetector(
-      onTap: _showPhotoSourceSheet,
+      onTap: () => _showPhotoSourceSheetFor(onPick),
       child: Container(
         width: 50,
         height: 50,

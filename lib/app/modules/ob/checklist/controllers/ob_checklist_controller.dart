@@ -49,7 +49,7 @@ class ObChecklistController extends GetxController {
   final ImagePicker _picker = ImagePicker();
 
   // Tab state
-  final activeTab = 'tugas'.obs; // 'tugas' or 'tugas_harian'
+  final activeTab = 'tugas_harian'.obs; // 'tugas' or 'tugas_harian'
   final penugasanText = ''.obs;
 
   // Filter state
@@ -97,17 +97,87 @@ class ObChecklistController extends GetxController {
   }
 
   Future<void> loadAdHocTasks() async {
+    await loadAllTasks();
+  }
+
+  Future<void> loadChecklist() async {
+    await loadAllTasks();
+  }
+
+  bool _isRoutineTask(Map<String, dynamic> task) {
+    final type = (task['jenis_tugas'] ?? task['jenis'] ?? task['type'] ?? task['kategori'] ?? task['category'] ?? '').toString().toLowerCase();
+    final isRoutine = task['is_routine'] == true || task['isRoutine'] == true;
+    
+    if (isRoutine) return true;
+    if (type.contains('tidak rutin') || type.contains('tidak_rutin') || type.contains('non')) {
+      return false;
+    }
+    if (type.contains('rutin') || type.contains('routine')) {
+      return true;
+    }
+    
+    final name = (task['nama_tugas'] ?? task['title'] ?? '').toString().toLowerCase();
+    if (name.contains('rutin') && !name.contains('tidak rutin')) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  Future<void> loadAllTasks() async {
     isLoading.value = true;
+    
     try {
-      final response = await _authService.getObTugas();
-      if (response != null && response['success'] == true) {
-        final list = response['data'] as List?;
+      // 1. Fetch Daily Checklist (Rutin)
+      final checklistRes = await _authService.getDailyChecklist(
+        search: searchQuery.value.isNotEmpty ? searchQuery.value : null,
+        lokasiId: selectedLokasiId.value,
+        lantaiId: selectedLantaiId.value,
+        status: selectedStatus.value,
+      );
+      final checklistItems = _extractChecklistItems(checklistRes);
+      final routineSections = _sectionsFromApi(checklistItems);
+      
+      // 2. Fetch Tasks from /api/ob/tugas
+      final tasksRes = await _authService.getObTugas();
+      final List<ChecklistSection> apiRoutineSections = [];
+      final List<Map<String, dynamic>> nonRoutineTasks = [];
+      
+      if (tasksRes != null && tasksRes['success'] == true) {
+        final list = tasksRes['data'] as List?;
         if (list != null) {
-          adHocTasks.value = list.map((e) => Map<String, dynamic>.from(e)).toList();
+          final allTasks = list.map((e) => Map<String, dynamic>.from(e)).toList();
+          
+          for (final task in allTasks) {
+            if (_isRoutineTask(task)) {
+              final item = ChecklistItem(
+                id: task['id']?.toString() ?? '',
+                title: task['nama_tugas']?.toString() ?? task['title']?.toString() ?? 'Tugas Rutin',
+                description: task['catatan']?.toString() ?? task['deskripsi']?.toString() ?? '-',
+                status: _statusFromApi(task['status']?.toString() ?? 'todo'),
+                note: task['catatan']?.toString() ?? '',
+              );
+              
+              final sectionTitle = task['lokasi']?.toString() ?? 'Tugas Rutin';
+              
+              var existingSection = apiRoutineSections.firstWhereOrNull((s) => s.title == sectionTitle);
+              if (existingSection == null) {
+                existingSection = ChecklistSection(title: sectionTitle, items: []);
+                apiRoutineSections.add(existingSection);
+              }
+              existingSection.items.add(item);
+            } else {
+              nonRoutineTasks.add(task);
+            }
+          }
         }
       }
+      
+      sections.value = [...routineSections, ...apiRoutineSections];
+      adHocTasks.value = nonRoutineTasks;
+      
     } catch (e) {
-      debugPrint('Error load ad-hoc tasks: $e');
+      debugPrint('Error loading tasks: $e');
     } finally {
       isLoading.value = false;
     }
@@ -126,7 +196,7 @@ class ObChecklistController extends GetxController {
 
       final selesaiRes = await _authService.selesaiObTugas(tugasId);
       if (selesaiRes != null && selesaiRes['success'] == true) {
-        await loadAdHocTasks();
+        await loadAllTasks();
         return true;
       } else {
         _showErrorAlert('Gagal menyelesaikan tugas.'.tr);
@@ -136,25 +206,6 @@ class ObChecklistController extends GetxController {
       debugPrint('Error completing ad-hoc task: $e');
       _showErrorAlert('Terjadi kesalahan.'.tr);
       return false;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> loadChecklist() async {
-    isLoading.value = true;
-
-    try {
-      final response = await _authService.getDailyChecklist(
-        search: searchQuery.value.isNotEmpty ? searchQuery.value : null,
-        lokasiId: selectedLokasiId.value,
-        lantaiId: selectedLantaiId.value,
-        status: selectedStatus.value,
-      );
-      final checklistItems = _extractChecklistItems(response);
-      sections.value = _sectionsFromApi(checklistItems);
-    } catch (_) {
-      sections.clear();
     } finally {
       isLoading.value = false;
     }

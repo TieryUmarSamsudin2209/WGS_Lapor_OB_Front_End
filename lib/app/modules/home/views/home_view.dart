@@ -178,7 +178,7 @@ class _HomeHeader extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () => Get.toNamed(Routes.REPORT),
                       icon: const Icon(Icons.add_circle_outline, size: 13),
-                      label: Text('Buat Laporan Baru'.tr),
+                      label: Text('Silahkan Buat Laporan Baru'.tr),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: HomeView._buttonBlue,
                         foregroundColor: Colors.white,
@@ -256,19 +256,20 @@ class _HomeContent extends StatelessWidget {
 
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(22, 40, 22, 122),
+      padding: const EdgeInsets.fromLTRB(22, 40, 22, 10),
       children: [
         _SectionHeader(
           title: 'Kategori'.tr,
           titleColor: isDark ? Colors.white : HomeView._lightText,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 2),
+        
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
           childAspectRatio: 1.2,
           children: const [
             _CategoryCard(

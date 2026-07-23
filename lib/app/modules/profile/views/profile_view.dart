@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 
 import '../../../routes/app_pages.dart';
 import '../../../shared/theme/theme_controller.dart';
-import '../../../shared/translations/app_translations.dart';
 import '../../../shared/widgets/bottom_nav.dart';
 import '../../../shared/widgets/edit_profile_dialog.dart';
 import '../../../shared/widgets/logout_confirmation_dialog.dart';
@@ -616,12 +615,6 @@ class _SettingsSection extends StatelessWidget {
               onTap: () => Get.toNamed(Routes.PRIVACY),
             ),
             const Divider(height: 1),
-            Obx(() => _SettingsTile(
-                  icon: Icons.translate_rounded,
-                  label: 'Bahasa'.tr,
-                  trailingText: controller.selectedLanguage.value,
-                  onTap: () => _showLanguageBottomSheet(context, controller.selectedLanguage),
-                )),
           ],
         ),
         const SizedBox(height: 12),
@@ -1346,146 +1339,4 @@ class _ProfileBottomNav extends StatelessWidget {
       ),
     );
   }
-}
-
-void _showLanguageBottomSheet(BuildContext context, RxString selectedLanguage) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  final titleColor = isDark ? Colors.white : const Color(0xFF172033);
-  final subtitleColor = isDark ? Colors.white70 : const Color(0xFF6F7785);
-  final sheetBg = isDark ? AppDarkColors.surface : Colors.white;
-
-  Get.bottomSheet(
-    Container(
-      decoration: BoxDecoration(
-        color: sheetBg,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.black12,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'language_sheet_title'.tr,
-            style: TextStyle(
-              color: titleColor,
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'language_sheet_subtitle'.tr,
-            style: TextStyle(
-              color: subtitleColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Obx(() {
-            return Column(
-              children: AppTranslations.languages.map((language) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _buildLanguageOption(
-                    context: context,
-                    label: language.nativeLabel,
-                    value: language.nativeLabel,
-                    isSelected: selectedLanguage.value == language.nativeLabel,
-                    onTap: () async {
-                      selectedLanguage.value = language.nativeLabel;
-                      await AppTranslations.updateLocale(language);
-                      Get.back();
-                      Get.snackbar(
-                        'language_changed_title'.tr,
-                        'language_changed_message'.trParams({
-                          'language': language.nativeLabel,
-                        }),
-                        snackPosition: SnackPosition.BOTTOM,
-                        duration: const Duration(seconds: 2),
-                      );
-                    },
-                  ),
-                );
-              }).toList(),
-            );
-          }),
-          const SizedBox(height: 2),
-        ],
-      ),
-    ),
-    isScrollControlled: true,
-  );
-}
-
-Widget _buildLanguageOption({
-  required BuildContext context,
-  required String label,
-  required String value,
-  required bool isSelected,
-  required VoidCallback onTap,
-}) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  final cardColor = isDark ? AppDarkColors.background : const Color(0xFFF7FAFC);
-  final activeColor = const Color(0xFF0F4C81);
-
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? activeColor.withValues(alpha: 0.08)
-              : cardColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected
-                ? activeColor
-                : (isDark ? AppDarkColors.border : const Color(0xFFE2E8F0)),
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected
-                      ? activeColor
-                      : (isDark ? Colors.white : const Color(0xFF2D3748)),
-                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle_rounded,
-                color: activeColor,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
-    ),
-  );
 }

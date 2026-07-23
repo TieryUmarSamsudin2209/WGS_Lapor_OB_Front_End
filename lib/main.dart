@@ -17,15 +17,14 @@ Future<void> main() async {
   Get.put(AuthController(), permanent: true);
 
   final themeController = Get.put(ThemeController());
-  await AppTranslations.loadSavedLocale();
 
   runApp(
     Obx(
       () => GetMaterialApp(
         title: "Lapor OB",
         translations: AppTranslations(),
-        locale: AppTranslations.currentLocale.value,
-        fallbackLocale: AppTranslations.fallbackLocale,
+        locale: const Locale('id'),
+        fallbackLocale: const Locale('id'),
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF0F4C81),

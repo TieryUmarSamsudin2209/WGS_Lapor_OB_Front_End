@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../../../shared/controllers/auth_controller.dart';
 import '../../../shared/services/auth_service.dart';
-import '../../../shared/translations/app_translations.dart';
 import '../../../shared/utils/report_translation_key.dart';
 
 class ProfileController extends GetxController {
@@ -20,7 +19,6 @@ class ProfileController extends GetxController {
   final filteredReports = <Map<String, dynamic>>[].obs;
   final isLoading = false.obs;
   final selectedFilter = 'Semua'.obs;
-  final selectedLanguage = 'Indonesia'.obs;
 
   String _searchQuery = '';
   String? _selectedStatus;
@@ -42,7 +40,6 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    selectedLanguage.value = AppTranslations.currentLanguageLabel();
     loadProfile();
   }
 

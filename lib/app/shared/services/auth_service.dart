@@ -857,7 +857,7 @@ class AuthService extends GetxService {
         return _asMap(response.body);
       }
 
-      if (_isOfflineResponse(response)) {
+      if (_canUseOfflineFallback(response)) {
         return _getUserReportDetailOffline(reportId);
       }
 
@@ -867,7 +867,8 @@ class AuthService extends GetxService {
       return null;
     } catch (e) {
       debugPrint('Error ambil detail laporan: $e');
-      return _getUserReportDetailOffline(reportId);
+      if (isOfflineMode) return _getUserReportDetailOffline(reportId);
+      return null;
     }
   }
 
@@ -909,19 +910,25 @@ class AuthService extends GetxService {
         query['status'] = status.trim();
       }
 
-      final response = await _client.get(
-        '/api/checklist-harian',
+      // Try the new endpoint from the API documentation
+      var response = await _client.get(
+        '/api/ob/laporan/checklist',
         query: query,
         headers: authHeaders(),
       );
 
+      // Fallback to legacy endpoint if 404
+      if (response.statusCode == 404) {
+        response = await _client.get(
+          '/api/checklist-harian',
+          query: query,
+          headers: authHeaders(),
+        );
+      }
+
       if (response.isOk) {
         return _responseBodyAsMap(response.body, response.bodyString) ??
             _asMap(response.body);
-      }
-
-      if (_isOfflineResponse(response)) {
-        return _getDailyChecklistOffline();
       }
 
       debugPrint(
@@ -930,16 +937,8 @@ class AuthService extends GetxService {
       return null;
     } catch (e) {
       debugPrint('Error ambil checklist harian: $e');
-      return _getDailyChecklistOffline();
+      return null;
     }
-  }
-
-  Map<String, dynamic> _getDailyChecklistOffline() {
-    if (!kDebugMode) return {'success': false, 'data': <Map<String, dynamic>>[]};
-    return {
-      'success': true,
-      'data': _dummyChecklist,
-    };
   }
 
   Future<Map<String, dynamic>?> getObTugas() async {
@@ -954,82 +953,50 @@ class AuthService extends GetxService {
             _asMap(response.body);
       }
 
-      if (_isOfflineResponse(response)) {
-        return _getObTugasOffline();
-      }
-
       debugPrint(
         'Gagal ambil tugas OB: ${response.bodyString ?? response.body}',
       );
       return null;
     } catch (e) {
       debugPrint('Error ambil tugas OB: $e');
-      return _getObTugasOffline();
+      return null;
     }
   }
 
-  Map<String, dynamic> _getObTugasOffline() {
-    if (!kDebugMode) return {'success': false, 'data': <Map<String, dynamic>>[]};
-    return {
-      'success': true,
-      'data': [
-        {
-          'id': 't1',
-          'nama_tugas': 'Mengepel & Menyapu',
-          'kategori': 'Kebersihan',
-          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
-          'lokasi': 'Gedung A - Lantai 1 & 2',
-          'nomor_lantai': 1,
-          'status': 'BELUM_DIKERJAKAN',
-          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
-          'created_at': '2026-07-20T05:06:59.379Z'
-        },
-        {
-          'id': 't2',
-          'nama_tugas': 'Mengepel & Menyapu',
-          'kategori': 'Kebersihan',
-          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
-          'lokasi': 'Gedung A - Lantai 1 & 2',
-          'nomor_lantai': 1,
-          'status': 'SELESAI',
-          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
-          'created_at': '2026-07-20T05:06:59.379Z'
-        },
-        {
-          'id': 't3',
-          'nama_tugas': 'Mengepel & Menyapu',
-          'kategori': 'Kebersihan',
-          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
-          'lokasi': 'Gedung A - Lantai 1 & 2',
-          'nomor_lantai': 1,
-          'status': 'BELUM_DIKERJAKAN',
-          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
-          'created_at': '2026-07-20T05:06:59.379Z'
-        },
-        {
-          'id': 't4',
-          'nama_tugas': 'Mengepel & Menyapu',
-          'kategori': 'Kebersihan',
-          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
-          'lokasi': 'Gedung A - Lantai 1 & 2',
-          'nomor_lantai': 1,
-          'status': 'BELUM_DIKERJAKAN',
-          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
-          'created_at': '2026-07-20T05:06:59.379Z'
-        },
-        {
-          'id': 't5',
-          'nama_tugas': 'Mengepel & Menyapu',
-          'kategori': 'Kebersihan',
-          'lantai_id': '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
-          'lokasi': 'Gedung A - Lantai 1 & 2',
-          'nomor_lantai': 1,
-          'status': 'BELUM_DIKERJAKAN',
-          'catatan': 'Membersihkan seluruh lantai area kerja dan koridor',
-          'created_at': '2026-07-20T05:06:59.379Z'
-        }
-      ]
-    };
+  Future<Map<String, dynamic>?> claimChecklist(String checklistId) async {
+    try {
+      final response = await _client.patch(
+        '/api/ob/laporan/checklist/$checklistId/claim',
+        {},
+        headers: authHeaders(),
+      );
+      if (response.isOk) {
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            _asMap(response.body);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error claim checklist: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> selesaiChecklist(String checklistId) async {
+    try {
+      final response = await _client.patch(
+        '/api/ob/laporan/checklist/$checklistId/selesai',
+        {},
+        headers: authHeaders(),
+      );
+      if (response.isOk) {
+        return _responseBodyAsMap(response.body, response.bodyString) ??
+            _asMap(response.body);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error selesai checklist: $e');
+      return null;
+    }
   }
 
   Future<Map<String, dynamic>?> claimObTugas(String tugasId) async {
@@ -1045,7 +1012,7 @@ class AuthService extends GetxService {
             _asMap(response.body);
       }
 
-      if (_isOfflineResponse(response)) {
+      if (_canUseOfflineFallback(response)) {
         return {'success': true, 'message': 'Tugas berhasil diklaim (Offline)'};
       }
 
@@ -1072,7 +1039,7 @@ class AuthService extends GetxService {
             _asMap(response.body);
       }
 
-      if (_isOfflineResponse(response)) {
+      if (_canUseOfflineFallback(response)) {
         return {'success': true, 'message': 'Tugas berhasil diselesaikan (Offline)'};
       }
 
@@ -1394,7 +1361,8 @@ class AuthService extends GetxService {
       return null;
     } catch (e) {
       debugPrint('Error ambil notifikasi: $e');
-      return _getNotificationsOffline();
+      if (isOfflineMode) return _getNotificationsOffline();
+      return null;
     }
   }
 
@@ -2724,12 +2692,13 @@ class AuthService extends GetxService {
     required String reportId,
     required String note,
     required List<String> photoPaths,
+    required List<String> beforePhotoPaths,
   }) async {
     _lastRequestError = null;
 
     try {
       debugPrint('Submitting OB report history for report ID: $reportId');
-      debugPrint('Note length: ${note.length}, Photos: ${photoPaths.length}');
+      debugPrint('Note length: ${note.length}, Photos: ${photoPaths.length}, Before Photos: ${beforePhotoPaths.length}');
       
       // Based on curl example: multiple -F "foto_selesai=@file.jpg" fields
       // This requires http.MultipartRequest, not GetConnect FormData
@@ -2743,6 +2712,29 @@ class AuthService extends GetxService {
       
       // Add text field
       request.fields['catatan'] = note.trim();
+      
+      // Add multiple files for before photo with key names 'foto_sebelum' and 'foto_belum_selesai'
+      for (final path in beforePhotoPaths.take(5)) {
+        try {
+          final fileBefore1 = await http.MultipartFile.fromPath(
+            'foto_sebelum',
+            path,
+            filename: _filenameFromPath(path),
+          );
+          request.files.add(fileBefore1);
+          
+          final fileBefore2 = await http.MultipartFile.fromPath(
+            'foto_belum_selesai',
+            path,
+            filename: _filenameFromPath(path),
+          );
+          request.files.add(fileBefore2);
+          
+          debugPrint('Added before file: ${fileBefore1.filename}');
+        } catch (e) {
+          debugPrint('Error adding before file: $e');
+        }
+      }
       
       // Add multiple files with the SAME key name (like curl -F "foto_selesai=@file1" -F "foto_selesai=@file2")
       for (final path in photoPaths.take(5)) {
@@ -2759,7 +2751,7 @@ class AuthService extends GetxService {
         }
       }
       
-      debugPrint('Sending ${request.files.length} files with key "foto_selesai"');
+      debugPrint('Sending ${request.files.length} files');
       
       // Send request
       final streamedResponse = await request.send();
@@ -2782,7 +2774,7 @@ class AuthService extends GetxService {
       // WORKAROUND: Since backend endpoint is not working properly,
       // use offline fallback so users can still complete reports in UI
       debugPrint('⚠️  Backend endpoint not working, using offline fallback');
-      return _submitObReportHistoryOffline(reportId, note, photoPaths);
+      return _submitObReportHistoryOffline(reportId, note, photoPaths, beforePhotoPaths);
       
       /* Original error handling (disabled for workaround)
       _lastRequestError =
@@ -2794,7 +2786,7 @@ class AuthService extends GetxService {
       debugPrint('Exception submitting report history: $e');
       debugPrint('Stack trace: $stackTrace');
       if (isOfflineMode) {
-        return _submitObReportHistoryOffline(reportId, note, photoPaths);
+        return _submitObReportHistoryOffline(reportId, note, photoPaths, beforePhotoPaths);
       }
       _lastRequestError =
           'Tidak dapat menghubungi server untuk menyelesaikan laporan.';
@@ -2818,6 +2810,7 @@ class AuthService extends GetxService {
     String reportId,
     String note,
     List<String> photoPaths,
+    List<String> beforePhotoPaths,
   ) {
     debugPrint('Offline: Simulating submitting history...');
     final index = _dummyReports.indexWhere(
@@ -2829,6 +2822,9 @@ class AuthService extends GetxService {
     updated['status'] = 'selesai';
     updated['notes'] = note;
     updated['photos'] = photoPaths;
+    updated['before_photos'] = beforePhotoPaths;
+    updated['foto_sebelum'] = beforePhotoPaths;
+    updated['foto_belum_selesai'] = beforePhotoPaths;
     _dummyReports[index] = updated;
 
     return {

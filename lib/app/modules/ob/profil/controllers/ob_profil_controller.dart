@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../shared/controllers/auth_controller.dart';
 import '../../../../shared/services/auth_service.dart';
-import '../../../../shared/translations/app_translations.dart';
 import '../../../../shared/utils/report_translation_key.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
@@ -83,7 +82,6 @@ class ObProfilController extends GetxController {
 
   /// ---- State ----
   var isLoading = false.obs;
-  final selectedLanguage = 'Indonesia'.obs;
   var isEditingLocation = false.obs;
   var isSavingLocation = false.obs;
 
@@ -104,7 +102,6 @@ class ObProfilController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    selectedLanguage.value = AppTranslations.currentLanguageLabel();
     loadProfile();
     loadActiveLocations();
   }
