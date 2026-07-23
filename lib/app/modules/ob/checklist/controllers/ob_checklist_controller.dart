@@ -65,8 +65,7 @@ class ObChecklistController extends GetxController {
   void onInit() {
     super.onInit();
     _fetchUserProfile();
-    loadAdHocTasks();
-    loadChecklist();
+    loadAllTasks();
   }
 
   @override
@@ -78,8 +77,7 @@ class ObChecklistController extends GetxController {
   int get completedCountToday {
     final adHocCompleted = adHocTasks.where((t) => t['status'] == 'SELESAI').length;
     final dailyCompleted = sections.expand((s) => s.items).where((item) => item.status.value == 'resolved').length;
-    final total = adHocCompleted + dailyCompleted;
-    return total > 0 ? total : 40;
+    return adHocCompleted + dailyCompleted;
   }
 
   Future<void> _fetchUserProfile() async {
@@ -105,22 +103,45 @@ class ObChecklistController extends GetxController {
   }
 
   bool _isRoutineTask(Map<String, dynamic> task) {
-    final type = (task['jenis_tugas'] ?? task['jenis'] ?? task['type'] ?? task['kategori'] ?? task['category'] ?? '').toString().toLowerCase();
-    final isRoutine = task['is_routine'] == true || task['isRoutine'] == true;
-    
-    if (isRoutine) return true;
-    if (type.contains('tidak rutin') || type.contains('tidak_rutin') || type.contains('non')) {
+    final type = (task['jenis_tugas'] ??
+            task['tipe_tugas'] ??
+            task['tipe'] ??
+            task['jenis'] ??
+            task['type'] ??
+            task['kategori'] ??
+            task['category'] ??
+            '')
+        .toString()
+        .toLowerCase()
+        .trim();
+
+    final routineVal = task['is_routine'] ?? task['isRoutine'];
+    if (routineVal is bool) {
+      if (routineVal) return true;
+    } else if (routineVal is num) {
+      if (routineVal == 1) return true;
+    } else if (routineVal is String) {
+      final v = routineVal.trim().toLowerCase();
+      if (v == 'true' || v == '1' || v == 'ya') return true;
+    }
+
+    if (type.contains('tidak rutin') ||
+        type.contains('tidak_rutin') ||
+        type == 'non_rutin' ||
+        type == 'non-rutin' ||
+        type == 'non rutin' ||
+        type == 'tidak') {
       return false;
     }
-    if (type.contains('rutin') || type.contains('routine')) {
+    if (type.contains('rutin') || type.contains('routine') || type == 'harian') {
       return true;
     }
-    
+
     final name = (task['nama_tugas'] ?? task['title'] ?? '').toString().toLowerCase();
     if (name.contains('rutin') && !name.contains('tidak rutin')) {
       return true;
     }
-    
+
     return false;
   }
 

@@ -105,65 +105,6 @@ class AuthService extends GetxService {
     },
   ];
 
-  final List<Map<String, dynamic>> _dummyChecklist = [
-    {
-      'id': 'c1',
-      'title': 'Mengepel & Menyapu',
-      'description': 'Membersihkan seluruh lantai area kerja dan koridor',
-      'section': 'Area kerja utama & Koridor',
-      'status': 'selesai'
-    },
-    {
-      'id': 'c2',
-      'title': 'Dusting (Mengelap Debu)',
-      'description': 'Mengelap meja kerja, meja meeting, kursi, rak buku, dan ambang jendela.',
-      'section': 'Area kerja utama & Koridor',
-      'status': 'pending'
-    },
-    {
-      'id': 'c3',
-      'title': 'Restocking (Isi Ulang)',
-      'description': 'Memastikan sabun cuci tangan, tisu toilet, dan tisu wastafel selalu terisi penuh.',
-      'section': 'Area kerja utama & Koridor',
-      'status': 'pending'
-    },
-    {
-      'id': 'c4',
-      'title': 'Pembersihan Area Basah',
-      'description': 'Lantai, kloset/urinal, dan wastafel.',
-      'section': 'Area Toilet (Krusial & Harus Dicek Berkala)',
-      'status': 'selesai'
-    },
-    {
-      'id': 'c5',
-      'title': 'Cek Drainase',
-      'description': 'Memastikan tidak ada sumbatan pada saluran air dan air mengalir dengan lancar.',
-      'section': 'Area Toilet (Krusial & Harus Dicek Berkala)',
-      'status': 'selesai'
-    },
-    {
-      'id': 'c6',
-      'title': 'Pengosongan Tempat Sampah',
-      'description': 'Mengosongkan seluruh tempat sampah',
-      'section': 'Manajemen Sampah & Utilitas (Fasilitas)',
-      'status': 'selesai'
-    },
-    {
-      'id': 'c7',
-      'title': 'Pengecekan Lampu & AC',
-      'description': 'Matikan saat pulang / nyalakan saat pagi.',
-      'section': 'Manajemen Sampah & Utilitas (Fasilitas)',
-      'status': 'selesai'
-    },
-    {
-      'id': 'c8',
-      'title': 'Menyiram Tanaman',
-      'description': 'Menyiram tanaman hias yang ada di dalam maupun di area depan kantor.',
-      'section': 'Manajemen Sampah & Utilitas (Fasilitas)',
-      'status': 'selesai'
-    }
-  ];
-
   // ✅ Match dengan seed.mjs - Kategori
   final List<Map<String, dynamic>> _dummyCategories = [
     {
@@ -910,17 +851,17 @@ class AuthService extends GetxService {
         query['status'] = status.trim();
       }
 
-      // Try the new endpoint from the API documentation
+      // Try /api/checklist-harian first (documented endpoint)
       var response = await _client.get(
-        '/api/ob/laporan/checklist',
+        '/api/checklist-harian',
         query: query,
         headers: authHeaders(),
       );
 
       // Fallback to legacy endpoint if 404
-      if (response.statusCode == 404) {
+      if (!response.isOk) {
         response = await _client.get(
-          '/api/checklist-harian',
+          '/api/ob/laporan/checklist',
           query: query,
           headers: authHeaders(),
         );
