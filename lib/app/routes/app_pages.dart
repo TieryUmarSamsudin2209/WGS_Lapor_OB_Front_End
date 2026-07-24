@@ -14,6 +14,8 @@ import '../modules/ob/collaboration/bindings/ob_collaboration_binding.dart';
 import '../modules/ob/collaboration/views/ob_collaboration_view.dart';
 import '../modules/ob/detail/bindings/ob_detail_binding.dart';
 import '../modules/ob/detail/views/ob_detail_view.dart';
+import '../modules/ob/detail_tugas/bindings/ob_detail_tugas_binding.dart';
+import '../modules/ob/detail_tugas/views/ob_detail_tugas_view.dart';
 import '../modules/ob/home/bindings/ob_home_binding.dart';
 import '../modules/ob/notifications/bindings/ob_notifications_binding.dart';
 import '../modules/ob/notifications/views/ob_notifications_view.dart';
@@ -105,6 +107,13 @@ class AppPages {
       name: Routes.OB_DETAIL,
       page: () => const ObDetailView(),
       binding: ObDetailBinding(),
+      transition: Transition.rightToLeftWithFade,
+      transitionDuration: const Duration(milliseconds: 250),
+    ),
+    GetPage(
+      name: Routes.OB_DETAIL_TUGAS,
+      page: () => const ObDetailTugasView(),
+      binding: ObDetailTugasBinding(),
       transition: Transition.rightToLeftWithFade,
       transitionDuration: const Duration(milliseconds: 250),
     ),

@@ -8,6 +8,7 @@ import '../../../../shared/widgets/custom_alert.dart';
 import '../../../../shared/theme/theme_controller.dart';
 import '../../../../shared/widgets/ob_bottom_nav.dart';
 import '../controllers/ob_checklist_controller.dart';
+import '../../../../routes/app_pages.dart';
 import '../../home/controllers/ob_home_controller.dart';
 
 class ObChecklistView extends GetView<ObChecklistController> {
@@ -367,14 +368,14 @@ class ObChecklistView extends GetView<ObChecklistController> {
           final report = HomeReport(
             id: id,
             title: title,
-            location: task['lokasi']?.toString() ?? controller.penugasanText.value,
+            location: '${controller.penugasanText.value}|${task['lokasi']?.toString() ?? controller.penugasanText.value}',
             description: description,
             priority: 'STANDARD',
             status: 'Sedang Diproses',
             categoryName: 'Tidak Rutin',
           );
           Get.toNamed(
-            '/ob/detail',
+            Routes.OB_DETAIL_TUGAS,
             arguments: report,
           )?.then((_) {
             controller.loadAdHocTasks();
@@ -767,7 +768,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
             final report = HomeReport(
               id: item.id,
               title: item.title,
-              location: controller.penugasanText.value,
+              location: '${controller.penugasanText.value}|$specificLocation',
               description: item.description,
               priority: 'STANDARD',
               status: 'Sedang Diproses',
@@ -777,7 +778,7 @@ class ObChecklistView extends GetView<ObChecklistController> {
               assignedObName: 'Anda',
             );
             Get.toNamed(
-              '/ob/detail',
+              Routes.OB_DETAIL_TUGAS,
               arguments: report,
             )?.then((_) {
               controller.loadChecklist();

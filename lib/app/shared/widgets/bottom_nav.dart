@@ -24,39 +24,70 @@ class BottomNavItem extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = isDark ? const Color(0xFF052C58) : navyColor;
     final activeContentColor = isDark ? AppDarkColors.accent : Colors.white;
-    final inactiveColor = isDark ? const Color(0xFF8B929C) : navyColor;
+    final inactiveColor = isDark ? const Color(0xFF8B929C) : const Color(0xFF003366).withValues(alpha: 0.6);
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: double.infinity,
-        decoration: BoxDecoration(
-          color: isActive ? activeColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isActive ? activeContentColor : inactiveColor,
-              size: 24,
+      child: Container(
+        color: Colors.transparent, // Ensures the entire slot is clickable
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: isActive
+                ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+                : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isActive ? activeColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(15),
             ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label.tr,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: isActive ? activeContentColor : inactiveColor,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.w700,
-                  fontSize: isActive ? 13 : 12,
-                ),
-              ),
-            ),
-          ],
+            child: isActive
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        color: activeContentColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          label.tr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: activeContentColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        color: inactiveColor,
+                        size: 24,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        label.tr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: inactiveColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

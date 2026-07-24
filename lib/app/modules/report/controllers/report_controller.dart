@@ -29,26 +29,42 @@ class ReportController extends GetxController {
     ),
   ];
 
+  static const _fallbackLocations = [
+    ReportOption(
+      id: '033f0941-8378-42e3-af2c-29cf83ab8e11',
+      label: 'Gedung A - Kantor Pusat',
+    ),
+    ReportOption(
+      id: '6c58477b-a345-4175-893a-58472165b899',
+      label: 'Gedung B - Kantor Cabang',
+    ),
+  ];
+
   static const _fallbackFloors = [
     ReportOption(
       id: '45a8d4d0-ea99-404d-b35b-f39cd7315c2b',
       label: 'Gedung A - Kantor Pusat - Lantai 1',
+      parentId: '033f0941-8378-42e3-af2c-29cf83ab8e11',
     ),
     ReportOption(
       id: '7249c72a-642d-4ceb-afbe-61396587e37e',
       label: 'Gedung A - Kantor Pusat - Lantai 2',
+      parentId: '033f0941-8378-42e3-af2c-29cf83ab8e11',
     ),
     ReportOption(
       id: 'a67fbf59-44e4-4537-a9b8-5c5193958116',
       label: 'Gedung A - Kantor Pusat - Lantai 3',
+      parentId: '033f0941-8378-42e3-af2c-29cf83ab8e11',
     ),
     ReportOption(
       id: '5970908a-117c-4ab9-95f6-065ed4d8b04c',
       label: 'Gedung B - Kantor Cabang - Lantai 1',
+      parentId: '6c58477b-a345-4175-893a-58472165b899',
     ),
     ReportOption(
       id: 'a75e15c3-5990-4936-af85-2848d12d1901',
       label: 'Gedung B - Kantor Cabang - Lantai 2',
+      parentId: '6c58477b-a345-4175-893a-58472165b899',
     ),
   ];
 
@@ -58,14 +74,20 @@ class ReportController extends GetxController {
   final ImagePicker _picker = ImagePicker();
 
   final categories = <ReportOption>[].obs;
+  final locations = <ReportOption>[].obs;
   final floors = <ReportOption>[].obs;
   final rooms = <ReportOption>[].obs;
+  
   final selectedCategory = Rxn<ReportOption>();
+  final selectedLocation = Rxn<ReportOption>();
   final selectedFloor = Rxn<ReportOption>();
   final selectedRoom = Rxn<ReportOption>();
+  
   final priorityLevel = 'STANDARD'.obs;
   final descriptionController = ''.obs;
   final attachedPhotos = <String>[].obs;
+  final isAnonymous = false.obs;
+  
   final isLoadingOptions = false.obs;
   final isSubmitting = false.obs;
   final submitFailureMessage = RxnString();
@@ -76,20 +98,43 @@ class ReportController extends GetxController {
       : _authService.isOfflineMode
       ? _fallbackCategories
       : const [];
-  List<ReportOption> get floorOptions =>
-      floors.isNotEmpty
-      ? floors
+
+  List<ReportOption> get locationOptions =>
+      locations.isNotEmpty
+      ? locations
       : _authService.isOfflineMode
-      ? _fallbackFloors
+      ? _fallbackLocations
       : const [];
+
+  List<ReportOption> get floorOptions {
+    final location = selectedLocation.value;
+    if (floors.isEmpty && !_authService.isOfflineMode) return const [];
+    final activeFloors = floors.isNotEmpty ? floors : _fallbackFloors;
+    if (location == null) return const [];
+
+    final locationId = location.id;
+    final locationLabel = location.label.toLowerCase();
+
+    return activeFloors.where((option) {
+      if (option.parentId == locationId) return true;
+      if (option.parentId == null) {
+        final floorLabel = option.label.toLowerCase();
+        if (floorLabel.contains(locationLabel)) return true;
+        if (locationLabel.contains('gedung a') && floorLabel.contains('gedung a')) return true;
+        if (locationLabel.contains('gedung b') && floorLabel.contains('gedung b')) return true;
+      }
+      return false;
+    }).toList();
+  }
+
   List<ReportOption> get roomOptions {
     final floorId = selectedFloor.value?.id;
-    if (rooms.isEmpty || floorId == null) return rooms;
+    if (rooms.isEmpty || floorId == null) return const [];
 
     final filtered = rooms
         .where((option) => option.parentId == null || option.parentId == floorId)
         .toList();
-    return filtered.isEmpty ? rooms : filtered;
+    return filtered;
   }
 
   @override
@@ -108,13 +153,42 @@ class ReportController extends GetxController {
         _authService.getReportCategories(),
         _authService.getReportFloors(),
         _authService.getReportRooms(),
+        _authService.getReportLocations(),
       ]);
 
       categories.assignAll(_optionsFromApi(results[0], isFloor: false));
       floors.assignAll(_optionsFromApi(results[1], isFloor: true));
       rooms.assignAll(_roomOptionsFromApi(results[2]));
+      locations.assignAll(_optionsFromApi(results[3], isFloor: false));
+
+      // FALLBACK: If locations list from API is empty but we have floors, extract unique locations from floors!
+      if (locations.isEmpty && floors.isNotEmpty) {
+        final Map<String, ReportOption> extracted = {};
+        var fallbackIdCounter = 1;
+        for (final floor in floors) {
+          final locId = floor.parentId ?? 'loc-fallback-$fallbackIdCounter';
+          if (floor.parentId == null) {
+            fallbackIdCounter++;
+          }
+          
+          // Floor label is like "Gedung A - Kantor Pusat - Lantai 1"
+          final parts = floor.label.split(' - ');
+          final locLabel = parts.length > 1
+              ? parts.sublist(0, parts.length - 1).join(' - ')
+              : parts[0];
+              
+          extracted.putIfAbsent(
+            locLabel.toLowerCase(),
+            () => ReportOption(id: locId, label: locLabel),
+          );
+        }
+        if (extracted.isNotEmpty) {
+          locations.assignAll(extracted.values);
+        }
+      }
 
       _replaceSelectionWithApiOption(selectedCategory, categoryOptions);
+      _replaceSelectionWithApiOption(selectedLocation, locationOptions);
       _replaceSelectionWithApiOption(selectedFloor, floorOptions);
       _replaceSelectionWithApiOption(selectedRoom, roomOptions);
     } finally {
@@ -126,8 +200,22 @@ class ReportController extends GetxController {
     selectedCategory.value = _optionById(categoryOptions, categoryId);
   }
 
+  void setLocationById(String? locationId) {
+    selectedLocation.value = _optionById(locationOptions, locationId);
+    
+    final floor = selectedFloor.value;
+    if (floor != null) {
+      final matchesLocation = floor.parentId == locationId || 
+          (floor.parentId == null && floor.label.toLowerCase().contains(selectedLocation.value?.label.toLowerCase() ?? ''));
+      if (!matchesLocation) {
+        selectedFloor.value = null;
+        selectedRoom.value = null;
+      }
+    }
+  }
+
   void setFloorById(String? floorId) {
-    selectedFloor.value = _optionById(floorOptions, floorId);
+    selectedFloor.value = _optionById(floors.isNotEmpty ? floors : _fallbackFloors, floorId);
 
     final room = selectedRoom.value;
     if (room?.parentId != null && room!.parentId != floorId) {
@@ -172,6 +260,7 @@ class ReportController extends GetxController {
     submitFailureMessage.value = null;
 
     final category = selectedCategory.value;
+    final location = selectedLocation.value;
     final floor = selectedFloor.value;
     final room = selectedRoom.value;
     final description = descriptionController.value.trim();
@@ -198,10 +287,23 @@ class ReportController extends GetxController {
       return false;
     }
 
+    if (location == null) {
+      Get.snackbar(
+        'Peringatan'.tr,
+        'Harap pilih lokasi terlebih dahulu.'.tr,
+        backgroundColor: Colors.orangeAccent,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+      return false;
+    }
+
     if (floor == null) {
       Get.snackbar(
         'Peringatan'.tr,
-        'Harap pilih lokasi gedung terlebih dahulu.'.tr,
+        'Harap pilih lokasi lantai terlebih dahulu.'.tr,
         backgroundColor: Colors.orangeAccent,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -279,11 +381,13 @@ class ReportController extends GetxController {
 
   void clearForm() {
     selectedCategory.value = null;
+    selectedLocation.value = null;
     selectedFloor.value = null;
     selectedRoom.value = null;
     priorityLevel.value = 'STANDARD';
     descriptionController.value = '';
     attachedPhotos.clear();
+    isAnonymous.value = false;
   }
 
   void _applyInitialCategory(Object? arguments) {
@@ -295,6 +399,22 @@ class ReportController extends GetxController {
           (option) => option.label.toLowerCase() == category.toLowerCase(),
         ) ??
         ReportOption(id: category, label: category);
+  }
+
+  String? _floorParentId(
+    Map<String, dynamic> item,
+    List<Map<String, dynamic>> sources,
+  ) {
+    return _firstTextFromSources(sources, const [
+      'lokasi_id',
+      'lokasiId',
+      'location_id',
+      'locationId',
+      'gedung_id',
+      'gedungId',
+      'building_id',
+      'buildingId',
+    ]);
   }
 
   ReportOption? _optionFromApi(
@@ -375,7 +495,9 @@ class ReportController extends GetxController {
         ? '$building - $normalizedLabel'
         : normalizedLabel;
 
-    return ReportOption(id: id, label: displayLabel);
+    final parentId = isFloor ? _floorParentId(item, sources) : null;
+
+    return ReportOption(id: id, label: displayLabel, parentId: parentId);
   }
 
   List<ReportOption> _optionsFromApi(
